@@ -14,6 +14,30 @@ MOCK_DOWNLOADS = {
     "next": 18000000,
     "axios": 45000000,
     "react": 95000000,
+    "react-dom": 90000000,
+    "scheduler": 85000000,
+    "loose-envify": 40000000,
+    "postcss": 50000000,
+    "js-tokens": 35000000,
+    "body-parser": 15000000,
+    "cookie-parser": 12000000,
+    "bytes": 25000000,
+    "depd": 30000000,
+    "cookie": 40000000,
+    "cookie-signature": 15000000,
+    "acorn": 65000000,
+    "enhanced-resolve": 32000000,
+    "graceful-fs": 70000000,
+    "tapable": 45000000,
+}
+
+MOCK_VERSIONS = {
+    "lodash": "4.17.21",
+    "express": "4.18.2",
+    "react": "18.2.0",
+    "webpack": "5.88.0",
+    "next": "13.4.0",
+    "axios": "1.6.0",
 }
 
 from api.services.exceptions import PackageNotFoundError, ServiceTimeoutError
@@ -26,16 +50,14 @@ async def get_latest_version(package: str) -> str:
         raise PackageNotFoundError(f"Package '{package}' not found in npm registry")
     if pkg_clean in ["timeout", "timeout-pkg", "service-timeout"]:
         raise ServiceTimeoutError(f"Connection to registry.npmjs.org timed out for '{package}'")
-    if pkg_clean == "lodash":
-        return "4.17.21"
-    return "1.0.0"
+    return MOCK_VERSIONS.get(pkg_clean, "1.0.0")
 
 async def get_monthly_downloads(package: str) -> int:
     """Mock fetching monthly download count for an npm package."""
     await asyncio.sleep(0.01)
-    return MOCK_DOWNLOADS.get(package.lower(), 500000)
+    return MOCK_DOWNLOADS.get(package.lower().strip(), 500000)
 
 async def get_downloads_batch(packages: List[str]) -> Dict[str, int]:
     """Mock fetching monthly downloads concurrently for a list of npm packages."""
     await asyncio.sleep(0.01)
-    return {pkg: MOCK_DOWNLOADS.get(pkg.lower(), 500000) for pkg in packages}
+    return {pkg: MOCK_DOWNLOADS.get(pkg.lower().strip(), 500000) for pkg in packages}

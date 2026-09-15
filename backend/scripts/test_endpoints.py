@@ -187,6 +187,38 @@ def test_error_handling():
     print(f"  --> [PASS] 503 returned for upstream timeout: {res_timeout.json()['detail']}\n")
 
 
+def test_all_five_demo_packages():
+    print("[TEST] Checking All 5 Video Demo Packages via /analyze and /simulate...")
+    packages = [
+        {"package": "lodash", "ecosystem": "npm", "version": "4.17.21"},
+        {"package": "express", "ecosystem": "npm", "version": "4.18.2"},
+        {"package": "requests", "ecosystem": "pypi", "version": "2.31.0"},
+        {"package": "flask", "ecosystem": "pypi", "version": "3.0.0"},
+        {"package": "react", "ecosystem": "npm", "version": "18.2.0"},
+    ]
+    for pkg_info in packages:
+        pkg = pkg_info["package"]
+        eco = pkg_info["ecosystem"]
+        ver = pkg_info["version"]
+        res_a = client.post("/analyze", json={"package": pkg, "ecosystem": eco, "version": ver, "depth": 3})
+        assert res_a.status_code == 200, f"/analyze failed for {pkg}: {res_a.text}"
+        data_a = res_a.json()
+        assert data_a["stats"]["total_nodes"] > 0
+        graph_id = f"{pkg}-{eco}-{ver}-depth3"
+
+        res_s = client.post("/simulate", json={"graph_id": graph_id, "compromised_node": f"{pkg}@{ver}"})
+        assert res_s.status_code == 200, f"/simulate failed for {pkg}: {res_s.text}"
+        data_s = res_s.json()
+        score = data_s["blast_radius"]["blast_score"]
+        count = data_s["blast_radius"]["affected_package_count"]
+        dls = data_s["blast_radius"]["total_monthly_downloads_affected"]
+        assert 30.0 <= score <= 100.0, f"Blast score {score} out of range for {pkg}"
+        assert count > 0, f"Affected count must be >0 for {pkg}"
+        assert dls > 0, f"Affected downloads must be >0 for {pkg}"
+        print(f"  --> [PASS] {pkg.upper()} ({eco}): Blast Score={score}/100, Affected={count}, Downloads={dls:,}")
+    print("  --> All 5 Demo Packages Verified Successfully!\n")
+
+
 def run_all_tests():
     print("===================================================================")
     print("RippleGuard — End-to-End API Test Suite (F7 Compare & F8 Export)")
@@ -197,6 +229,7 @@ def run_all_tests():
     test_compare(graph_id)
     test_export(graph_id)
     test_error_handling()
+    test_all_five_demo_packages()
     print("===================================================================")
     print("ALL API ENDPOINTS & ERROR HANDLING PASSED SUCCESSFULLY!")
     print("===================================================================")

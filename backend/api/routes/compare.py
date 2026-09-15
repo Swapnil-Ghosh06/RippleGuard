@@ -19,7 +19,7 @@ from api.services.graph_service import (
     build_dependency_graph,
     _graph_storage
 )
-from api.services import npm_service, osv_service
+from api.services import npm_service, pypi_service, osv_service
 
 router = APIRouter(tags=["compare"])
 
@@ -102,10 +102,14 @@ async def compare_compromises(request: CompareRequest):
             pkg_name = target_node
             version = "latest"
 
-        eco = "npm"
+        eco = "pypi" if pkg_name.lower() in ["requests", "flask", "urllib3", "certifi", "jinja2", "werkzeug"] else "npm"
         try:
             if version == "latest":
-                version = await asyncio.wait_for(npm_service.get_latest_version(pkg_name), timeout=7.5)
+                if eco == "pypi":
+                    meta = await asyncio.wait_for(pypi_service.get_pypi_metadata(pkg_name), timeout=7.5)
+                    version = meta.get("version", "latest")
+                else:
+                    version = await asyncio.wait_for(npm_service.get_latest_version(pkg_name), timeout=7.5)
 
             G = await asyncio.wait_for(build_dependency_graph(pkg_name, eco, version, max_depth=3), timeout=7.5)
             if G.number_of_nodes() == 0:
@@ -125,7 +129,11 @@ async def compare_compromises(request: CompareRequest):
             ]
             package_names = [G.nodes[nid]["name"] for nid in node_ids]
 
-            downloads_task = npm_service.get_downloads_batch(package_names)
+            if eco == "npm":
+                downloads_task = npm_service.get_downloads_batch(package_names)
+            else:
+                downloads_task = pypi_service.get_downloads_batch(package_names)
+
             vulns_task = osv_service.query_vulnerabilities_batch(packages_for_osv)
             downloads_map, vulns_map = await asyncio.wait_for(asyncio.gather(downloads_task, vulns_task), timeout=7.5)
 

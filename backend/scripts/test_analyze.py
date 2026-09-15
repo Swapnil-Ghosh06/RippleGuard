@@ -20,6 +20,8 @@ async def test_packages():
         {"package": "lodash", "ecosystem": "npm", "version": "4.17.21", "depth": 3},
         {"package": "express", "ecosystem": "npm", "version": "4.18.2", "depth": 3},
         {"package": "requests", "ecosystem": "pypi", "version": "2.31.0", "depth": 3},
+        {"package": "flask", "ecosystem": "pypi", "version": "3.0.0", "depth": 3},
+        {"package": "react", "ecosystem": "npm", "version": "18.2.0", "depth": 3},
     ]
 
     print("==========================================================")

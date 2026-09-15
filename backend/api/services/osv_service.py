@@ -26,6 +26,46 @@ MOCK_VULNS: Dict[str, List[Dict[str, Any]]] = {
             "affected_versions": ["<1.20.2"],
             "fixed_version": "1.20.2"
         }
+    ],
+    "express": [
+        {
+            "id": "GHSA-qw6h-v8gh-w369",
+            "summary": "Open redirect and query parsing vulnerability in express",
+            "severity": "MEDIUM",
+            "cvss_score": 6.1,
+            "affected_versions": ["<4.19.2"],
+            "fixed_version": "4.19.2"
+        }
+    ],
+    "requests": [
+        {
+            "id": "GHSA-9wx4-h78v-vm56",
+            "summary": "Leak of Proxy-Authorization header in requests",
+            "severity": "MEDIUM",
+            "cvss_score": 6.1,
+            "affected_versions": ["<2.31.0"],
+            "fixed_version": "2.31.0"
+        }
+    ],
+    "flask": [
+        {
+            "id": "GHSA-65fc-9p4h-6p98",
+            "summary": "Unexpected memory usage in Flask JSON decoder",
+            "severity": "HIGH",
+            "cvss_score": 7.5,
+            "affected_versions": ["<2.3.3"],
+            "fixed_version": "2.3.3"
+        }
+    ],
+    "react": [
+        {
+            "id": "GHSA-jcw7-3f3g-5h8v",
+            "summary": "Cross-site scripting in React development helper",
+            "severity": "LOW",
+            "cvss_score": 3.7,
+            "affected_versions": ["<18.2.0"],
+            "fixed_version": "18.2.0"
+        }
     ]
 }
 

@@ -41,6 +41,26 @@ MOCK_DEPENDENCY_TREES: Dict[Tuple[str, str], List[Dict[str, str]]] = {
     ("graceful-fs", "npm"): [],
     ("tapable", "npm"): [],
 
+    # react tree (npm)
+    ("react", "npm"): [
+        {"name": "react-dom", "version": "18.2.0"},
+        {"name": "next", "version": "13.4.0"},
+    ],
+    ("react-dom", "npm"): [
+        {"name": "scheduler", "version": "0.23.0"},
+    ],
+    ("scheduler", "npm"): [
+        {"name": "loose-envify", "version": "1.4.0"},
+    ],
+    ("next", "npm"): [
+        {"name": "postcss", "version": "8.4.31"},
+    ],
+    ("loose-envify", "npm"): [
+        {"name": "js-tokens", "version": "4.0.0"},
+    ],
+    ("postcss", "npm"): [],
+    ("js-tokens", "npm"): [],
+
     # PyPI ecosystem
     ("requests", "pypi"): [
         {"name": "urllib3", "version": "2.0.7"},
@@ -55,6 +75,25 @@ MOCK_DEPENDENCY_TREES: Dict[Tuple[str, str], List[Dict[str, str]]] = {
     ("charset-normalizer", "pypi"): [],
     ("idna", "pypi"): [],
     ("six", "pypi"): [],
+
+    # flask tree (pypi)
+    ("flask", "pypi"): [
+        {"name": "werkzeug", "version": "3.0.1"},
+        {"name": "jinja2", "version": "3.1.2"},
+        {"name": "itsdangerous", "version": "2.1.2"},
+        {"name": "click", "version": "8.1.7"},
+        {"name": "blinker", "version": "1.6.3"},
+    ],
+    ("werkzeug", "pypi"): [
+        {"name": "markupsafe", "version": "2.1.3"},
+    ],
+    ("jinja2", "pypi"): [
+        {"name": "markupsafe", "version": "2.1.3"},
+    ],
+    ("itsdangerous", "pypi"): [],
+    ("click", "pypi"): [],
+    ("blinker", "pypi"): [],
+    ("markupsafe", "pypi"): [],
 }
 
 

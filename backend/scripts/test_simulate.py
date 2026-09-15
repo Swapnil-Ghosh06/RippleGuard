@@ -1,6 +1,7 @@
 """
 Direct Sanity Test for Compromise Propagation, Blast Scoring, Butterfly Trace,
 Shadow Dependency Revealer, and Mitigation Engine.
+Tests all 5 demo packages: lodash, express, requests, flask, react.
 """
 
 import asyncio
@@ -21,6 +22,8 @@ async def test_simulation():
         {"package": "lodash", "ecosystem": "npm", "version": "4.17.21"},
         {"package": "express", "ecosystem": "npm", "version": "4.18.2"},
         {"package": "requests", "ecosystem": "pypi", "version": "2.31.0"},
+        {"package": "flask", "ecosystem": "pypi", "version": "3.0.0"},
+        {"package": "react", "ecosystem": "npm", "version": "18.2.0"},
     ]
 
     print("===================================================================")
@@ -46,7 +49,7 @@ async def test_simulation():
         if eco == "npm":
             dl_map = await npm_service.get_downloads_batch(pkg_names)
         else:
-            dl_map = {name: 0 for name in pkg_names}
+            dl_map = await pypi_service.get_downloads_batch(pkg_names)
 
         vuln_map = await osv_service.query_vulnerabilities_batch(packages_for_osv)
 
@@ -78,6 +81,11 @@ async def test_simulation():
         print(f"      {mit['minimum_fix_set']}")
         print("\n" + "-" * 67 + "\n")
 
+        # Sanity assertions on demo packages: none should have 0 or >100 score
+        assert 30.0 <= blast['blast_score'] <= 100.0, f"Blast score {blast['blast_score']} out of expected range for {pkg}"
+        assert blast['affected_package_count'] > 0, f"Affected package count must be >0 for {pkg}"
+        assert blast['total_monthly_downloads_affected'] > 0, f"Downloads must be >0 for {pkg}"
+
     # 4. Sanity Check on Leaf Node (Should score near 0)
     G_lodash = await build_dependency_graph("lodash", "npm", "4.17.21", 3)
     lodash_names = [G_lodash.nodes[n]["name"] for n in G_lodash.nodes]
@@ -97,13 +105,13 @@ async def test_simulation():
     )
     leaf_blast = leaf_res["blast_radius"]
     print(f"  • Affected Count: {leaf_blast['affected_package_count']} (expected: 0)")
-    print(f"  • Blast Score:    {leaf_blast['blast_score']} (expected: near 0)")
+    print(f"  • Blast Score:    {leaf_blast['blast_score']} (expected: 0.0)")
     print(f"  • Critical Chain: {leaf_res['critical_chain']}")
     assert leaf_blast['affected_package_count'] == 0
-    assert leaf_blast['blast_score'] < 40.0
+    assert leaf_blast['blast_score'] == 0.0
     print("  [PASS] Leaf node sanity check PASSED!\n")
 
-    print("All simulation algorithms verified successfully!")
+    print("All simulation algorithms for all 5 demo packages verified successfully!")
 
 
 if __name__ == "__main__":

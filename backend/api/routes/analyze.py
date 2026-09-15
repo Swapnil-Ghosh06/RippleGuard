@@ -87,10 +87,7 @@ async def analyze_package(request: AnalyzeRequest):
         if eco == "npm":
             downloads_task = npm_service.get_downloads_batch(package_names)
         else:
-            # PyPI does not expose official monthly point download endpoints
-            async def mock_pypi_downloads():
-                return {name: 0 for name in package_names}
-            downloads_task = mock_pypi_downloads()
+            downloads_task = pypi_service.get_downloads_batch(package_names)
 
         vulns_task = osv_service.query_vulnerabilities_batch(packages_for_osv)
 

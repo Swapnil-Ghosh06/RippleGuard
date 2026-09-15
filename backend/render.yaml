@@ -7,4 +7,6 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: CORS_ORIGINS
+        value: "http://localhost:5173,https://rippleguard.vercel.app"
     healthCheckPath: /health
