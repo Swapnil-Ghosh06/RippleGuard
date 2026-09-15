@@ -1,4 +1,4 @@
-# Hari (Haripriya) — Role Brief
+# Hari (Haripriya) — Ro
 ### RippleGuard | Manipal Hackathon 2026
 **Squad:** Backend (with Zahid) | **Title:** Backend — Data & Integrations
 
