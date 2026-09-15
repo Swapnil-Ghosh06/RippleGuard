@@ -13,6 +13,7 @@ if str(backend_dir) not in sys.path:
 from api.routes.analyze import router as analyze_router
 from api.routes.simulate import router as simulate_router
 from api.routes.compare import router as compare_router
+from api.routes.export import router as export_router
 
 load_dotenv()
 
@@ -38,6 +39,7 @@ app.add_middleware(
 app.include_router(analyze_router)
 app.include_router(simulate_router)
 app.include_router(compare_router)
+app.include_router(export_router)
 
 
 # Health check endpoint per docs/TDD.md Section 2.4

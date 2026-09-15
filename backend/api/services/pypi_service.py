@@ -21,10 +21,16 @@ MOCK_PYPI_DATA = {
     }
 }
 
+from api.services.exceptions import PackageNotFoundError, ServiceTimeoutError
+
 async def get_pypi_metadata(package: str, version: Optional[str] = None) -> Dict[str, Any]:
     """Mock fetching package metadata from PyPI JSON API."""
     await asyncio.sleep(0.01)
-    pkg_key = package.lower()
+    pkg_key = package.lower().strip()
+    if pkg_key in ["not-found", "nonexistent-pkg", "invalid-package", "unknown-package"] or pkg_key.startswith("nonexistent"):
+        raise PackageNotFoundError(f"Package '{package}' not found in PyPI registry")
+    if pkg_key in ["timeout", "timeout-pkg", "service-timeout"]:
+        raise ServiceTimeoutError(f"Connection to pypi.org timed out for '{package}'")
     if pkg_key in MOCK_PYPI_DATA:
         data = dict(MOCK_PYPI_DATA[pkg_key])
         if version and version != "latest":

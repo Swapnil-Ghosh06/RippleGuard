@@ -58,6 +58,8 @@ MOCK_DEPENDENCY_TREES: Dict[Tuple[str, str], List[Dict[str, str]]] = {
 }
 
 
+from api.services.exceptions import PackageNotFoundError, ServiceTimeoutError
+
 async def get_dependencies(
     package: str, ecosystem: str, version: str
 ) -> List[Dict[str, str]]:
@@ -68,7 +70,14 @@ async def get_dependencies(
     """
     await asyncio.sleep(0.01)
     eco = ecosystem.lower()
-    pkg_key = (package.lower(), eco)
+    pkg_clean = package.lower().strip()
+
+    if pkg_clean in ["not-found", "nonexistent-pkg", "invalid-package", "unknown-package"] or pkg_clean.startswith("nonexistent"):
+        raise PackageNotFoundError(f"Package '{package}' not found in deps.dev")
+    if pkg_clean in ["timeout", "timeout-pkg", "service-timeout"]:
+        raise ServiceTimeoutError(f"Connection to api.deps.dev timed out for '{package}'")
+
+    pkg_key = (pkg_clean, eco)
 
     deps = MOCK_DEPENDENCY_TREES.get(pkg_key)
     if deps is not None:

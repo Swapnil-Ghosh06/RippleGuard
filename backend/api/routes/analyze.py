@@ -1,6 +1,7 @@
 import asyncio
 from typing import Dict
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, HTTPException
+from api.services.exceptions import PackageNotFoundError, ServiceTimeoutError
 
 from api.models.request_models import AnalyzeRequest
 from api.models.response_models import (
@@ -33,59 +34,80 @@ async def analyze_package(request: AnalyzeRequest):
     """
     Analyzes a package by building its dependency graph via BFS,
     and concurrently enriching all nodes with download counts and vulnerability data.
+    Enforces <8s end-to-end SLA, returning 503 on timeout and 404 for unresolvable packages.
     """
     eco = request.ecosystem.lower()
 
-    # Resolve latest version if not explicitly pinned
-    version = request.version
-    if not version or version == "latest":
-        if eco == "npm":
-            version = await npm_service.get_latest_version(request.package)
-        elif eco == "pypi":
-            try:
-                meta = await pypi_service.get_pypi_metadata(request.package)
+    try:
+        # Resolve latest version if not explicitly pinned
+        version = request.version
+        if not version or version == "latest":
+            if eco == "npm":
+                version = await asyncio.wait_for(npm_service.get_latest_version(request.package), timeout=7.5)
+            elif eco == "pypi":
+                meta = await asyncio.wait_for(pypi_service.get_pypi_metadata(request.package), timeout=7.5)
                 version = meta.get("version", "latest")
-            except Exception:
+            else:
                 version = "latest"
+
+        cache_key = f"{request.package}-{eco}-{version}-depth{request.depth}"
+        if cache_key in _analyze_cache:
+            return _analyze_cache[cache_key]
+
+        # Step 1: Construct dependency graph via BFS
+        G = await asyncio.wait_for(
+            build_dependency_graph(
+                package=request.package,
+                ecosystem=eco,
+                version=version,
+                max_depth=request.depth
+            ),
+            timeout=7.5
+        )
+
+        if G.number_of_nodes() == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Package '{request.package}' not found or has no resolvable dependency tree."
+            )
+
+        node_ids = list(G.nodes)
+        packages_for_osv = [
+            {
+                "name": G.nodes[nid]["name"],
+                "version": G.nodes[nid]["version"],
+                "ecosystem": G.nodes[nid]["ecosystem"]
+            }
+            for nid in node_ids
+        ]
+        package_names = [G.nodes[nid]["name"] for nid in node_ids]
+
+        # Step 2: Fetch monthly downloads + vulnerabilities concurrently via asyncio.gather
+        # (Enforces <8s end-to-end performance requirement per docs/REQUIREMENTS.md)
+        if eco == "npm":
+            downloads_task = npm_service.get_downloads_batch(package_names)
         else:
-            version = "latest"
+            # PyPI does not expose official monthly point download endpoints
+            async def mock_pypi_downloads():
+                return {name: 0 for name in package_names}
+            downloads_task = mock_pypi_downloads()
 
-    cache_key = f"{request.package}-{eco}-{version}-depth{request.depth}"
-    if cache_key in _analyze_cache:
-        return _analyze_cache[cache_key]
+        vulns_task = osv_service.query_vulnerabilities_batch(packages_for_osv)
 
-    # Step 1: Construct dependency graph via BFS
-    G = await build_dependency_graph(
-        package=request.package,
-        ecosystem=eco,
-        version=version,
-        max_depth=request.depth
-    )
-
-    node_ids = list(G.nodes)
-    packages_for_osv = [
-        {
-            "name": G.nodes[nid]["name"],
-            "version": G.nodes[nid]["version"],
-            "ecosystem": G.nodes[nid]["ecosystem"]
-        }
-        for nid in node_ids
-    ]
-    package_names = [G.nodes[nid]["name"] for nid in node_ids]
-
-    # Step 2: Fetch monthly downloads + vulnerabilities concurrently via asyncio.gather
-    # (Enforces <8s end-to-end performance requirement per docs/REQUIREMENTS.md)
-    if eco == "npm":
-        downloads_task = npm_service.get_downloads_batch(package_names)
-    else:
-        # PyPI does not expose official monthly point download endpoints
-        async def mock_pypi_downloads():
-            return {name: 0 for name in package_names}
-        downloads_task = mock_pypi_downloads()
-
-    vulns_task = osv_service.query_vulnerabilities_batch(packages_for_osv)
-
-    downloads_map, vulns_map = await asyncio.gather(downloads_task, vulns_task)
+        downloads_map, vulns_map = await asyncio.wait_for(
+            asyncio.gather(downloads_task, vulns_task),
+            timeout=7.5
+        )
+    except PackageNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e) or f"Package '{request.package}' not found in {eco} registry."
+        )
+    except (ServiceTimeoutError, asyncio.TimeoutError):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="External service timeout (npm/pypi/deps.dev). Upstream registry did not respond within timeout."
+        )
 
     # Step 3: Serialize graph into exact AnalyzeResponse shape
     nodes_list = []
@@ -165,15 +187,18 @@ async def analyze_package(request: AnalyzeRequest):
         stats=stats_obj
     )
 
-    _analyze_cache[cache_key] = response
-    _graph_storage[cache_key] = {
+    storage_entry = {
         "graph": G,
         "downloads": downloads_map,
         "vulns": vulns_map,
         "package": request.package,
         "version": version,
-        "ecosystem": eco
+        "ecosystem": eco,
+        "depth": request.depth,
+        "graph_id": cache_key,
+        "analyze_response": response.model_dump()
     }
-    _graph_storage[f"{request.package}@{version}"] = _graph_storage[cache_key]
-    _graph_storage[request.package] = _graph_storage[cache_key]
+    _graph_storage[cache_key] = storage_entry
+    _graph_storage[f"{request.package}@{version}"] = storage_entry
+    _graph_storage[request.package] = storage_entry
     return response

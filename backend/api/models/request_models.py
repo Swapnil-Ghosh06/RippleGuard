@@ -4,10 +4,10 @@ from pydantic import BaseModel, Field
 
 
 class AnalyzeRequest(BaseModel):
-    package: str = Field(..., description="Package name to analyze", example="lodash")
+    package: str = Field(..., min_length=1, description="Package name to analyze", example="lodash")
     ecosystem: Literal["npm", "pypi"] = Field(default="npm", description="Package ecosystem")
     version: Optional[str] = Field(default="latest", description="Package version")
-    depth: int = Field(default=3, ge=1, le=4, description="Dependency graph traversal depth (1-4)")
+    depth: int = Field(default=3, ge=1, le=5, description="Dependency graph traversal depth (1-5)")
 
 
 class SimulateRequest(BaseModel):

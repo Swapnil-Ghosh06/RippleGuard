@@ -16,10 +16,17 @@ MOCK_DOWNLOADS = {
     "react": 95000000,
 }
 
+from api.services.exceptions import PackageNotFoundError, ServiceTimeoutError
+
 async def get_latest_version(package: str) -> str:
     """Mock fetching the latest published version string for an npm package."""
     await asyncio.sleep(0.01)
-    if package.lower() == "lodash":
+    pkg_clean = package.lower().strip()
+    if pkg_clean in ["not-found", "nonexistent-pkg", "invalid-package", "unknown-package"] or pkg_clean.startswith("nonexistent"):
+        raise PackageNotFoundError(f"Package '{package}' not found in npm registry")
+    if pkg_clean in ["timeout", "timeout-pkg", "service-timeout"]:
+        raise ServiceTimeoutError(f"Connection to registry.npmjs.org timed out for '{package}'")
+    if pkg_clean == "lodash":
         return "4.17.21"
     return "1.0.0"
 
