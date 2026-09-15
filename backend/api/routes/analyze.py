@@ -12,7 +12,7 @@ from api.models.response_models import (
     GraphStats,
     Vulnerability
 )
-from api.services.graph_service import build_dependency_graph
+from api.services.graph_service import build_dependency_graph, _graph_storage
 from api.services import npm_service, pypi_service, osv_service
 
 router = APIRouter(tags=["analyze"])
@@ -166,4 +166,14 @@ async def analyze_package(request: AnalyzeRequest):
     )
 
     _analyze_cache[cache_key] = response
+    _graph_storage[cache_key] = {
+        "graph": G,
+        "downloads": downloads_map,
+        "vulns": vulns_map,
+        "package": request.package,
+        "version": version,
+        "ecosystem": eco
+    }
+    _graph_storage[f"{request.package}@{version}"] = _graph_storage[cache_key]
+    _graph_storage[request.package] = _graph_storage[cache_key]
     return response

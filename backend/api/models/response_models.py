@@ -1,5 +1,5 @@
 # Draft models — Hari owns the canonical version per docs/TDD.md Section 7, sync before merge
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -57,7 +57,7 @@ class AnalyzeResponse(BaseModel):
     stats: GraphStats = Field(..., description="Graph statistics summary")
 
 
-# --- Simulate Response Models (TDD Section 2.2) ---
+# --- Simulate Response Models (TDD Section 2.2 + Creative Ideas 2 & 3) ---
 
 class PropagationStep(BaseModel):
     node: str = Field(..., description="Node reached during propagation", example="express@4.18.2")
@@ -69,6 +69,7 @@ class PropagationData(BaseModel):
     affected_nodes: List[str] = Field(default_factory=list, description="All downstream nodes affected by the compromise")
     propagation_paths: List[List[str]] = Field(default_factory=list, description="Detailed traversal paths from compromise to affected nodes")
     propagation_order: List[PropagationStep] = Field(default_factory=list, description="Ordered propagation steps for animation")
+    critical_chain: List[str] = Field(default_factory=list, description="Butterfly trace longest critical path (Idea 2)")
 
 
 class SeverityBreakdown(BaseModel):
@@ -94,7 +95,16 @@ class MitigationAction(BaseModel):
 
 class MitigationData(BaseModel):
     priority_actions: List[MitigationAction] = Field(default_factory=list, description="Ranked list of mitigation actions")
-    minimum_fix_set: List[str] = Field(default_factory=list, description="Minimal set of package upgrades to neutralize blast radius")
+    minimum_fix_set: List[str] = Field(default_factory=list, description="Minimal set of package upgrades to neutralize blast radius (Idea 10)")
+
+
+class ShadowDependency(BaseModel):
+    node: str = Field(..., description="Node ID of shadow dependency", example="kind-of@6.0.3")
+    package: str = Field(..., description="Package name", example="kind-of")
+    depth: int = Field(..., description="Depth in graph (>1)", example=2)
+    in_degree: int = Field(..., description="Number of dependents in the graph", example=4)
+    monthly_downloads: int = Field(..., description="Monthly downloads", example=45000000)
+    chokepoint_score: float = Field(..., description="Calculated chokepoint score", example=180.0)
 
 
 class SimulateResponse(BaseModel):
@@ -102,6 +112,8 @@ class SimulateResponse(BaseModel):
     propagation: PropagationData = Field(..., description="Propagation simulation results")
     blast_radius: BlastRadius = Field(..., description="Blast radius assessment")
     mitigation: MitigationData = Field(..., description="Recommended mitigation steps")
+    critical_chain: List[str] = Field(default_factory=list, description="Butterfly Trace (Idea 2) critical chain")
+    shadow_dependencies: List[ShadowDependency] = Field(default_factory=list, description="Shadow Dependency Revealer (Idea 3) top chokepoints")
 
 
 # --- Compare Response Models (TDD Section 2.3) ---

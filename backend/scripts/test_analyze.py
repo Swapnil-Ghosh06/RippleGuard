@@ -39,13 +39,13 @@ async def test_packages():
         max_depth = max((data.get("depth", 0) for _, data in G.nodes(data=True)), default=0)
 
         print(f"Package: {pkg} ({eco}@{ver}) | Requested Max Depth: {depth}")
-        print(f"  • Total Nodes:     {node_count}")
-        print(f"  • Total Edges:     {edge_count}")
-        print(f"  • Max Depth Found: {max_depth}")
-        print("  • Nodes in Graph:")
+        print(f"  - Total Nodes:     {node_count}")
+        print(f"  - Total Edges:     {edge_count}")
+        print(f"  - Max Depth Found: {max_depth}")
+        print("  - Nodes in Graph:")
         for nid, data in G.nodes(data=True):
             print(f"      - {nid} [depth={data.get('depth')}, root={data.get('is_root')}]")
-        print("  • Sample Edges:")
+        print("  - Sample Edges:")
         for u, v in list(G.edges)[:6]:
             print(f"      - {u} -> {v}")
         if edge_count > 6:
