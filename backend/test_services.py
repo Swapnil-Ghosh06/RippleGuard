@@ -20,6 +20,13 @@ import os
 import sys
 import time
 
+# Safely handle UTF-8 console output on Windows Windows-1252 terminals
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 # Ensure project root directory is in sys.path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
