@@ -90,9 +90,10 @@ All of these are **completely free, no API key, no rate-limit concern for demo s
 - Animation shows the blast spreading node by node in real time on the frontend
 
 ### F5 — Blast Radius Score
-- Calculated per injected node: `BlastScore = Σ(monthly_downloads of affected packages) * severity_weight`
+- Calculated per injected node: `BlastScore = Σ(monthly_downloads of affected packages) * severity_weight` (Formalized in TDD Section 3.2: `min(count/200, 1.0)*30 + min(log10(downloads)/9, 1.0)*60 + CVE_bonus`)
 - Displayed as a large number with a label: "**47M users potentially affected**"
 - Broken down: direct dependencies affected, transitive dependencies affected, estimated app count
+> **Note on Prototype Calibrations:** Earlier prototype documentation and draft mocks quoted uniform blast scores in the 65–75 range. Those were stub-only illustrative figures used during mock calibration before live network integration. Against live registries (npm, PyPI, deps.dev, OSV), blast scores dynamically reflect real graph topologies and real registry metrics (e.g. 0.0 for leaf packages with 0 dependents, 10.0 for zero-dependency packages with known CVEs like lodash, 60.3 for react, and 78.2 for high-connectivity frameworks like express).
 
 ### F6 — Mitigation Priority Engine
 - After compromise injection, backend ranks all vulnerable paths by fix priority
@@ -149,17 +150,17 @@ Given: Windows dev environment, Python + Node available, 5-person team, 2-day sp
 
 ```
 1. User lands on RippleGuard homepage
-2. Types "lodash" in the search box, selects "npm", clicks Analyze
+2. Types "express" (representing their application / web server) in the search box, selects "npm", clicks Analyze
 3. Loading state: "Mapping dependency graph... Fetching vulnerabilities..."
-4. Graph renders: lodash at center, ~40 nodes, color-coded by vuln severity
-5. User sees panel: "3 CVEs found. Blast radius if lodash@3.10.1 compromised: 8.2M downloads/month"
-6. User clicks lodash node → clicks "Inject Compromise"
-7. Animation: red pulse spreads from lodash outward to all dependents
-8. Blast Radius panel updates: "142 packages affected, 8.2M monthly downloads in blast zone"
-9. Mitigation panel shows: "Upgrade to lodash@4.17.21 — eliminates 94% of blast radius"
-10. User clicks "Compare" → injects second compromise on a different node
-11. Side-by-side blast comparison renders
-12. User clicks "Export Report" → gets shareable URL
+4. Graph renders: express at center, 56 nodes across 3 layers, color-coded by vulnerability severity
+5. User sees panel: "7 vulnerable packages detected across transitive dependencies"
+6. User clicks a critical dependency node (e.g. send or cookie) → clicks "Inject Compromise"
+7. Animation: red pulse spreads from the compromised dependency outward through every dependent package
+8. Blast Radius panel updates: shows Blast Radius Score (e.g. 71/100), affected package count, and total monthly downloads in the blast zone
+9. Mitigation panel shows prioritized remediation: "Upgrade <package> to <version> — eliminates X% of blast radius"
+10. User clicks "Compare" → injects a second compromise on a different dependency node (e.g. cookie vs mime)
+11. Side-by-side blast comparison renders with a clear summary: "Compromising X is Nx more dangerous than Y"
+12. User clicks "Export Report" → downloads complete JSON or copies shareable URL
 ```
 
 ---

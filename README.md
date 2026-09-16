@@ -37,7 +37,7 @@ All project documentation lives in [`docs/`](./docs). Start here, in this order:
 | **Zahid** ([@syedzahidsaleem](https://github.com/syedzahidsaleem)) | Backend | Lead — Graph Engine |
 | **Hari** ([@Haripriya24071](https://github.com/Haripriya24071)) | Backend | Data & Integrations |
 | **Swapnil** ([@Swapnil-Ghosh06](https://github.com/Swapnil-Ghosh06)) | Frontend | Lead — DevOps, Scaffolding & Motion Design |
-| **Shubham** | Frontend | Graph Visualization |
+| **Shubham** ([@subham-OPS08](https://github.com/subham-OPS08)) | Frontend | Graph Visualization |
 | **Nitya** ([@dearnitya](https://github.com/dearnitya)) | Frontend + PPT | Panels & UI Copy, PPT/Video Lead |
 
 Zahid is team lead; `main` is lead-owned. Everyone else works off their own branch (`zahid-backend`, `hari-backend`, `swapnil-frontend`, `shubham-frontend`, `nitya-frontend-ppt`) and opens PRs into `main`.

@@ -1,0 +1,3500 @@
+{
+  "happy_path": {
+    "packages": [
+      {
+        "package": "lodash",
+        "ecosystem": "npm",
+        "version": "4.17.21",
+        "analyze_status": 200,
+        "analyze_latency_s": 1.702,
+        "analyze_error": null,
+        "total_nodes": 1,
+        "total_edges": 0,
+        "vulnerable_nodes": 1,
+        "root_downloads": 640358451,
+        "simulate_status": 200,
+        "simulate_latency_s": 0.007,
+        "simulate_error": null,
+        "root_blast_score": 10.0,
+        "root_affected_pkgs": 0,
+        "root_affected_dls": 0,
+        "export_status": 200
+      },
+      {
+        "package": "express",
+        "ecosystem": "npm",
+        "version": "4.18.2",
+        "analyze_status": 200,
+        "analyze_latency_s": 1.748,
+        "analyze_error": null,
+        "total_nodes": 56,
+        "total_edges": 100,
+        "vulnerable_nodes": 7,
+        "root_downloads": 472770914,
+        "simulate_status": 200,
+        "simulate_latency_s": 0.027,
+        "simulate_error": null,
+        "root_blast_score": 78.2,
+        "root_affected_pkgs": 55,
+        "root_affected_dls": 35683334564,
+        "export_status": 200
+      },
+      {
+        "package": "requests",
+        "ecosystem": "pypi",
+        "version": "2.31.0",
+        "analyze_status": 200,
+        "analyze_latency_s": 1.472,
+        "analyze_error": null,
+        "total_nodes": 5,
+        "total_edges": 4,
+        "vulnerable_nodes": 1,
+        "root_downloads": 150000000,
+        "simulate_status": 200,
+        "simulate_latency_s": 0.004,
+        "simulate_error": null,
+        "root_blast_score": 69.5,
+        "root_affected_pkgs": 4,
+        "root_affected_dls": 680000000,
+        "export_status": 200
+      },
+      {
+        "package": "flask",
+        "ecosystem": "pypi",
+        "version": "3.0.0",
+        "analyze_status": 200,
+        "analyze_latency_s": 1.364,
+        "analyze_error": null,
+        "total_nodes": 7,
+        "total_edges": 7,
+        "vulnerable_nodes": 1,
+        "root_downloads": 80000000,
+        "simulate_status": 200,
+        "simulate_latency_s": 0.003,
+        "simulate_error": null,
+        "root_blast_score": 69.2,
+        "root_affected_pkgs": 6,
+        "root_affected_dls": 560000000,
+        "export_status": 200
+      },
+      {
+        "package": "react",
+        "ecosystem": "npm",
+        "version": "18.2.0",
+        "analyze_status": 200,
+        "analyze_latency_s": 1.178,
+        "analyze_error": null,
+        "total_nodes": 3,
+        "total_edges": 2,
+        "vulnerable_nodes": 0,
+        "root_downloads": 646981829,
+        "simulate_status": 200,
+        "simulate_latency_s": 0.003,
+        "simulate_error": null,
+        "root_blast_score": 60.3,
+        "root_affected_pkgs": 2,
+        "root_affected_dls": 1361165525,
+        "export_status": 200
+      }
+    ],
+    "compare_1": {
+      "node_a": {
+        "compromised_node": "express@4.18.2",
+        "propagation": {
+          "affected_nodes": [
+            "side-channel-list@1.0.1",
+            "debug@2.6.9",
+            "accepts@1.3.8",
+            "forwarded@0.2.0",
+            "cookie@0.5.0",
+            "parseurl@1.3.3",
+            "depd@2.0.0",
+            "raw-body@2.5.1",
+            "proxy-addr@2.0.8",
+            "content-disposition@0.5.4",
+            "unpipe@1.0.0",
+            "escape-html@1.0.3",
+            "cookie-signature@1.0.6",
+            "utils-merge@1.0.1",
+            "path-to-regexp@0.1.7",
+            "http-errors@2.0.0",
+            "object-inspect@1.13.4",
+            "methods@1.1.2",
+            "merge-descriptors@1.0.1",
+            "serve-static@1.15.0",
+            "encodeurl@1.0.2",
+            "safe-buffer@5.2.1",
+            "type-is@1.6.18",
+            "vary@1.1.2",
+            "side-channel@1.1.1",
+            "send@0.18.0",
+            "media-typer@0.3.0",
+            "toidentifier@1.0.1",
+            "inherits@2.0.4",
+            "safer-buffer@2.1.2",
+            "setprototypeof@1.2.0",
+            "finalhandler@1.2.0",
+            "ms@2.0.0",
+            "range-parser@1.2.1",
+            "bytes@3.1.2",
+            "ipaddr.js@1.9.1",
+            "side-channel-weakmap@1.0.2",
+            "fresh@0.5.2",
+            "content-type@1.0.5",
+            "es-errors@1.3.0",
+            "mime-db@1.52.0",
+            "body-parser@1.20.1",
+            "iconv-lite@0.4.24",
+            "on-finished@2.4.1",
+            "negotiator@0.6.3",
+            "destroy@1.2.0",
+            "mime@1.6.0",
+            "ms@2.1.3",
+            "statuses@2.0.1",
+            "mime-types@2.1.35",
+            "side-channel-map@1.0.1",
+            "etag@1.8.1",
+            "qs@6.11.0",
+            "ee-first@1.1.1",
+            "array-flatten@1.1.1"
+          ],
+          "propagation_paths": [
+            [
+              "express@4.18.2",
+              "proxy-addr@2.0.8",
+              "forwarded@0.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "cookie@0.5.0"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "parseurl@1.3.3"
+            ],
+            [
+              "express@4.18.2",
+              "parseurl@1.3.3"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "parseurl@1.3.3"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "http-errors@2.0.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "http-errors@2.0.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "http-errors@2.0.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "unpipe@1.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "unpipe@1.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "unpipe@1.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "escape-html@1.0.3"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "escape-html@1.0.3"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "escape-html@1.0.3"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "escape-html@1.0.3"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "escape-html@1.0.3"
+            ],
+            [
+              "express@4.18.2",
+              "cookie-signature@1.0.6"
+            ],
+            [
+              "express@4.18.2",
+              "utils-merge@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "path-to-regexp@0.1.7"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-list@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-map@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "side-channel-map@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-list@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-map@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "side-channel-map@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "methods@1.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "merge-descriptors@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "encodeurl@1.0.2"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "encodeurl@1.0.2"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "encodeurl@1.0.2"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "encodeurl@1.0.2"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "encodeurl@1.0.2"
+            ],
+            [
+              "express@4.18.2",
+              "content-disposition@0.5.4",
+              "safe-buffer@5.2.1"
+            ],
+            [
+              "express@4.18.2",
+              "safe-buffer@5.2.1"
+            ],
+            [
+              "express@4.18.2",
+              "vary@1.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "type-is@1.6.18",
+              "media-typer@0.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "type-is@1.6.18",
+              "media-typer@0.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "http-errors@2.0.0",
+              "toidentifier@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "http-errors@2.0.0",
+              "toidentifier@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "http-errors@2.0.0",
+              "toidentifier@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "toidentifier@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "toidentifier@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "http-errors@2.0.0",
+              "inherits@2.0.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "http-errors@2.0.0",
+              "inherits@2.0.4"
+            ],
+            [
+              "express@4.18.2",
+              "http-errors@2.0.0",
+              "inherits@2.0.4"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "inherits@2.0.4"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "inherits@2.0.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "iconv-lite@0.4.24",
+              "safer-buffer@2.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "iconv-lite@0.4.24",
+              "safer-buffer@2.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "http-errors@2.0.0",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "http-errors@2.0.0",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "http-errors@2.0.0",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "debug@2.6.9",
+              "ms@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "debug@2.6.9",
+              "ms@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "debug@2.6.9",
+              "ms@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "debug@2.6.9",
+              "ms@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "debug@2.6.9",
+              "ms@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "range-parser@1.2.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "range-parser@1.2.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "range-parser@1.2.1"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "bytes@3.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "bytes@3.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "proxy-addr@2.0.8",
+              "ipaddr.js@1.9.1"
+            ],
+            [
+              "express@4.18.2",
+              "fresh@0.5.2"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "fresh@0.5.2"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "fresh@0.5.2"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "content-type@1.0.5"
+            ],
+            [
+              "express@4.18.2",
+              "content-type@1.0.5"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-list@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-map@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "side-channel-map@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-list@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-map@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "side-channel-map@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "accepts@1.3.8",
+              "mime-types@2.1.35",
+              "mime-db@1.52.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "type-is@1.6.18",
+              "mime-types@2.1.35",
+              "mime-db@1.52.0"
+            ],
+            [
+              "express@4.18.2",
+              "type-is@1.6.18",
+              "mime-types@2.1.35",
+              "mime-db@1.52.0"
+            ],
+            [
+              "express@4.18.2",
+              "accepts@1.3.8",
+              "negotiator@0.6.3"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "destroy@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "destroy@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "destroy@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "mime@1.6.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "mime@1.6.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "ms@2.1.3"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "ms@2.1.3"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "http-errors@2.0.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "http-errors@2.0.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "http-errors@2.0.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "etag@1.8.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "etag@1.8.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "etag@1.8.1"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "on-finished@2.4.1",
+              "ee-first@1.1.1"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "on-finished@2.4.1",
+              "ee-first@1.1.1"
+            ],
+            [
+              "express@4.18.2",
+              "on-finished@2.4.1",
+              "ee-first@1.1.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "on-finished@2.4.1",
+              "ee-first@1.1.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "on-finished@2.4.1",
+              "ee-first@1.1.1"
+            ],
+            [
+              "express@4.18.2",
+              "array-flatten@1.1.1"
+            ]
+          ],
+          "propagation_order": [
+            {
+              "node": "accepts@1.3.8",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "array-flatten@1.1.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "body-parser@1.20.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "content-disposition@0.5.4",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "content-type@1.0.5",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "cookie@0.5.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "cookie-signature@1.0.6",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "debug@2.6.9",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "depd@2.0.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "encodeurl@1.0.2",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "escape-html@1.0.3",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "etag@1.8.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "finalhandler@1.2.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "fresh@0.5.2",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "http-errors@2.0.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "merge-descriptors@1.0.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "methods@1.1.2",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "on-finished@2.4.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "parseurl@1.3.3",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "path-to-regexp@0.1.7",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "proxy-addr@2.0.8",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "qs@6.11.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "range-parser@1.2.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "safe-buffer@5.2.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "send@0.18.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "serve-static@1.15.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "setprototypeof@1.2.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "statuses@2.0.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "type-is@1.6.18",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "utils-merge@1.0.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "vary@1.1.2",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "mime-types@2.1.35",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "negotiator@0.6.3",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "bytes@3.1.2",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "destroy@1.2.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "iconv-lite@0.4.24",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "raw-body@2.5.1",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "unpipe@1.0.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "ms@2.0.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "inherits@2.0.4",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "toidentifier@1.0.1",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "ee-first@1.1.1",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "forwarded@0.2.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "ipaddr.js@1.9.1",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "side-channel@1.1.1",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "mime@1.6.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "ms@2.1.3",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "media-typer@0.3.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "mime-db@1.52.0",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "safer-buffer@2.1.2",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "es-errors@1.3.0",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "object-inspect@1.13.4",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "side-channel-list@1.0.1",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "side-channel-map@1.0.1",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "side-channel-weakmap@1.0.2",
+              "step": 3,
+              "delay_ms": 450
+            }
+          ],
+          "critical_chain": [
+            "express@4.18.2",
+            "body-parser@1.20.1",
+            "qs@6.11.0",
+            "side-channel@1.1.1",
+            "side-channel-weakmap@1.0.2",
+            "side-channel-map@1.0.1",
+            "es-errors@1.3.0"
+          ]
+        },
+        "blast_radius": {
+          "affected_package_count": 55,
+          "total_monthly_downloads_affected": 35683334564,
+          "estimated_apps_affected": 1019523,
+          "blast_score": 78.2,
+          "severity_breakdown": {
+            "critical_path_nodes": 6,
+            "high_impact_nodes": 55,
+            "medium_impact_nodes": 0
+          }
+        },
+        "mitigation": {
+          "priority_actions": [
+            {
+              "action": "Upgrade express to 4.20.0",
+              "eliminates_blast_percent": 100.0,
+              "affected_packages_resolved": 55,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade body-parser to 1.20.3",
+              "eliminates_blast_percent": 57.5,
+              "affected_packages_resolved": 29,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade serve-static to 1.16.0",
+              "eliminates_blast_percent": 43.5,
+              "affected_packages_resolved": 21,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade send to 0.19.0",
+              "eliminates_blast_percent": 40.9,
+              "affected_packages_resolved": 19,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade finalhandler to patched",
+              "eliminates_blast_percent": 23.6,
+              "affected_packages_resolved": 10,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade raw-body to patched",
+              "eliminates_blast_percent": 18.1,
+              "affected_packages_resolved": 11,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade debug to patched",
+              "eliminates_blast_percent": 12.9,
+              "affected_packages_resolved": 2,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade qs to 6.16.0",
+              "eliminates_blast_percent": 11.5,
+              "affected_packages_resolved": 7,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade http-errors to patched",
+              "eliminates_blast_percent": 9.6,
+              "affected_packages_resolved": 6,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade side-channel to patched",
+              "eliminates_blast_percent": 9.5,
+              "affected_packages_resolved": 6,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade accepts to patched",
+              "eliminates_blast_percent": 9.0,
+              "affected_packages_resolved": 4,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade type-is to patched",
+              "eliminates_blast_percent": 8.3,
+              "affected_packages_resolved": 4,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade side-channel-weakmap to patched",
+              "eliminates_blast_percent": 6.3,
+              "affected_packages_resolved": 4,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade ms to patched",
+              "eliminates_blast_percent": 5.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade ms to patched",
+              "eliminates_blast_percent": 5.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade mime-types to patched",
+              "eliminates_blast_percent": 5.5,
+              "affected_packages_resolved": 2,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade side-channel-list to patched",
+              "eliminates_blast_percent": 5.0,
+              "affected_packages_resolved": 3,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade side-channel-map to patched",
+              "eliminates_blast_percent": 5.0,
+              "affected_packages_resolved": 3,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade content-disposition to patched",
+              "eliminates_blast_percent": 4.7,
+              "affected_packages_resolved": 2,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade iconv-lite to patched",
+              "eliminates_blast_percent": 4.6,
+              "affected_packages_resolved": 2,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade proxy-addr to patched",
+              "eliminates_blast_percent": 3.5,
+              "affected_packages_resolved": 3,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade safe-buffer to patched",
+              "eliminates_blast_percent": 3.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade mime-db to patched",
+              "eliminates_blast_percent": 2.9,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade on-finished to patched",
+              "eliminates_blast_percent": 2.5,
+              "affected_packages_resolved": 2,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade path-to-regexp to 0.1.13",
+              "eliminates_blast_percent": 2.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade cookie to 0.7.0",
+              "eliminates_blast_percent": 2.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade inherits to patched",
+              "eliminates_blast_percent": 2.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade content-type to patched",
+              "eliminates_blast_percent": 2.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade negotiator to patched",
+              "eliminates_blast_percent": 2.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade es-errors to patched",
+              "eliminates_blast_percent": 1.8,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade statuses to patched",
+              "eliminates_blast_percent": 1.8,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade object-inspect to patched",
+              "eliminates_blast_percent": 1.7,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade encodeurl to patched",
+              "eliminates_blast_percent": 1.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade safer-buffer to patched",
+              "eliminates_blast_percent": 1.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade mime to patched",
+              "eliminates_blast_percent": 1.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade depd to patched",
+              "eliminates_blast_percent": 1.5,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade cookie-signature to patched",
+              "eliminates_blast_percent": 1.4,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade media-typer to patched",
+              "eliminates_blast_percent": 1.4,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade bytes to patched",
+              "eliminates_blast_percent": 1.4,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade ipaddr.js to patched",
+              "eliminates_blast_percent": 1.4,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade fresh to patched",
+              "eliminates_blast_percent": 1.4,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade merge-descriptors to patched",
+              "eliminates_blast_percent": 1.3,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade setprototypeof to patched",
+              "eliminates_blast_percent": 1.3,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade vary to patched",
+              "eliminates_blast_percent": 1.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade toidentifier to patched",
+              "eliminates_blast_percent": 1.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade range-parser to patched",
+              "eliminates_blast_percent": 1.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade etag to patched",
+              "eliminates_blast_percent": 1.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade forwarded to patched",
+              "eliminates_blast_percent": 1.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade parseurl to patched",
+              "eliminates_blast_percent": 1.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade unpipe to patched",
+              "eliminates_blast_percent": 1.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade escape-html to patched",
+              "eliminates_blast_percent": 1.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade ee-first to patched",
+              "eliminates_blast_percent": 1.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade utils-merge to patched",
+              "eliminates_blast_percent": 0.7,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade destroy to patched",
+              "eliminates_blast_percent": 0.7,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade methods to patched",
+              "eliminates_blast_percent": 0.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade array-flatten to patched",
+              "eliminates_blast_percent": 0.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            }
+          ],
+          "minimum_fix_set": [
+            "express@4.18.2"
+          ]
+        },
+        "critical_chain": [
+          "express@4.18.2",
+          "body-parser@1.20.1",
+          "qs@6.11.0",
+          "side-channel@1.1.1",
+          "side-channel-weakmap@1.0.2",
+          "side-channel-map@1.0.1",
+          "es-errors@1.3.0"
+        ],
+        "shadow_dependencies": [
+          {
+            "node": "side-channel@1.1.1",
+            "package": "side-channel",
+            "depth": 2,
+            "in_degree": 5,
+            "monthly_downloads": 634748851,
+            "chokepoint_score": 3173.74
+          },
+          {
+            "node": "raw-body@2.5.1",
+            "package": "raw-body",
+            "depth": 2,
+            "in_degree": 4,
+            "monthly_downloads": 540792845,
+            "chokepoint_score": 2163.17
+          },
+          {
+            "node": "side-channel-weakmap@1.0.2",
+            "package": "side-channel-weakmap",
+            "depth": 3,
+            "in_degree": 3,
+            "monthly_downloads": 491596306,
+            "chokepoint_score": 1474.79
+          }
+        ]
+      },
+      "node_b": {
+        "compromised_node": "cookie@0.5.0",
+        "propagation": {
+          "affected_nodes": [],
+          "propagation_paths": [],
+          "propagation_order": [],
+          "critical_chain": [
+            "cookie@0.5.0"
+          ]
+        },
+        "blast_radius": {
+          "affected_package_count": 0,
+          "total_monthly_downloads_affected": 0,
+          "estimated_apps_affected": 0,
+          "blast_score": 10.0,
+          "severity_breakdown": {
+            "critical_path_nodes": 0,
+            "high_impact_nodes": 0,
+            "medium_impact_nodes": 0
+          }
+        },
+        "mitigation": {
+          "priority_actions": [
+            {
+              "action": "Upgrade cookie to 0.7.0",
+              "eliminates_blast_percent": 100.0,
+              "affected_packages_resolved": 0,
+              "fixed_version": null,
+              "effort": "LOW"
+            }
+          ],
+          "minimum_fix_set": [
+            "cookie@0.5.0"
+          ]
+        },
+        "critical_chain": [
+          "cookie@0.5.0"
+        ],
+        "shadow_dependencies": [
+          {
+            "node": "side-channel@1.1.1",
+            "package": "side-channel",
+            "depth": 2,
+            "in_degree": 5,
+            "monthly_downloads": 634748851,
+            "chokepoint_score": 3173.74
+          },
+          {
+            "node": "raw-body@2.5.1",
+            "package": "raw-body",
+            "depth": 2,
+            "in_degree": 4,
+            "monthly_downloads": 540792845,
+            "chokepoint_score": 2163.17
+          },
+          {
+            "node": "side-channel-weakmap@1.0.2",
+            "package": "side-channel-weakmap",
+            "depth": 3,
+            "in_degree": 3,
+            "monthly_downloads": 491596306,
+            "chokepoint_score": 1474.79
+          }
+        ]
+      },
+      "winner": "node_a",
+      "summary": "Compromising express is 7.8x more dangerous than compromising cookie"
+    },
+    "compare_2": {
+      "node_a": {
+        "compromised_node": "lodash@4.17.21",
+        "propagation": {
+          "affected_nodes": [],
+          "propagation_paths": [],
+          "propagation_order": [],
+          "critical_chain": [
+            "lodash@4.17.21"
+          ]
+        },
+        "blast_radius": {
+          "affected_package_count": 0,
+          "total_monthly_downloads_affected": 0,
+          "estimated_apps_affected": 0,
+          "blast_score": 0.0,
+          "severity_breakdown": {
+            "critical_path_nodes": 0,
+            "high_impact_nodes": 0,
+            "medium_impact_nodes": 0
+          }
+        },
+        "mitigation": {
+          "priority_actions": [
+            {
+              "action": "Upgrade lodash to patched",
+              "eliminates_blast_percent": 0.0,
+              "affected_packages_resolved": 0,
+              "fixed_version": null,
+              "effort": "LOW"
+            }
+          ],
+          "minimum_fix_set": [
+            "lodash@4.17.21"
+          ]
+        },
+        "critical_chain": [
+          "lodash@4.17.21"
+        ],
+        "shadow_dependencies": [
+          {
+            "node": "side-channel@1.1.1",
+            "package": "side-channel",
+            "depth": 2,
+            "in_degree": 5,
+            "monthly_downloads": 634748851,
+            "chokepoint_score": 3173.74
+          },
+          {
+            "node": "raw-body@2.5.1",
+            "package": "raw-body",
+            "depth": 2,
+            "in_degree": 4,
+            "monthly_downloads": 540792845,
+            "chokepoint_score": 2163.17
+          },
+          {
+            "node": "side-channel-weakmap@1.0.2",
+            "package": "side-channel-weakmap",
+            "depth": 3,
+            "in_degree": 3,
+            "monthly_downloads": 491596306,
+            "chokepoint_score": 1474.79
+          }
+        ]
+      },
+      "node_b": {
+        "compromised_node": "express@4.18.2",
+        "propagation": {
+          "affected_nodes": [
+            "side-channel-list@1.0.1",
+            "debug@2.6.9",
+            "accepts@1.3.8",
+            "forwarded@0.2.0",
+            "cookie@0.5.0",
+            "parseurl@1.3.3",
+            "depd@2.0.0",
+            "raw-body@2.5.1",
+            "proxy-addr@2.0.8",
+            "content-disposition@0.5.4",
+            "unpipe@1.0.0",
+            "escape-html@1.0.3",
+            "cookie-signature@1.0.6",
+            "utils-merge@1.0.1",
+            "path-to-regexp@0.1.7",
+            "http-errors@2.0.0",
+            "object-inspect@1.13.4",
+            "methods@1.1.2",
+            "merge-descriptors@1.0.1",
+            "serve-static@1.15.0",
+            "encodeurl@1.0.2",
+            "safe-buffer@5.2.1",
+            "type-is@1.6.18",
+            "vary@1.1.2",
+            "side-channel@1.1.1",
+            "send@0.18.0",
+            "media-typer@0.3.0",
+            "toidentifier@1.0.1",
+            "inherits@2.0.4",
+            "safer-buffer@2.1.2",
+            "setprototypeof@1.2.0",
+            "finalhandler@1.2.0",
+            "ms@2.0.0",
+            "range-parser@1.2.1",
+            "bytes@3.1.2",
+            "ipaddr.js@1.9.1",
+            "side-channel-weakmap@1.0.2",
+            "fresh@0.5.2",
+            "content-type@1.0.5",
+            "es-errors@1.3.0",
+            "mime-db@1.52.0",
+            "body-parser@1.20.1",
+            "iconv-lite@0.4.24",
+            "on-finished@2.4.1",
+            "negotiator@0.6.3",
+            "destroy@1.2.0",
+            "mime@1.6.0",
+            "ms@2.1.3",
+            "statuses@2.0.1",
+            "mime-types@2.1.35",
+            "side-channel-map@1.0.1",
+            "etag@1.8.1",
+            "qs@6.11.0",
+            "ee-first@1.1.1",
+            "array-flatten@1.1.1"
+          ],
+          "propagation_paths": [
+            [
+              "express@4.18.2",
+              "proxy-addr@2.0.8",
+              "forwarded@0.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "cookie@0.5.0"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "parseurl@1.3.3"
+            ],
+            [
+              "express@4.18.2",
+              "parseurl@1.3.3"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "parseurl@1.3.3"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "http-errors@2.0.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "http-errors@2.0.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "http-errors@2.0.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "depd@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "unpipe@1.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "unpipe@1.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "unpipe@1.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "escape-html@1.0.3"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "escape-html@1.0.3"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "escape-html@1.0.3"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "escape-html@1.0.3"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "escape-html@1.0.3"
+            ],
+            [
+              "express@4.18.2",
+              "cookie-signature@1.0.6"
+            ],
+            [
+              "express@4.18.2",
+              "utils-merge@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "path-to-regexp@0.1.7"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-list@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-map@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "side-channel-map@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-list@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-map@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "side-channel-map@1.0.1",
+              "object-inspect@1.13.4"
+            ],
+            [
+              "express@4.18.2",
+              "methods@1.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "merge-descriptors@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "encodeurl@1.0.2"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "encodeurl@1.0.2"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "encodeurl@1.0.2"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "encodeurl@1.0.2"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "encodeurl@1.0.2"
+            ],
+            [
+              "express@4.18.2",
+              "content-disposition@0.5.4",
+              "safe-buffer@5.2.1"
+            ],
+            [
+              "express@4.18.2",
+              "safe-buffer@5.2.1"
+            ],
+            [
+              "express@4.18.2",
+              "vary@1.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "type-is@1.6.18",
+              "media-typer@0.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "type-is@1.6.18",
+              "media-typer@0.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "http-errors@2.0.0",
+              "toidentifier@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "http-errors@2.0.0",
+              "toidentifier@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "http-errors@2.0.0",
+              "toidentifier@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "toidentifier@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "toidentifier@1.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "http-errors@2.0.0",
+              "inherits@2.0.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "http-errors@2.0.0",
+              "inherits@2.0.4"
+            ],
+            [
+              "express@4.18.2",
+              "http-errors@2.0.0",
+              "inherits@2.0.4"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "inherits@2.0.4"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "inherits@2.0.4"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "iconv-lite@0.4.24",
+              "safer-buffer@2.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "iconv-lite@0.4.24",
+              "safer-buffer@2.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "http-errors@2.0.0",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "http-errors@2.0.0",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "http-errors@2.0.0",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "setprototypeof@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "debug@2.6.9",
+              "ms@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "debug@2.6.9",
+              "ms@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "debug@2.6.9",
+              "ms@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "debug@2.6.9",
+              "ms@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "debug@2.6.9",
+              "ms@2.0.0"
+            ],
+            [
+              "express@4.18.2",
+              "range-parser@1.2.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "range-parser@1.2.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "range-parser@1.2.1"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "bytes@3.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "bytes@3.1.2"
+            ],
+            [
+              "express@4.18.2",
+              "proxy-addr@2.0.8",
+              "ipaddr.js@1.9.1"
+            ],
+            [
+              "express@4.18.2",
+              "fresh@0.5.2"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "fresh@0.5.2"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "fresh@0.5.2"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "content-type@1.0.5"
+            ],
+            [
+              "express@4.18.2",
+              "content-type@1.0.5"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-list@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-map@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "side-channel-map@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-list@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-map@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "qs@6.11.0",
+              "side-channel@1.1.1",
+              "side-channel-weakmap@1.0.2",
+              "side-channel-map@1.0.1",
+              "es-errors@1.3.0"
+            ],
+            [
+              "express@4.18.2",
+              "accepts@1.3.8",
+              "mime-types@2.1.35",
+              "mime-db@1.52.0"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "type-is@1.6.18",
+              "mime-types@2.1.35",
+              "mime-db@1.52.0"
+            ],
+            [
+              "express@4.18.2",
+              "type-is@1.6.18",
+              "mime-types@2.1.35",
+              "mime-db@1.52.0"
+            ],
+            [
+              "express@4.18.2",
+              "accepts@1.3.8",
+              "negotiator@0.6.3"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "destroy@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "destroy@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "destroy@1.2.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "mime@1.6.0"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "mime@1.6.0"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "ms@2.1.3"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "ms@2.1.3"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "http-errors@2.0.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "raw-body@2.5.1",
+              "http-errors@2.0.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "http-errors@2.0.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "http-errors@2.0.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "statuses@2.0.1"
+            ],
+            [
+              "express@4.18.2",
+              "etag@1.8.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "etag@1.8.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "etag@1.8.1"
+            ],
+            [
+              "express@4.18.2",
+              "body-parser@1.20.1",
+              "on-finished@2.4.1",
+              "ee-first@1.1.1"
+            ],
+            [
+              "express@4.18.2",
+              "finalhandler@1.2.0",
+              "on-finished@2.4.1",
+              "ee-first@1.1.1"
+            ],
+            [
+              "express@4.18.2",
+              "on-finished@2.4.1",
+              "ee-first@1.1.1"
+            ],
+            [
+              "express@4.18.2",
+              "send@0.18.0",
+              "on-finished@2.4.1",
+              "ee-first@1.1.1"
+            ],
+            [
+              "express@4.18.2",
+              "serve-static@1.15.0",
+              "send@0.18.0",
+              "on-finished@2.4.1",
+              "ee-first@1.1.1"
+            ],
+            [
+              "express@4.18.2",
+              "array-flatten@1.1.1"
+            ]
+          ],
+          "propagation_order": [
+            {
+              "node": "accepts@1.3.8",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "array-flatten@1.1.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "body-parser@1.20.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "content-disposition@0.5.4",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "content-type@1.0.5",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "cookie@0.5.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "cookie-signature@1.0.6",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "debug@2.6.9",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "depd@2.0.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "encodeurl@1.0.2",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "escape-html@1.0.3",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "etag@1.8.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "finalhandler@1.2.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "fresh@0.5.2",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "http-errors@2.0.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "merge-descriptors@1.0.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "methods@1.1.2",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "on-finished@2.4.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "parseurl@1.3.3",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "path-to-regexp@0.1.7",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "proxy-addr@2.0.8",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "qs@6.11.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "range-parser@1.2.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "safe-buffer@5.2.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "send@0.18.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "serve-static@1.15.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "setprototypeof@1.2.0",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "statuses@2.0.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "type-is@1.6.18",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "utils-merge@1.0.1",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "vary@1.1.2",
+              "step": 1,
+              "delay_ms": 150
+            },
+            {
+              "node": "mime-types@2.1.35",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "negotiator@0.6.3",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "bytes@3.1.2",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "destroy@1.2.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "iconv-lite@0.4.24",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "raw-body@2.5.1",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "unpipe@1.0.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "ms@2.0.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "inherits@2.0.4",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "toidentifier@1.0.1",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "ee-first@1.1.1",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "forwarded@0.2.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "ipaddr.js@1.9.1",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "side-channel@1.1.1",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "mime@1.6.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "ms@2.1.3",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "media-typer@0.3.0",
+              "step": 2,
+              "delay_ms": 300
+            },
+            {
+              "node": "mime-db@1.52.0",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "safer-buffer@2.1.2",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "es-errors@1.3.0",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "object-inspect@1.13.4",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "side-channel-list@1.0.1",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "side-channel-map@1.0.1",
+              "step": 3,
+              "delay_ms": 450
+            },
+            {
+              "node": "side-channel-weakmap@1.0.2",
+              "step": 3,
+              "delay_ms": 450
+            }
+          ],
+          "critical_chain": [
+            "express@4.18.2",
+            "body-parser@1.20.1",
+            "qs@6.11.0",
+            "side-channel@1.1.1",
+            "side-channel-weakmap@1.0.2",
+            "side-channel-map@1.0.1",
+            "es-errors@1.3.0"
+          ]
+        },
+        "blast_radius": {
+          "affected_package_count": 55,
+          "total_monthly_downloads_affected": 35683334564,
+          "estimated_apps_affected": 1019523,
+          "blast_score": 78.2,
+          "severity_breakdown": {
+            "critical_path_nodes": 6,
+            "high_impact_nodes": 55,
+            "medium_impact_nodes": 0
+          }
+        },
+        "mitigation": {
+          "priority_actions": [
+            {
+              "action": "Upgrade express to 4.20.0",
+              "eliminates_blast_percent": 100.0,
+              "affected_packages_resolved": 55,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade body-parser to 1.20.3",
+              "eliminates_blast_percent": 57.5,
+              "affected_packages_resolved": 29,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade serve-static to 1.16.0",
+              "eliminates_blast_percent": 43.5,
+              "affected_packages_resolved": 21,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade send to 0.19.0",
+              "eliminates_blast_percent": 40.9,
+              "affected_packages_resolved": 19,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade finalhandler to patched",
+              "eliminates_blast_percent": 23.6,
+              "affected_packages_resolved": 10,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade raw-body to patched",
+              "eliminates_blast_percent": 18.1,
+              "affected_packages_resolved": 11,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade debug to patched",
+              "eliminates_blast_percent": 12.9,
+              "affected_packages_resolved": 2,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade qs to 6.16.0",
+              "eliminates_blast_percent": 11.5,
+              "affected_packages_resolved": 7,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade http-errors to patched",
+              "eliminates_blast_percent": 9.6,
+              "affected_packages_resolved": 6,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade side-channel to patched",
+              "eliminates_blast_percent": 9.5,
+              "affected_packages_resolved": 6,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade accepts to patched",
+              "eliminates_blast_percent": 9.0,
+              "affected_packages_resolved": 4,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade type-is to patched",
+              "eliminates_blast_percent": 8.3,
+              "affected_packages_resolved": 4,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade side-channel-weakmap to patched",
+              "eliminates_blast_percent": 6.3,
+              "affected_packages_resolved": 4,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade ms to patched",
+              "eliminates_blast_percent": 5.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade ms to patched",
+              "eliminates_blast_percent": 5.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade mime-types to patched",
+              "eliminates_blast_percent": 5.5,
+              "affected_packages_resolved": 2,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade side-channel-list to patched",
+              "eliminates_blast_percent": 5.0,
+              "affected_packages_resolved": 3,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade side-channel-map to patched",
+              "eliminates_blast_percent": 5.0,
+              "affected_packages_resolved": 3,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade content-disposition to patched",
+              "eliminates_blast_percent": 4.7,
+              "affected_packages_resolved": 2,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade iconv-lite to patched",
+              "eliminates_blast_percent": 4.6,
+              "affected_packages_resolved": 2,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade proxy-addr to patched",
+              "eliminates_blast_percent": 3.5,
+              "affected_packages_resolved": 3,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade safe-buffer to patched",
+              "eliminates_blast_percent": 3.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade mime-db to patched",
+              "eliminates_blast_percent": 2.9,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade on-finished to patched",
+              "eliminates_blast_percent": 2.5,
+              "affected_packages_resolved": 2,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade path-to-regexp to 0.1.13",
+              "eliminates_blast_percent": 2.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade cookie to 0.7.0",
+              "eliminates_blast_percent": 2.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade inherits to patched",
+              "eliminates_blast_percent": 2.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade content-type to patched",
+              "eliminates_blast_percent": 2.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade negotiator to patched",
+              "eliminates_blast_percent": 2.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade es-errors to patched",
+              "eliminates_blast_percent": 1.8,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade statuses to patched",
+              "eliminates_blast_percent": 1.8,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade object-inspect to patched",
+              "eliminates_blast_percent": 1.7,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade encodeurl to patched",
+              "eliminates_blast_percent": 1.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade safer-buffer to patched",
+              "eliminates_blast_percent": 1.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "HIGH"
+            },
+            {
+              "action": "Upgrade mime to patched",
+              "eliminates_blast_percent": 1.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade depd to patched",
+              "eliminates_blast_percent": 1.5,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade cookie-signature to patched",
+              "eliminates_blast_percent": 1.4,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade media-typer to patched",
+              "eliminates_blast_percent": 1.4,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade bytes to patched",
+              "eliminates_blast_percent": 1.4,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade ipaddr.js to patched",
+              "eliminates_blast_percent": 1.4,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade fresh to patched",
+              "eliminates_blast_percent": 1.4,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade merge-descriptors to patched",
+              "eliminates_blast_percent": 1.3,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade setprototypeof to patched",
+              "eliminates_blast_percent": 1.3,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade vary to patched",
+              "eliminates_blast_percent": 1.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade toidentifier to patched",
+              "eliminates_blast_percent": 1.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade range-parser to patched",
+              "eliminates_blast_percent": 1.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade etag to patched",
+              "eliminates_blast_percent": 1.2,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade forwarded to patched",
+              "eliminates_blast_percent": 1.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade parseurl to patched",
+              "eliminates_blast_percent": 1.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade unpipe to patched",
+              "eliminates_blast_percent": 1.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade escape-html to patched",
+              "eliminates_blast_percent": 1.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade ee-first to patched",
+              "eliminates_blast_percent": 1.1,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade utils-merge to patched",
+              "eliminates_blast_percent": 0.7,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade destroy to patched",
+              "eliminates_blast_percent": 0.7,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "MEDIUM"
+            },
+            {
+              "action": "Upgrade methods to patched",
+              "eliminates_blast_percent": 0.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            },
+            {
+              "action": "Upgrade array-flatten to patched",
+              "eliminates_blast_percent": 0.6,
+              "affected_packages_resolved": 1,
+              "fixed_version": null,
+              "effort": "LOW"
+            }
+          ],
+          "minimum_fix_set": [
+            "express@4.18.2"
+          ]
+        },
+        "critical_chain": [
+          "express@4.18.2",
+          "body-parser@1.20.1",
+          "qs@6.11.0",
+          "side-channel@1.1.1",
+          "side-channel-weakmap@1.0.2",
+          "side-channel-map@1.0.1",
+          "es-errors@1.3.0"
+        ],
+        "shadow_dependencies": [
+          {
+            "node": "side-channel@1.1.1",
+            "package": "side-channel",
+            "depth": 2,
+            "in_degree": 5,
+            "monthly_downloads": 634748851,
+            "chokepoint_score": 3173.74
+          },
+          {
+            "node": "raw-body@2.5.1",
+            "package": "raw-body",
+            "depth": 2,
+            "in_degree": 4,
+            "monthly_downloads": 540792845,
+            "chokepoint_score": 2163.17
+          },
+          {
+            "node": "side-channel-weakmap@1.0.2",
+            "package": "side-channel-weakmap",
+            "depth": 3,
+            "in_degree": 3,
+            "monthly_downloads": 491596306,
+            "chokepoint_score": 1474.79
+          }
+        ]
+      },
+      "winner": "node_b",
+      "summary": "Compromising express is 782.0x more dangerous than compromising lodash"
+    }
+  },
+  "famous_attacks": [
+    {
+      "id": "log4shell-2021",
+      "name": "Log4Shell",
+      "package": "log4js",
+      "ecosystem": "npm",
+      "version": "6.4.0",
+      "claimed_cve": "CVE-2021-44228",
+      "analyze_status": 200,
+      "analyze_duration_s": 1.526,
+      "analyze_error": null,
+      "node_count": 11,
+      "vuln_count": 0,
+      "osv_ids_found": [],
+      "claimed_cve_matches_osv": false,
+      "raw_osv_vulns_sample": []
+    },
+    {
+      "id": "event-stream-2018",
+      "name": "Event-Stream Attack",
+      "package": "event-stream",
+      "ecosystem": "npm",
+      "version": "3.3.6",
+      "claimed_cve": "GHSA-mh6f-8j2x-4483",
+      "analyze_status": 404,
+      "analyze_duration_s": 1.942,
+      "analyze_error": {
+        "detail": "Package 'event-stream' not found or has no resolvable dependency tree."
+      },
+      "node_count": 0,
+      "vuln_count": 0,
+      "osv_ids_found": [
+        "GHSA-mh6f-8j2x-4483"
+      ],
+      "claimed_cve_matches_osv": true,
+      "raw_osv_vulns_sample": [
+        {
+          "id": "GHSA-mh6f-8j2x-4483",
+          "modified": "2021-09-15T20:08:26Z"
+        }
+      ]
+    },
+    {
+      "id": "xz-utils-2024",
+      "name": "XZ Utils Backdoor",
+      "package": "xz",
+      "ecosystem": "pypi",
+      "version": "5.6.0",
+      "claimed_cve": "CVE-2024-3094",
+      "analyze_status": 404,
+      "analyze_duration_s": 0.399,
+      "analyze_error": {
+        "detail": "Package 'xz' not found or has no resolvable dependency tree."
+      },
+      "node_count": 0,
+      "vuln_count": 0,
+      "osv_ids_found": [],
+      "claimed_cve_matches_osv": false,
+      "raw_osv_vulns_sample": []
+    },
+    {
+      "id": "colors-sabotage-2022",
+      "name": "Colors.js Sabotage",
+      "package": "colors",
+      "ecosystem": "npm",
+      "version": "1.4.1",
+      "claimed_cve": "GHSA-5rqg-jm4f-cqx7",
+      "analyze_status": 404,
+      "analyze_duration_s": 0.389,
+      "analyze_error": {
+        "detail": "Package 'colors' not found or has no resolvable dependency tree."
+      },
+      "node_count": 0,
+      "vuln_count": 0,
+      "osv_ids_found": [
+        "GHSA-5rqg-jm4f-cqx7",
+        "GHSA-gh88-3pxp-6fm8"
+      ],
+      "claimed_cve_matches_osv": true,
+      "raw_osv_vulns_sample": [
+        {
+          "id": "GHSA-5rqg-jm4f-cqx7",
+          "modified": "2022-01-10T19:56:36Z"
+        },
+        {
+          "id": "GHSA-gh88-3pxp-6fm8",
+          "modified": "2026-03-13T21:56:25.303006Z"
+        }
+      ]
+    }
+  ],
+  "edge_cases": {
+    "nonexistent_pkg": {
+      "status": 404,
+      "body": {
+        "detail": "Package 'this-package-definitely-does-not-exist-xyz123' not found or has no resolvable dependency tree."
+      }
+    },
+    "nonexistent_version": {
+      "status": 404,
+      "body": {
+        "detail": "Package 'lodash' not found or has no resolvable dependency tree."
+      }
+    },
+    "wrong_ecosystem": {
+      "status": 200,
+      "body": {
+        "root": {
+          "name": "lodash",
+          "version": "0.0.1",
+          "ecosystem": "pypi",
+          "monthly_downloads": 1000000
+        },
+        "graph": {
+          "nodes": [
+            {
+              "id": "lodash@0.0.1",
+              "name": "lodash",
+              "version": "0.0.1",
+              "ecosystem": "pypi",
+              "monthly_downloads": 1000000,
+              "depth": 0,
+              "vulnerabilities": [],
+              "risk_score": 0.0,
+              "is_root": true
+            }
+          ],
+          "edges": []
+        },
+        "stats": {
+          "total_nodes": 1,
+          "total_edges": 0,
+          "vulnerable_nodes": 0,
+          "max_depth": 0,
+          "total_monthly_downloads": 0
+        }
+      }
+    },
+    "depth_tests": {
+      "0": {
+        "status": 422,
+        "duration_s": 0.002,
+        "snippet": "{'detail': [{'type': 'greater_than_equal', 'loc': ['body', 'depth'], 'msg': 'Input should be greater than or equal to 1', 'input': 0, 'ctx': {'ge': 1}"
+      },
+      "1": {
+        "status": 200,
+        "duration_s": 1.48,
+        "snippet": "{'root': {'name': 'lodash', 'version': '4.17.21', 'ecosystem': 'npm', 'monthly_downloads': 640358451}, 'graph': {'nodes': [{'id': 'lodash@4.17.21', 'n"
+      },
+      "5": {
+        "status": 200,
+        "duration_s": 1.404,
+        "snippet": "{'root': {'name': 'lodash', 'version': '4.17.21', 'ecosystem': 'npm', 'monthly_downloads': 640358451}, 'graph': {'nodes': [{'id': 'lodash@4.17.21', 'n"
+      },
+      "100": {
+        "status": 422,
+        "duration_s": 0.002,
+        "snippet": "{'detail': [{'type': 'less_than_equal', 'loc': ['body', 'depth'], 'msg': 'Input should be less than or equal to 5', 'input': 100, 'ctx': {'le': 5}}]}"
+      }
+    },
+    "large_tree": {
+      "status": 200,
+      "duration_s": 2.173,
+      "nodes": 73,
+      "edges": 105,
+      "under_150_cap": true,
+      "under_8s": true
+    },
+    "leaf_package": {
+      "lowest_nodes": [
+        {
+          "node": "array-flatten@1.1.1",
+          "blast_score": 0.0,
+          "affected_count": 0
+        },
+        {
+          "node": "content-type@1.0.5",
+          "blast_score": 0.0,
+          "affected_count": 0
+        },
+        {
+          "node": "cookie-signature@1.0.6",
+          "blast_score": 0.0,
+          "affected_count": 0
+        }
+      ],
+      "highest_nodes": [
+        {
+          "node": "send@0.18.0",
+          "blast_score": 70.7,
+          "affected_count": 18
+        },
+        {
+          "node": "serve-static@1.15.0",
+          "blast_score": 71.0,
+          "affected_count": 20
+        },
+        {
+          "node": "express@4.18.2",
+          "blast_score": 75.6,
+          "affected_count": 48
+        }
+      ]
+    },
+    "validation": {
+      "missing_required": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "package"
+              ],
+              "msg": "Field required",
+              "input": {
+                "depth": 3
+              }
+            }
+          ]
+        }
+      },
+      "wrong_type": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "int_parsing",
+              "loc": [
+                "body",
+                "depth"
+              ],
+              "msg": "Input should be a valid integer, unable to parse string as an integer",
+              "input": "not-an-int"
+            }
+          ]
+        }
+      },
+      "bad_json": {
+        "status": 422,
+        "body": {
+          "detail": [
+            {
+              "type": "json_invalid",
+              "loc": [
+                "body",
+                1
+              ],
+              "msg": "JSON decode error",
+              "input": {},
+              "ctx": {
+                "error": "Expecting property name enclosed in double quotes"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "concurrent_calls": {
+      "req1_status": 200,
+      "req2_status": 200,
+      "duration_s": 2.62,
+      "identical_nodes": true
+    },
+    "simulate_nonexistent_node": {
+      "status": 200,
+      "body_snippet": "{'compromised_node': 'ghost-package@0.0.1', 'propagation': {'affected_nodes': [], 'propagation_paths': [], 'propagation_order': [], 'critical_chain': ['ghost-package@0.0.1']}, 'blast_radius': {'affected_package_count': 0, 'total_monthly_downloads_aff",
+      "blast_score": 0.0
+    },
+    "compare_identical_nodes": {
+      "status": 200,
+      "winner": "tie",
+      "summary": "Compromising express and express have equivalent blast radius scores (78.2)"
+    },
+    "export_unanalyzed": {
+      "status": 404,
+      "body": {
+        "detail": "Graph 'this-graph-was-never-analyzed-xyz' not found. Please run /analyze first."
+      }
+    }
+  },
+  "external_api_failure": {
+    "status": 404,
+    "body": {
+      "detail": "Package 'some-flaky-package' not found or has no resolvable dependency tree."
+    },
+    "fires_503": false
+  }
+}

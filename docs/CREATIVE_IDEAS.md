@@ -42,22 +42,22 @@ This is not a better version of Snyk. This is a fundamentally different category
 - Color-coded: Red (>75), Orange (50–75), Yellow (25–50), Green (<25)
 - Supplemented by human-readable label: *"Equivalent to a compromise affecting the population of Germany"*
 
-**For the PPT slide:** Show side-by-side: lodash (Score: 94) vs. a niche utility package (Score: 12). Judges immediately understand why this number matters.
+**For the PPT slide:** Show side-by-side within an application graph (e.g. `express`): high-impact dependency `send` (Score: 73, affects 18 downstream packages) vs. isolated leaf `cookie` (Score: 10). Judges immediately understand why this number matters.
 
 ---
 
 ## IDEA 2 — The Butterfly Trace (★★★★★ — Implement This)
 **What it is:** After compromise injection, show the single most dangerous propagation path highlighted in the graph — the "butterfly" — the smallest change that causes the biggest damage.
 
-**Why it's brilliant:** The hackathon theme is literally "The Butterfly Effect." We make that theme *the core UI metaphor*. When you inject a compromise, a glowing path lights up showing the critical chain. It is instantly photogenic and demo-worthy.
+**Why it's brilliant:** The hackathon theme is literally "The Butterfly Effect." We make that theme *the core UI metaphor*. When you inject a compromise into a dependency, a glowing path lights up showing the critical chain cascading upward through the ecosystem. It is instantly photogenic and demo-worthy.
 
 **How it works:**
-- After BFS propagation, find the longest path from compromised node to any leaf
+- After BFS propagation, find the longest path from compromised node to any leaf in the propagation tree
 - Highlight this path with a pulsing gold/amber animation
-- Label it: "**Critical Chain: lodash → express → next.js → your-app** (affects 8.2M users)"
+- Label it: "**Critical Chain: send → debug → ms**"
 - This becomes the hero visual of your video
 
-**For the video demo script:** "Watch as a single compromise in lodash creates a butterfly effect, cascading through 4 layers of the open source ecosystem to reach 8.2 million end users..."
+**For the video demo script:** "Watch as a compromise in send creates a butterfly effect, cascading through multiple layers of transitive dependencies like debug and ms..."
 
 ---
 
@@ -86,9 +86,9 @@ This is not a better version of Snyk. This is a fundamentally different category
 const FAMOUS_ATTACKS = [
   {
     name: "Log4Shell (2021)",
-    package: "log4j-core",
-    ecosystem: "maven",
-    version: "2.14.1",
+    package: "log4js",
+    ecosystem: "npm",
+    version: "6.4.0",
     cve: "CVE-2021-44228",
     impact: "3 billion devices at risk",
     description: "A single logging library compromised the internet."
