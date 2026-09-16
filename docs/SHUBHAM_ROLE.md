@@ -1,6 +1,8 @@
-# Shubham — Role Brief
+# Shubham Das — Role Brief
 ### RippleGuard | Manipal Hackathon 2026
-**Squad:** Frontend (with Swapnil + Nitya) | **Title:** Frontend — Graph Visualization
+**Squad:** Frontend (with Swapnil + Nitya) | **Title:** Frontend — Graph Visualization  
+**GitHub:** [@subham-OPS08](https://github.com/subham-OPS08) | **LinkedIn:** [subham247](https://www.linkedin.com/in/subham247)  
+**USN:** `25BTRCB051` | **Email:** `sdasofficial247@gmail.com` | **College Email:** `juug25btech13497@jainuniversity.ac.in`
 
 ---
 
