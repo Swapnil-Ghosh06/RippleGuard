@@ -1,149 +1,117 @@
-// Custom React Flow node — package card with severity ring + CVE badge
-// Shubham can extend this — add tooltips, click handlers, etc.
+import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 
-const SEVERITY = {
-  CRITICAL: { border: '#C0392B', glow: 'rgba(192,57,43,0.4)',  label: 'CRIT'   },
-  HIGH:     { border: '#C49A3C', glow: 'rgba(196,154,60,0.35)', label: 'HIGH'   },
-  MEDIUM:   { border: '#AD9D87', glow: 'rgba(173,157,135,0.3)', label: 'MED'    },
-  LOW:      { border: '#6B8F71', glow: 'rgba(107,143,113,0.3)', label: 'LOW'    },
-};
-
-function formatDL(n) {
+function formatDownloads(n) {
   if (!n) return null;
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(0) + 'M/mo';
-  if (n >= 1_000)     return (n / 1_000).toFixed(0) + 'K/mo';
-  return n + '/mo';
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M dl/mo';
+  if (n >= 1_000)     return (n / 1_000).toFixed(0) + 'K dl/mo';
+  return n + ' dl/mo';
 }
 
-export default function PackageNode({ data }) {
-  const { name, version, is_root, vulnerabilities = [], monthly_downloads, blasted, selected } = data;
+const PackageNode = memo(({ data }) => {
+  const {
+    name,
+    version,
+    is_root,
+    depth = 0,
+    ecosystem = 'npm',
+    vulnerabilities = [],
+    monthly_downloads,
+    blasted,
+    selected,
+  } = data;
 
-  const topSev = ['CRITICAL','HIGH','MEDIUM','LOW'].find(s =>
+  const topSev = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].find(s =>
     vulnerabilities.some(v => v.severity === s)
   );
-  const sev = topSev ? SEVERITY[topSev] : null;
 
-  const borderColor  = selected  ? '#F0EBE3'
-                     : blasted   ? '#C0392B'
-                     : sev       ? sev.border
-                     : '#3a3530';
+  const mainCVE = vulnerabilities[0];
 
-  const boxShadow    = blasted   ? '0 0 12px rgba(192,57,43,0.5)'
-                     : sev       ? `0 0 8px ${sev.glow}`
-                     : 'none';
+  // Subtle top border accent
+  let rimColor = 'border-t-slate-500';
+  let badgeClass = 'text-zinc-400 bg-zinc-800/60 border-zinc-700/60';
+  let roleLabel = depth === 0 ? 'ROOT' : depth === 1 ? 'DIRECT' : `DEPTH ${depth}`;
 
-  const bgColor      = blasted   ? 'rgba(192,57,43,0.18)'
-                     : is_root   ? '#2a2720'
-                     : '#201e1b';
+  if (is_root || topSev === 'CRITICAL') {
+    rimColor = 'border-t-red-500';
+    badgeClass = 'text-red-400 bg-red-500/10 border-red-500/30';
+  } else if (topSev === 'HIGH' || topSev === 'MEDIUM') {
+    rimColor = 'border-t-amber-400';
+    badgeClass = 'text-amber-400 bg-amber-400/10 border-amber-400/30';
+  } else if (vulnerabilities.length === 0) {
+    rimColor = 'border-t-emerald-400';
+    badgeClass = 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30';
+  }
 
   return (
     <div
-      style={{
-        background: bgColor,
-        border: `1px solid ${borderColor}`,
-        boxShadow,
-        borderRadius: 4,
-        padding: '8px 12px',
-        minWidth: 100,
-        maxWidth: 140,
-        cursor: 'pointer',
-        transition: 'all 0.25s ease',
-        position: 'relative',
-      }}
+      className={`relative rounded-xl p-3 min-w-[200px] max-w-[230px] transition-all duration-200 cursor-pointer select-none border-t-2 ${rimColor} ${
+        blasted
+          ? 'bg-red-950/20 border-x border-b border-red-500/80 shadow-[0_0_16px_rgba(239,68,68,0.25)]'
+          : selected
+          ? 'bg-surface2 border-x border-b border-accent shadow-[0_0_16px_rgba(56,189,248,0.2)]'
+          : 'bg-[#141418] border-x border-b border-border hover:border-borderGlow shadow-lg'
+      }`}
     >
-      {/* Root badge */}
-      {is_root && (
-        <div style={{
-          position: 'absolute', top: -8, left: 8,
-          background: '#AD9D87', color: '#191615',
-          fontFamily: 'JetBrains Mono, monospace',
-          fontSize: 9, fontWeight: 600,
-          padding: '1px 5px', borderRadius: 2,
-        }}>
-          ROOT
-        </div>
-      )}
-
-      {/* Package name */}
-      <p style={{
-        fontFamily: 'JetBrains Mono, monospace',
-        fontSize: 11, fontWeight: 500,
-        color: blasted ? '#f08080' : '#F0EBE3',
-        lineHeight: 1.3,
-        marginBottom: 2,
-        wordBreak: 'break-all',
-      }}>
-        {name}
-      </p>
-
-      {/* Version */}
-      <p style={{
-        fontFamily: 'JetBrains Mono, monospace',
-        fontSize: 10, color: '#6C6B5A',
-        lineHeight: 1.2, marginBottom: sev ? 4 : 0,
-      }}>
-        {version}
-      </p>
-
-      {/* Severity badge */}
-      {sev && (
-        <span style={{
-          fontFamily: 'JetBrains Mono, monospace',
-          fontSize: 9, fontWeight: 600,
-          color: sev.border,
-          display: 'block',
-        }}>
-          {sev.label} ·{' '}
-          <span style={{ color: '#6C6B5A', fontWeight: 400 }}>CVE</span>
-        </span>
-      )}
-
-      {/* Download count */}
-      {monthly_downloads > 0 && (
-        <p style={{
-          fontFamily: 'JetBrains Mono, monospace',
-          fontSize: 9, color: '#484638',
-          marginTop: 3,
-        }}>
-          {formatDL(monthly_downloads)}
-        </p>
-      )}
-
-      {/* Blasted indicator */}
-      {blasted && (
-        <p style={{
-          fontFamily: 'JetBrains Mono, monospace',
-          fontSize: 9, color: '#C0392B',
-          marginTop: 3, fontWeight: 600,
-        }}>
-          ⚡ compromised
-        </p>
-      )}
-
-      {/* React Flow connection handles */}
+      {/* Left target handle */}
       <Handle
         type="target"
         position={Position.Left}
-        style={{
-          background: '#6C6B5A',
-          width: 7,
-          height: 7,
-          border: '1px solid #191615',
-          borderRadius: '50%',
-        }}
+        className="!w-2 !h-2 !bg-borderGlow !border !border-surface !-left-1"
       />
+
+      {/* Header Row */}
+      <div className="flex items-center justify-between gap-1.5 mb-1.5">
+        <span className={`font-mono text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded border ${badgeClass}`}>
+          {roleLabel}
+        </span>
+
+        {blasted ? (
+          <span className="font-mono text-[9px] font-bold text-red-400 uppercase tracking-wider">
+            ⚡ TAINTED
+          </span>
+        ) : topSev ? (
+          <span className="font-mono text-[9px] font-medium text-muted">
+            {topSev}
+          </span>
+        ) : null}
+      </div>
+
+      {/* Package Name */}
+      <div className="mb-1">
+        <h4 className="font-mono text-xs font-bold text-text truncate">
+          {name}
+          <span className="text-muted font-normal text-[11px] ml-1">@{version}</span>
+        </h4>
+      </div>
+
+      {/* Description / Summary */}
+      <p className="text-[11px] text-muted line-clamp-2 leading-relaxed font-sans mb-2">
+        {mainCVE?.summary
+          ? mainCVE.summary
+          : depth === 0
+          ? 'Root target package'
+          : `Dependency via direct linkage`}
+      </p>
+
+      {/* Bottom Metadata */}
+      <div className="flex items-center justify-between pt-1.5 border-t border-border/60 font-mono text-[9px] text-muted">
+        <span>{ecosystem}</span>
+        {monthly_downloads && (
+          <span>{formatDownloads(monthly_downloads)}</span>
+        )}
+      </div>
+
+      {/* Right source handle */}
       <Handle
         type="source"
         position={Position.Right}
-        style={{
-          background: '#6C6B5A',
-          width: 7,
-          height: 7,
-          border: '1px solid #191615',
-          borderRadius: '50%',
-        }}
+        className="!w-2 !h-2 !bg-borderGlow !border !border-surface !-right-1"
       />
     </div>
   );
-}
+});
+
+PackageNode.displayName = 'PackageNode';
+
+export default PackageNode;

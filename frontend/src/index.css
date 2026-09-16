@@ -2,28 +2,29 @@
 
 @theme inline {
   /* ── Fonts ─────────────────────────────────────────── */
-  --font-family-sans: 'DM Sans', system-ui, sans-serif;
-  --font-family-mono: 'JetBrains Mono', monospace;
+  --font-family-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
   --font-family-head: 'Montserrat', sans-serif;
   --font-family-sora: 'Sora', sans-serif;
 
-  /* ── Earth Palette ──────────────────────────────────── */
-  --color-void:        #191615;
-  --color-surface:     #201e1b;
-  --color-surface2:    #2a2720;
-  --color-border:      #3a3530;
-  --color-muted:       #6C6B5A;
-  --color-dim:         #AD9D87;
-  --color-text:        #F0EBE3;
-  --color-accent:      #AD9D87;
-  --color-accentHover: #C4B49A;
-  --color-danger:      #C0392B;
-  --color-safe:        #6B8F71;
-  --color-warn:        #C49A3C;
-  --color-gold:        #D4A843;
+  /* ── Obsidian Dark Palette (Inspo 1, 3, 4) ──────────── */
+  --color-void:         #0A0A0C;
+  --color-surface:      #121215;
+  --color-surface2:     #18181D;
+  --color-surface3:     #22222A;
+  --color-border:       #262630;
+  --color-border-glow:  #3E3E4E;
+  --color-muted:        #71717A;
+  --color-dim:          #A1A1AA;
+  --color-text:         #F4F4F6;
+  --color-accent:       #38BDF8;
+  --color-accentHover:  #7DD3FC;
+  --color-danger:       #EF4444;
+  --color-safe:         #10B981;
+  --color-warn:         #F59E0B;
 }
 
-/* ── Reset ───────────────────────────────────────────── */
+/* ── Reset & Global ──────────────────────────────────── */
 @layer base {
   *, *::before, *::after {
     box-sizing: border-box;
@@ -33,61 +34,56 @@
 
   html, body, #root {
     height: 100%;
-    background-color: #191615;
-    color: #F0EBE3;
+    background-color: #0A0A0C;
+    color: #F4F4F6;
   }
 
   body {
     font-family: 'DM Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 
-  /* Scrollbar */
+  /* Sleek Scrollbar */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #3a3530 #191615;
+    scrollbar-color: #262630 #0A0A0C;
   }
 
-  ::-webkit-scrollbar        { width: 4px; }
-  ::-webkit-scrollbar-track  { background: #191615; }
-  ::-webkit-scrollbar-thumb  { background: #3a3530; border-radius: 2px; }
+  ::-webkit-scrollbar        { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track  { background: #0A0A0C; }
+  ::-webkit-scrollbar-thumb  { background: #262630; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #383846; }
 }
 
-/* ── Custom utilities ────────────────────────────────── */
+/* ── Refined Utilities ───────────────────────────────── */
 @layer utilities {
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
+  /* Clean glassmorphism utility */
+  .glass-card {
+    background: rgba(18, 18, 21, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .cursor-blink {
-    display: inline-block;
-    width: 2px;
-    height: 1em;
-    background: #AD9D87;
-    margin-left: 2px;
-    vertical-align: middle;
-    animation: blink 1s step-end infinite;
+  /* Inspo 3: Delicate Glowing top rim gradient */
+  .glow-rim-critical {
+    border-top: 2px solid #EF4444;
+    box-shadow: 0 -2px 12px rgba(239, 68, 68, 0.25);
   }
 
-  @keyframes scanline {
-    0%   { transform: translateY(-100%); }
-    100% { transform: translateY(100vh); }
+  .glow-rim-warn {
+    border-top: 2px solid #F59E0B;
+    box-shadow: 0 -2px 12px rgba(245, 158, 11, 0.2);
   }
 
-  .scanline {
-    position: absolute;
-    left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(
-      to right,
-      transparent                    0%,
-      rgba(173, 157, 135, 0.08)    30%,
-      rgba(173, 157, 135, 0.15)    50%,
-      rgba(173, 157, 135, 0.08)    70%,
-      transparent                  100%
-    );
-    animation: scanline 4s linear infinite;
-    pointer-events: none;
+  .glow-rim-safe {
+    border-top: 2px solid #10B981;
+    box-shadow: 0 -2px 12px rgba(16, 185, 129, 0.2);
+  }
+
+  .glow-rim-neutral {
+    border-top: 2px solid #64748B;
+    box-shadow: 0 -2px 8px rgba(100, 116, 139, 0.15);
   }
 }
