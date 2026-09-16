@@ -12,6 +12,7 @@ import { useGraphStore } from '../store/graphStore';
 import PackageNode from './PackageNode';
 
 const NODE_TYPES = { package: PackageNode };
+const EDGE_TYPES = {};
 
 // Layout: Clean horizontal depth tiers with comfortable vertical spacing
 function buildLayout(nodes, edges) {
@@ -49,9 +50,6 @@ export default function GraphCanvas() {
 
   const [blastSet, setBlastSet] = useState(new Set());
   const [localSelected, setLocalSelected] = useState(null);
-  const [logs, setLogs] = useState([]);
-  const [logExpanded, setLogExpanded] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const rawNodes = graphData?.nodes ?? graphData?.graph?.nodes ?? [];
   const rawEdges = graphData?.edges ?? graphData?.graph?.edges ?? [];
@@ -103,8 +101,6 @@ export default function GraphCanvas() {
   useEffect(() => {
     setBlastSet(new Set());
     setLocalSelected(null);
-    setLogs([]);
-    setLogExpanded(false);
   }, [graphData]);
 
   // Mock blast scenario data
@@ -156,42 +152,20 @@ export default function GraphCanvas() {
     if (!localSelected || isSimulating) return;
     setIsSimulating(true);
     setSelectedNode(localSelected);
-    setLogExpanded(true);
-
-    setLogs([
-      { time: '00:00.000', type: 'SYS', msg: `Initiating breach simulation on ${localSelected}...` }
-    ]);
 
     setTimeout(() => {
       setBlastData(MOCK_BLAST);
       const timers = [];
 
-      MOCK_BLAST.propagation_order.forEach(({ node, delay_ms, event, msg }) => {
+      MOCK_BLAST.propagation_order.forEach(({ node, delay_ms }) => {
         const t = setTimeout(() => {
           setBlastSet(prev => new Set([...prev, node]));
-          setLogs(prev => [
-            ...prev,
-            {
-              time: `00:0${(delay_ms / 1000).toFixed(3)}`,
-              type: event,
-              target: node,
-              msg,
-            }
-          ]);
         }, delay_ms);
         timers.push(t);
       });
 
       const finalTimer = setTimeout(() => {
         setIsSimulating(false);
-        setLogs(prev => [
-          ...prev,
-          {
-            time: '00:01.050',
-            type: 'COMPLETE',
-            msg: `Cascade complete: 9/10 packages compromised. Threat Score: 91/100 (CRITICAL).`,
-          }
-        ]);
       }, 1100);
       timers.push(finalTimer);
 
@@ -205,13 +179,6 @@ export default function GraphCanvas() {
       return next;
     });
   }, [setSelectedNode]);
-
-  const handleCopyLogs = () => {
-    const text = logs.map(l => `[${l.time}] [${l.type}] ${l.target ? l.target + ' - ' : ''}${l.msg}`).join('\n');
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   if (!rawNodes.length) {
     return (
@@ -257,6 +224,7 @@ export default function GraphCanvas() {
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
           nodeTypes={NODE_TYPES}
+          edgeTypes={EDGE_TYPES}
           fitView
           fitViewOptions={{ padding: 0.25 }}
           minZoom={0.25}
@@ -297,60 +265,16 @@ export default function GraphCanvas() {
         </div>
 
         <div className="flex items-center gap-3">
-          {logs.length > 0 && (
-            <button
-              onClick={() => setLogExpanded(prev => !prev)}
-              className="font-mono text-xs text-dim hover:text-text border border-border bg-surface2 px-3 py-1.5 rounded-md transition-colors"
-            >
-              {logExpanded ? 'Hide Trace Log' : `View Trace Log (${logs.length})`}
-            </button>
-          )}
-
           <button
             onClick={handleInject}
             disabled={!localSelected || isSimulating}
-            className="px-5 py-2 rounded-md bg-red-600 hover:bg-red-500 disabled:opacity-30 disabled:cursor-not-allowed text-white font-mono text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 disabled:opacity-30 disabled:cursor-not-allowed text-white font-sans text-xs font-semibold tracking-wide transition-all shadow-md flex items-center gap-2 cursor-pointer"
           >
             <span>⚡</span>
             <span>{isSimulating ? 'Simulating Cascade…' : 'Inject Compromise'}</span>
           </button>
         </div>
       </div>
-
-      {/* Collapsible Threat Propagation Trace (Inspo 2) */}
-      {logExpanded && (
-        <div className="border-t border-border bg-void px-5 py-3 shrink-0 z-20 flex flex-col gap-2 max-h-40 overflow-y-auto font-mono text-xs">
-          <div className="flex items-center justify-between text-muted text-[11px] pb-1 border-b border-border/60">
-            <span>PROPAGATION TELEMETRY TRACE</span>
-            <button
-              onClick={handleCopyLogs}
-              className="text-dim hover:text-text"
-            >
-              {copied ? '✓ Copied' : 'Copy Log'}
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-1 select-text">
-            {logs.map((log, idx) => (
-              <div key={idx} className="flex items-start gap-2.5 leading-relaxed">
-                <span className="text-muted shrink-0 text-[11px]">{log.time}</span>
-                <span className={`px-1.5 rounded text-[10px] font-bold uppercase shrink-0 ${
-                  log.type === 'COMPLETE' ? 'bg-emerald-500/20 text-emerald-400' :
-                  log.type === 'INJECT' ? 'bg-red-500/20 text-red-400' :
-                  'bg-amber-500/20 text-amber-400'
-                }`}>
-                  {log.type}
-                </span>
-                <span className="text-dim">
-                  {log.target && <strong className="text-text mr-1">{log.target}</strong>}
-                  {log.msg}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
