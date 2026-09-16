@@ -1,6 +1,7 @@
 # Swapnil — Role Brief (v2)
 ### RippleGuard | Manipal Hackathon 2026
 **Squad:** Frontend (with Shubham + Nitya) | **Title:** Frontend Lead — DevOps, Scaffolding & Motion Design
+**Typography:** DM Sans (primary) · Montserrat (secondary) · Sora (tertiary) | **Palette:** Eerie Black / Khaki / Ebony / Black Olive
 
 ---
 
@@ -53,30 +54,32 @@ npm install gsap @gsap/react framer-motion
 npx tailwindcss init
 ```
 
-**Dark theme token system** (set these in `tailwind.config.js` and CSS variables — every component uses these, never raw hex):
+**Color token system** (earthy palette — Eerie Black / Khaki / Ebony / Black Olive). Set in `tailwind.config.js` and CSS variables. Every component uses these tokens, **never raw hex**:
 
 ```javascript
 // tailwind.config.js
 theme: {
   extend: {
     colors: {
-      void:    '#050a14',   // deepest background
-      surface: '#0d1829',   // panels, cards
-      border:  '#1a2d4a',   // subtle borders
-      muted:   '#334155',   // inactive elements
-      text:    '#e2e8f0',   // primary text
-      dim:     '#94a3b8',   // secondary text
-      accent:  '#38bdf8',   // cyan — primary interactive
-      danger:  '#ef4444',   // blast / compromise red
-      safe:    '#22c55e',   // safe / fixed green
-      warn:    '#f97316',   // warning orange
-      gold:    '#fbbf24',   // butterfly trace / critical path
+      void:        '#191615',   // Eerie Black — deepest background
+      surface:     '#201e1b',   // panels, cards
+      surface2:    '#2a2720',   // elevated cards, modals
+      border:      '#484638',   // Black Olive — subtle borders
+      muted:       '#6C6B5A',   // Ebony — inactive elements
+      text:        '#F0EBE3',   // warm off-white — primary text
+      dim:         '#AD9D87',   // Khaki — secondary text
+      accent:      '#AD9D87',   // Khaki — primary interactive
+      accentHover: '#C4B49A',   // hover state of accent
+      danger:      '#C0392B',   // blast / compromise red
+      safe:        '#6B8F71',   // earthy green — fixed / clean
+      warn:        '#C49A3C',   // warm amber — HIGH severity
+      gold:        '#D4A843',   // butterfly trace / critical path ONLY
     }
   }
 }
 ```
 
-This palette is intentional: deep navy void + cyan accent reads as "infrastructure security" — not generic dark SaaS. The gold is reserved *only* for the butterfly trace so it means something when it appears.
+This palette is intentional: Eerie Black base + Khaki accent reads as *precision and seriousness* — unlike any other security tool. The `gold` (`#D4A843`) is reserved *exclusively* for the Butterfly Trace so it carries weight when it appears. Full rationale in **DESIGN.md**.
 
 ---
 
@@ -186,13 +189,13 @@ export function useAnalyze() {
 This is the first thing a judge sees. It needs to hit hard. Don't make it a plain form.
 
 **Design spec:**
-- Full-viewport centered layout on `void` background
-- Large wordmark: **RippleGuard** in a monospace or tech-forward typeface (`JetBrains Mono` or `Space Grotesk` via Google Fonts)
-- Tagline beneath: *"See the compromise before it becomes a catastrophe."* — dim color, lighter weight
-- Single input: package name — styled as a borderless command-line input with a `>` prefix character (cyan), cursor blinking via CSS
-- Ecosystem toggle: `npm` / `PyPI` — pill tabs, not a dropdown
-- Analyze button: full-width, `accent` background, with a subtle right-arrow icon
-- Below the input: three "Replay a Real Attack" chips — `Log4Shell`, `Event-Stream`, `XZ Utils` — clicking one fills the input and auto-submits
+- Full-viewport centered layout on `void` (`#191615`) background
+- Large wordmark: **RippleGuard** — `Montserrat` weight 800, `letter-spacing: 0.02em`, color `text` (`#F0EBE3`)
+- Tagline beneath: *"See the compromise before it becomes a catastrophe."* — `Sora` weight 300, `dim` color (`#AD9D87`), lighter feel
+- Single input: package name — `DM Sans` 400; borderless CLI-style input with a `>` prefix character in `accent` (Khaki `#AD9D87`), cursor blinking via CSS animation
+- Ecosystem toggle: `npm` / `PyPI` — pill tabs, not a dropdown; `Montserrat` 600 for pill labels
+- Analyze button: full-width, `accent` (`#AD9D87`) background with `void` text; `DM Sans` 600; hover shifts to `accentHover`
+- Below the input: three "Replay a Real Attack" chips — `Log4Shell`, `Event-Stream`, `XZ Utils` — `DM Sans` 500, `border` bg — clicking one fills the input and auto-submits
 
 **GSAP page-load entrance** (do this once, on mount):
 ```javascript

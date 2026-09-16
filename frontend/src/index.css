@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@import "tailwindcss";
+
+@theme inline {
+  --font-family-sans: 'Montserrat', sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
+
+  --color-void:           #191615;
+  --color-surface:        #242220;
+  --color-surface-raised: #2d2a27;
+  --color-border:         #383430;
+  --color-muted:          #484638;
+  --color-dim:            #6C6B5A;
+  --color-text:           #e8e0d5;
+  --color-accent:         #AD9D87;
+  --color-danger:         #c0614a;
+  --color-safe:           #6b8f6b;
+  --color-gold:           #c4a96b;
+}
+
+@layer base {
+  html, body, #root {
+    min-height: 100vh;
+    background-color: #191615;
+    color: #e8e0d5;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  ::selection {
+    background-color: #AD9D87;
+    color: #191615;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #191615;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #383430;
+  }
+}
+
+@layer utilities {
+  .cursor-blink {
+    border-right: 1.5px solid #AD9D87;
+    animation: blink 0.7s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { border-color: #AD9D87; }
+    50%       { border-color: transparent; }
+  }
+}
