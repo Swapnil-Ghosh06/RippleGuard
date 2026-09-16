@@ -1,5 +1,6 @@
 // Custom React Flow node — package card with severity ring + CVE badge
 // Shubham can extend this — add tooltips, click handlers, etc.
+import { Handle, Position } from 'reactflow';
 
 const SEVERITY = {
   CRITICAL: { border: '#C0392B', glow: 'rgba(192,57,43,0.4)',  label: 'CRIT'   },
@@ -119,6 +120,30 @@ export default function PackageNode({ data }) {
           ⚡ compromised
         </p>
       )}
+
+      {/* React Flow connection handles */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{
+          background: '#6C6B5A',
+          width: 7,
+          height: 7,
+          border: '1px solid #191615',
+          borderRadius: '50%',
+        }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{
+          background: '#6C6B5A',
+          width: 7,
+          height: 7,
+          border: '1px solid #191615',
+          borderRadius: '50%',
+        }}
+      />
     </div>
   );
 }
