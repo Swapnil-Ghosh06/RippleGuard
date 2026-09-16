@@ -198,9 +198,10 @@ def rank_mitigations(
     comp_pkg = compromised_node.split("@")[0]
     comp_dl = download_data.get(compromised_node, 0) or download_data.get(comp_pkg, 0)
 
+    unique_affected_pkgs = {n.split("@")[0] for n in all_affected}
     total_blast_downloads = sum(
-        download_data.get(n, 0) or download_data.get(n.split("@")[0], 0)
-        for n in all_affected
+        download_data.get(pkg, 0) or max([download_data.get(n, 0) for n in all_affected if n.split("@")[0] == pkg], default=0)
+        for pkg in unique_affected_pkgs
     ) + comp_dl
 
     candidates = [compromised_node] + list(all_affected)
@@ -227,9 +228,10 @@ def rank_mitigations(
             saved_subtree = {node}
 
         saved_affected = (saved_subtree & all_affected) | ({node} if node in all_affected else set())
+        unique_saved_pkgs = {n.split("@")[0] for n in saved_affected}
         eliminated_downloads = sum(
-            download_data.get(n, 0) or download_data.get(n.split("@")[0], 0)
-            for n in saved_affected
+            download_data.get(pkg, 0) or max([download_data.get(n, 0) for n in saved_affected if n.split("@")[0] == pkg], default=0)
+            for pkg in unique_saved_pkgs
         )
         if node == compromised_node:
             eliminated_downloads += comp_dl
@@ -305,9 +307,11 @@ def simulate_compromise(
                 queue.append((neighbor, step + 1))
 
     # Calculate blast metrics per docs/TDD.md Section 3.2
+    # Deduplicate downloads by unique package name to prevent double-counting multiple versions/paths
+    unique_affected_pkgs = {node.split("@")[0] for node in affected}
     total_downloads = sum(
-        download_data.get(node, 0) or download_data.get(node.split("@")[0], 0)
-        for node in affected
+        download_data.get(pkg, 0) or max([download_data.get(n, 0) for n in affected if n.split("@")[0] == pkg], default=0)
+        for pkg in unique_affected_pkgs
     )
     comp_pkg = compromised_node.split("@")[0]
     comp_vulns = (vuln_data or {}).get(compromised_node, []) or (vuln_data or {}).get(comp_pkg, [])

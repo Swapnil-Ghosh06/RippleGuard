@@ -120,7 +120,7 @@ List these 5 features with one-line descriptions:
 - Log4Shell remediation: **$10 billion** globally
 - npm has **3.5 million packages** — most are never individually security-reviewed
 - **96% of commercial codebases** contain open-source components (Synopsys 2024)
-- One compromised lodash (82M downloads/month) = Blast Score 94/100 = population of Germany affected
+- One compromised dependency in a web framework (e.g. send or debug in express) = Blast Score 73–78/100 = billions of monthly downloads in the blast zone
 
 ---
 
