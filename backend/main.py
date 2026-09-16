@@ -3,7 +3,11 @@ import sys
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Ensure backend root is on sys.path regardless of launch directory
 backend_dir = Path(__file__).resolve().parent
@@ -15,7 +19,6 @@ from api.routes.simulate import router as simulate_router
 from api.routes.compare import router as compare_router
 from api.routes.export import router as export_router
 
-load_dotenv()
 
 app = FastAPI(
     title="RippleGuard API",
