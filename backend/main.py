@@ -28,14 +28,26 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS Configuration - allow all origins for hackathon frontend integration (Vercel + Local)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS Configuration - supports CORS_ORIGINS env var and wildcard local dev
+cors_env = os.environ.get("CORS_ORIGINS", "*")
+if cors_env and cors_env != "*":
+    origins = [o.strip() for o in cors_env.split(",") if o.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_origin_regex=r"https?://.*",
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Include API route modules
 app.include_router(health_router)
