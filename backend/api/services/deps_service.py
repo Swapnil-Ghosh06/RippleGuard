@@ -61,6 +61,32 @@ MOCK_DEPENDENCY_TREES: Dict[Tuple[str, str], List[Dict[str, str]]] = {
     ("postcss", "npm"): [],
     ("js-tokens", "npm"): [],
 
+    # log4js tree (npm - Historical Attack Replay for Log4Shell)
+    ("log4js", "npm"): [
+        {"name": "date-format", "version": "4.0.3"},
+        {"name": "debug", "version": "4.3.3"},
+        {"name": "flatted", "version": "3.2.4"},
+        {"name": "rfdc", "version": "1.3.0"},
+        {"name": "streamroller", "version": "3.0.2"},
+    ],
+    ("streamroller", "npm"): [
+        {"name": "fs-extra", "version": "10.0.0"},
+    ],
+    ("fs-extra", "npm"): [
+        {"name": "graceful-fs", "version": "4.2.11"},
+        {"name": "jsonfile", "version": "6.1.0"},
+        {"name": "universalify", "version": "2.0.0"},
+    ],
+    ("debug", "npm"): [
+        {"name": "ms", "version": "2.1.3"},
+    ],
+    ("date-format", "npm"): [],
+    ("flatted", "npm"): [],
+    ("rfdc", "npm"): [],
+    ("ms", "npm"): [],
+    ("jsonfile", "npm"): [],
+    ("universalify", "npm"): [],
+
     # PyPI ecosystem
     ("requests", "pypi"): [
         {"name": "urllib3", "version": "2.0.7"},

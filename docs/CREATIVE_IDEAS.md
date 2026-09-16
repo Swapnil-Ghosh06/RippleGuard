@@ -86,9 +86,9 @@ This is not a better version of Snyk. This is a fundamentally different category
 const FAMOUS_ATTACKS = [
   {
     name: "Log4Shell (2021)",
-    package: "log4j-core",
-    ecosystem: "maven",
-    version: "2.14.1",
+    package: "log4js",
+    ecosystem: "npm",
+    version: "6.4.0",
     cve: "CVE-2021-44228",
     impact: "3 billion devices at risk",
     description: "A single logging library compromised the internet."

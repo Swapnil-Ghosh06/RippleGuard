@@ -219,6 +219,29 @@ def test_all_five_demo_packages():
     print("  --> All 5 Demo Packages Verified Successfully!\n")
 
 
+def test_log4shell_replay():
+    print("[TEST] Checking Historical Attack Replay for Log4Shell (log4js@6.4.0)...")
+    # NOTE FOR HARI & MERGE: Canonical famous_attacks.py on hari-backend currently lists
+    # log4j-core (pypi, unresolvable by deps.dev). It must be updated to log4js (npm@6.4.0)
+    # matching this test before merging to main!
+    res = client.post("/analyze", json={
+        "package": "log4js",
+        "ecosystem": "npm",
+        "version": "6.4.0",
+        "depth": 3
+    })
+    assert res.status_code == 200, f"/analyze failed for log4js: {res.text}"
+    data = res.json()
+    assert data["stats"]["total_nodes"] > 0, "Expected non-empty graph for log4js"
+    assert data["stats"]["total_edges"] > 0, "Expected non-empty edges for log4js"
+    root_node = next((n for n in data["graph"]["nodes"] if n["id"] == "log4js@6.4.0"), None)
+    assert root_node is not None, "log4js@6.4.0 root node must be present in graph"
+    vuln_ids = [v["id"] for v in root_node.get("vulnerabilities", [])]
+    assert "CVE-2021-44228" in vuln_ids, f"Expected CVE-2021-44228 in vulnerabilities for log4js@6.4.0, found: {vuln_ids}"
+    print(f"  --> [PASS] log4js@6.4.0 graph built: {data['stats']['total_nodes']} nodes, {data['stats']['total_edges']} edges")
+    print(f"  --> [PASS] CVE-2021-44228 surfaced in vulnerabilities: {vuln_ids}\n")
+
+
 def run_all_tests():
     print("===================================================================")
     print("RippleGuard — End-to-End API Test Suite (F7 Compare & F8 Export)")
@@ -230,6 +253,7 @@ def run_all_tests():
     test_export(graph_id)
     test_error_handling()
     test_all_five_demo_packages()
+    test_log4shell_replay()
     print("===================================================================")
     print("ALL API ENDPOINTS & ERROR HANDLING PASSED SUCCESSFULLY!")
     print("===================================================================")

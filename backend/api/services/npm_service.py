@@ -29,6 +29,16 @@ MOCK_DOWNLOADS = {
     "enhanced-resolve": 32000000,
     "graceful-fs": 70000000,
     "tapable": 45000000,
+    "log4js": 15000000,
+    "date-format": 8000000,
+    "debug": 120000000,
+    "flatted": 90000000,
+    "rfdc": 45000000,
+    "streamroller": 12000000,
+    "fs-extra": 110000000,
+    "jsonfile": 95000000,
+    "universalify": 105000000,
+    "ms": 130000000,
 }
 
 MOCK_VERSIONS = {
@@ -38,6 +48,7 @@ MOCK_VERSIONS = {
     "webpack": "5.88.0",
     "next": "13.4.0",
     "axios": "1.6.0",
+    "log4js": "6.4.0",
 }
 
 from api.services.exceptions import PackageNotFoundError, ServiceTimeoutError

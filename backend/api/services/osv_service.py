@@ -66,6 +66,16 @@ MOCK_VULNS: Dict[str, List[Dict[str, Any]]] = {
             "affected_versions": ["<18.2.0"],
             "fixed_version": "18.2.0"
         }
+    ],
+    "log4js": [
+        {
+            "id": "CVE-2021-44228",
+            "summary": "Log4Shell Remote Code Execution (Historical Replay for log4js)",
+            "severity": "CRITICAL",
+            "cvss_score": 10.0,
+            "affected_versions": ["<=6.4.0"],
+            "fixed_version": "6.4.1"
+        }
     ]
 }
 
