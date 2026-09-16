@@ -103,7 +103,14 @@ def build_simulate_response(sim_result: dict, comp_node: str) -> SimulateRespons
     status_code=status.HTTP_200_OK,
     summary="Simulate compromise propagation across dependency graph"
 )
+@router.post(
+    "/api/simulate",
+    response_model=SimulateResponse,
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False
+)
 async def simulate_compromise_route(request: SimulateRequest):
+
     """
     Simulates injection of a compromise into a dependency node,
     computing upward propagation, blast radius score, Butterfly Trace,

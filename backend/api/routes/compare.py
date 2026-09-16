@@ -30,7 +30,14 @@ router = APIRouter(tags=["compare"])
     status_code=status.HTTP_200_OK,
     summary="Compare blast radius of two compromise scenarios"
 )
+@router.post(
+    "/api/compare",
+    response_model=CompareResponse,
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False
+)
 async def compare_compromises(request: CompareRequest):
+
     """
     Compares the blast radius of compromising node_a vs node_b on the same dependency graph.
     Returns both full simulation results, determines the higher-risk 'winner', and provides

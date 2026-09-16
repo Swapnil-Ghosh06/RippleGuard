@@ -18,6 +18,8 @@ from api.routes.analyze import router as analyze_router
 from api.routes.simulate import router as simulate_router
 from api.routes.compare import router as compare_router
 from api.routes.export import router as export_router
+from api.routes.attacks import router as attacks_router
+from api.routes.health import router as health_router
 
 
 app = FastAPI(
@@ -26,32 +28,26 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS Configuration per docs/TDD.md Section 6.3
-cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:5173")
-origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
-
+# CORS Configuration - allow all origins for hackathon frontend integration (Vercel + Local)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Include API route modules
+app.include_router(health_router)
 app.include_router(analyze_router)
 app.include_router(simulate_router)
 app.include_router(compare_router)
 app.include_router(export_router)
-
-
-# Health check endpoint per docs/TDD.md Section 2.4
-@app.get("/health", tags=["health"], summary="Service health and version check")
-async def health_check():
-    """Uptime health check route returning API operational status and version."""
-    return {"status": "ok", "version": "1.0.0"}
+app.include_router(attacks_router, prefix="/api")
+app.include_router(attacks_router)
 
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+

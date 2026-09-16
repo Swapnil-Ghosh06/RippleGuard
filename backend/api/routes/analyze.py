@@ -30,7 +30,14 @@ _analyze_cache: Dict[str, AnalyzeResponse] = {}
     status_code=status.HTTP_200_OK,
     summary="Analyze package dependency graph and vulnerabilities"
 )
+@router.post(
+    "/api/analyze",
+    response_model=AnalyzeResponse,
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False
+)
 async def analyze_package(request: AnalyzeRequest):
+
     """
     Analyzes a package by building its dependency graph via BFS,
     and concurrently enriching all nodes with download counts and vulnerability data.
