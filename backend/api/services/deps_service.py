@@ -97,6 +97,11 @@ async def get_direct_dependencies(
     ]
 
 
+# Alias for backward compatibility across endpoints
+get_dependencies = get_direct_dependencies
+
+
+
 if __name__ == "__main__":
     async def main():
         print("--- Testing get_all_deps_as_flat_list for 'express@4.18.2' (npm) ---")

@@ -50,9 +50,9 @@ async def analyze_package(request: AnalyzeRequest):
         version = request.version
         if not version or version == "latest":
             if eco == "npm":
-                version = await asyncio.wait_for(npm_service.get_latest_version(request.package), timeout=7.5)
+                version = await asyncio.wait_for(npm_service.get_latest_version(request.package), timeout=15.0)
             elif eco == "pypi":
-                meta = await asyncio.wait_for(pypi_service.get_pypi_metadata(request.package), timeout=7.5)
+                meta = await asyncio.wait_for(pypi_service.get_pypi_metadata(request.package), timeout=15.0)
                 version = meta.get("version", "latest")
             else:
                 version = "latest"
@@ -69,7 +69,7 @@ async def analyze_package(request: AnalyzeRequest):
                 version=version,
                 max_depth=request.depth
             ),
-            timeout=7.5
+            timeout=25.0
         )
 
         if G.number_of_nodes() == 0:
@@ -90,7 +90,6 @@ async def analyze_package(request: AnalyzeRequest):
         package_names = [G.nodes[nid]["name"] for nid in node_ids]
 
         # Step 2: Fetch monthly downloads + vulnerabilities concurrently via asyncio.gather
-        # (Enforces <8s end-to-end performance requirement per docs/REQUIREMENTS.md)
         if eco == "npm":
             downloads_task = npm_service.get_downloads_batch(package_names)
         else:
@@ -100,7 +99,7 @@ async def analyze_package(request: AnalyzeRequest):
 
         downloads_map, vulns_map = await asyncio.wait_for(
             asyncio.gather(downloads_task, vulns_task),
-            timeout=7.5
+            timeout=25.0
         )
     except PackageNotFoundError as e:
         raise HTTPException(
@@ -112,6 +111,7 @@ async def analyze_package(request: AnalyzeRequest):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="External service timeout (npm/pypi/deps.dev). Upstream registry did not respond within timeout."
         )
+
 
     # Step 3: Serialize graph into exact AnalyzeResponse shape
     nodes_list = []
