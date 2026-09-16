@@ -1,8 +1,9 @@
 const ATTACKS = [
-  { label: 'Log4Shell',    query: 'log4j',         ecosystem: 'npm'  },
+  { label: 'Log4Shell',    query: 'log4js',        ecosystem: 'npm'  },
   { label: 'Event-Stream', query: 'event-stream',  ecosystem: 'npm'  },
-  { label: 'XZ Utils',     query: 'xz-utils',      ecosystem: 'pypi' },
-]
+  { label: 'XZ Utils',     query: 'xz',            ecosystem: 'pypi' },
+  { label: 'Colors.js',    query: 'colors',        ecosystem: 'npm'  },
+];
 
 export default function AttackChips({ onSelect }) {
   return (

@@ -16,10 +16,11 @@ export function useAnalyze() {
         version,
         depth,
       });
-      setGraphData(data.data);
+      const responseData = data.data || data;
+      setGraphData(responseData);
       setView('graph');
     } catch (err) {
-      const msg = err?.response?.data?.detail || 'Backend unreachable. Is the API running?';
+      const msg = err?.response?.data?.detail || err?.message || 'Backend unreachable. Is the API running?';
       setError(msg);
       setView('idle');
     }

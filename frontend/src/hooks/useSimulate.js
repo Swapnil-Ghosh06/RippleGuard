@@ -7,19 +7,25 @@ export function useSimulate() {
   const { graphData, setBlastData, setIsSimulating } = useGraphStore();
 
   const simulate = async (compromisedNodeId) => {
-    if (!graphData) return;
+    if (!graphData) return null;
     setIsSimulating(true);
 
     try {
+      const graphId = graphData?.graph_id || (graphData?.root ? `${graphData.root.name}-${graphData.root.ecosystem || 'npm'}-${graphData.root.version}-depth${graphData.stats?.max_depth || 3}` : null);
+      const graphPayload = graphData?.graph || graphData;
+
       const { data } = await axios.post(`${API}/api/simulate`, {
-        graph_data: graphData,
+        graph_id: graphId,
+        graph_data: graphPayload,
         compromised_node: compromisedNodeId,
+        propagation_model: 'weighted_bfs',
       });
 
-      const raw = data.data;
+      const raw = data.data || data;
+      const propOrder = raw.propagation?.propagation_order ?? raw.propagation_order ?? [];
+      const affected = raw.propagation?.affected_nodes ?? raw.affected_nodes ?? [];
 
-      // Normalize backend shape → what BlastRadiusPanel and MitigationPanel expect
-      setBlastData({
+      const normalized = {
         blast_score:                   raw.blast_radius?.blast_score ?? 0,
         packages_affected:             raw.blast_radius?.affected_package_count ?? 0,
         direct_affected:               raw.blast_radius?.affected_package_count ?? 0,
@@ -28,16 +34,22 @@ export function useSimulate() {
         human_comparison:              getHumanComparison(raw.blast_radius?.total_monthly_downloads_affected ?? 0),
         mitigations: (raw.mitigation?.priority_actions ?? []).map(a => ({
           package:         a.node ?? a.action,
-          fix_version:     a.fixed_version ?? '—',
+          fix_version:     a.fixed_version ?? (a.action ? (a.action.match(/to\s+([^\s]+)/)?.[1] ?? 'patched') : 'patched'),
           blast_reduction: a.eliminates_blast_percent ?? 0,
-          description:     null,
+          description:     a.effort ? `Effort: ${a.effort}` : null,
         })),
-        propagation_order: raw.propagation_order ?? [],
-        affected_nodes:    raw.affected_nodes ?? [],
-      });
+        propagation_order: propOrder,
+        affected_nodes:    affected,
+        critical_chain:    raw.critical_chain ?? raw.propagation?.critical_chain ?? [],
+        shadow_dependencies: raw.shadow_dependencies ?? [],
+      };
+
+      setBlastData(normalized);
+      return normalized;
 
     } catch (err) {
       console.error('Simulate failed:', err);
+      return null;
     } finally {
       setIsSimulating(false);
     }

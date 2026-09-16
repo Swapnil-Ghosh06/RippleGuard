@@ -2,48 +2,23 @@ import { useState, useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { useGraphStore } from '../store/graphStore';
+import { useAnalyze } from '../hooks/useAnalyze';
 
 gsap.registerPlugin(useGSAP);
 
 const FAMOUS_ATTACKS = [
-  { label: 'Log4Shell',    package: 'log4j-core',    ecosystem: 'npm'  },
+  { label: 'Log4Shell',    package: 'log4js',        ecosystem: 'npm'  },
   { label: 'Event-Stream', package: 'event-stream',  ecosystem: 'npm'  },
   { label: 'XZ Utils',     package: 'xz',            ecosystem: 'pypi' },
+  { label: 'Colors.js',    package: 'colors',        ecosystem: 'npm'  },
 ];
-
-const MOCK_GRAPH = {
-  nodes: [
-    { id: 'lodash@4.17.20',   name: 'lodash',     version: '4.17.20', ecosystem: 'npm', depth: 0, is_root: true,  monthly_downloads: 82000000,  vulnerabilities: [{ id: 'CVE-2021-23337',  severity: 'HIGH',   cvss_score: 7.2, summary: 'Command injection via template' }] },
-    { id: 'express@4.18.1',   name: 'express',    version: '4.18.1',  ecosystem: 'npm', depth: 1, is_root: false, monthly_downloads: 31000000,  vulnerabilities: [] },
-    { id: 'react@18.2.0',     name: 'react',      version: '18.2.0',  ecosystem: 'npm', depth: 1, is_root: false, monthly_downloads: 22000000,  vulnerabilities: [] },
-    { id: 'next@13.4.0',      name: 'next',       version: '13.4.0',  ecosystem: 'npm', depth: 2, is_root: false, monthly_downloads: 6800000,   vulnerabilities: [{ id: 'CVE-2024-34351',  severity: 'HIGH',   cvss_score: 7.5, summary: 'Host header injection' }] },
-    { id: 'webpack@5.88.0',   name: 'webpack',    version: '5.88.0',  ecosystem: 'npm', depth: 2, is_root: false, monthly_downloads: 24000000,  vulnerabilities: [] },
-    { id: 'axios@1.4.0',      name: 'axios',      version: '1.4.0',   ecosystem: 'npm', depth: 2, is_root: false, monthly_downloads: 44000000,  vulnerabilities: [] },
-    { id: 'chalk@5.3.0',      name: 'chalk',      version: '5.3.0',   ecosystem: 'npm', depth: 3, is_root: false, monthly_downloads: 38000000,  vulnerabilities: [] },
-    { id: 'semver@7.5.4',     name: 'semver',     version: '7.5.4',   ecosystem: 'npm', depth: 3, is_root: false, monthly_downloads: 52000000,  vulnerabilities: [{ id: 'CVE-2022-25883', severity: 'MEDIUM', cvss_score: 5.3, summary: 'ReDoS in comparator' }] },
-    { id: 'minimatch@3.0.4',  name: 'minimatch',  version: '3.0.4',   ecosystem: 'npm', depth: 3, is_root: false, monthly_downloads: 41000000,  vulnerabilities: [{ id: 'CVE-2022-3517',  severity: 'HIGH',   cvss_score: 7.5, summary: 'ReDoS vulnerability' }] },
-    { id: 'ms@2.1.3',         name: 'ms',         version: '2.1.3',   ecosystem: 'npm', depth: 3, is_root: false, monthly_downloads: 78000000,  vulnerabilities: [] },
-  ],
-  edges: [
-    { source: 'lodash@4.17.20',  target: 'express@4.18.1'  },
-    { source: 'lodash@4.17.20',  target: 'react@18.2.0'    },
-    { source: 'express@4.18.1',  target: 'next@13.4.0'     },
-    { source: 'react@18.2.0',    target: 'next@13.4.0'     },
-    { source: 'lodash@4.17.20',  target: 'webpack@5.88.0'  },
-    { source: 'express@4.18.1',  target: 'axios@1.4.0'     },
-    { source: 'next@13.4.0',     target: 'chalk@5.3.0'     },
-    { source: 'webpack@5.88.0',  target: 'semver@7.5.4'    },
-    { source: 'webpack@5.88.0',  target: 'minimatch@3.0.4' },
-    { source: 'express@4.18.1',  target: 'ms@2.1.3'        },
-  ],
-  stats: { total_nodes: 10, total_edges: 10, vulnerable_nodes: 4 },
-};
 
 export default function SearchPanel() {
   const [pkg, setPkg]       = useState('');
   const [eco, setEco]       = useState('npm');
   const [focused, setFocused] = useState(false);
-  const { setView, setGraphData, setBlastData } = useGraphStore();
+  const { setBlastData, error, setError } = useGraphStore();
+  const { analyze } = useAnalyze();
   const containerRef = useRef(null);
 
   useGSAP(() => {
@@ -56,14 +31,12 @@ export default function SearchPanel() {
       .from('.rg-chip',     { y: 6,   opacity: 0, duration: 0.25, stagger: 0.07 }, '-=0.1');
   }, { scope: containerRef });
 
-  const handleAnalyze = (overridePkg, overrideEco) => {
+  const handleAnalyze = async (overridePkg, overrideEco) => {
     const p = overridePkg ?? pkg;
+    const e = overrideEco ?? eco;
     if (!p.trim()) return;
-    // Loads mock graph immediately — swap for real API call when backend is ready
-    setGraphData({ nodes: MOCK_GRAPH.nodes, edges: MOCK_GRAPH.edges, stats: MOCK_GRAPH.stats });
     setBlastData(null);
-    setView('loading');
-    setTimeout(() => setView('graph'), 3200);
+    await analyze({ packageName: p.trim(), ecosystem: e, depth: 3 });
   };
 
   const handleChip = (attack) => {
@@ -137,6 +110,13 @@ export default function SearchPanel() {
           </button>
         ))}
       </div>
+
+      {/* Error display */}
+      {error && (
+        <div className="w-full max-w-md mb-3 px-3 py-2 border border-danger/40 bg-danger/10 rounded-sm text-center">
+          <p className="font-mono text-danger text-xs leading-relaxed">{error}</p>
+        </div>
+      )}
 
       {/* Analyze button */}
       <button

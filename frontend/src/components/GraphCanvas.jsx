@@ -9,6 +9,7 @@ import ReactFlow, {
   BackgroundVariant,
 } from 'reactflow';
 import { useGraphStore } from '../store/graphStore';
+import { useSimulate } from '../hooks/useSimulate';
 import PackageNode from './PackageNode';
 
 const NODE_TYPES = { package: PackageNode };
@@ -107,41 +108,17 @@ export default function GraphCanvas() {
     return () => timers.forEach(clearTimeout);
   }, []);
 
-  // ── Mock blast (replace with useSimulate when backend ready) ───────────────
-  const MOCK_BLAST = {
-    blast_score: 91, packages_affected: 9,
-    direct_affected: 3, transitive_affected: 6,
-    monthly_downloads_affected: '438M',
-    human_comparison: "That's like sending malware to every internet user in the USA — 330 million people — in a single month.",
-    mitigations: [
-      { package: 'lodash@4.17.20',  fix_version: '4.17.21', blast_reduction: 94, description: 'Patches prototype pollution in merge and zipObjectDeep.' },
-      { package: 'minimatch@3.0.4', fix_version: '3.0.5',   blast_reduction: 61, description: 'Fixes catastrophic backtracking in glob pattern matching.' },
-      { package: 'semver@7.5.4',    fix_version: '7.5.4',   blast_reduction: 38, description: 'Resolves ReDoS in version comparator regex.' },
-    ],
-    propagation_order: [
-      { node: 'express@4.18.1',  delay_ms: 200  },
-      { node: 'react@18.2.0',    delay_ms: 200  },
-      { node: 'webpack@5.88.0',  delay_ms: 420  },
-      { node: 'next@13.4.0',     delay_ms: 620  },
-      { node: 'axios@1.4.0',     delay_ms: 620  },
-      { node: 'chalk@5.3.0',     delay_ms: 840  },
-      { node: 'semver@7.5.4',    delay_ms: 840  },
-      { node: 'minimatch@3.0.4', delay_ms: 840  },
-      { node: 'ms@2.1.3',        delay_ms: 840  },
-    ],
-    affected_nodes: ['express@4.18.1','react@18.2.0','webpack@5.88.0','next@13.4.0','axios@1.4.0','chalk@5.3.0','semver@7.5.4','minimatch@3.0.4','ms@2.1.3'],
-  };
+  const { simulate } = useSimulate();
 
-  const handleInject = () => {
+  const handleInject = async () => {
     if (!localSelected || isSimulating) return;
-    setIsSimulating(true);
     setSelectedNode(localSelected);
+    setBlastSet(new Set([localSelected]));
 
-    setTimeout(() => {
-      setBlastData(MOCK_BLAST);
-      runPropagation(MOCK_BLAST);
-      setIsSimulating(false);
-    }, 600);
+    const result = await simulate(localSelected);
+    if (result) {
+      runPropagation(result);
+    }
   };
 
   const onNodeClick = useCallback((_, node) => {
