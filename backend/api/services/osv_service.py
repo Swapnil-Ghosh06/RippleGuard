@@ -23,16 +23,23 @@ from typing import Dict, List, Optional
 import httpx
 
 OSV_BATCH_URL = "https://api.osv.dev/v1/querybatch"
+OSV_VULN_URL = "https://api.osv.dev/v1/vulns"
+
+_VULN_CACHE: Dict[str, dict] = {}
 
 
 def _extract_severity(vuln: dict) -> str:
     """
     Extract human-readable severity string (CRITICAL/HIGH/MEDIUM/LOW/UNKNOWN).
-    Checks database_specific.severity first (uppercased), then scans severity list scores.
+    Checks database_specific.severity first (mapping MODERATE to MEDIUM), then scans severity list scores.
     """
     db_spec = vuln.get("database_specific")
     if isinstance(db_spec, dict) and db_spec.get("severity"):
-        return str(db_spec["severity"]).upper()
+        sev_str = str(db_spec["severity"]).upper()
+        if sev_str == "MODERATE":
+            return "MEDIUM"
+        if sev_str in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+            return sev_str
 
     severity_list = vuln.get("severity")
     if isinstance(severity_list, list):
@@ -46,12 +53,10 @@ def _extract_severity(vuln: dict) -> str:
     return "UNKNOWN"
 
 
-def _extract_cvss(vuln: dict) -> float:
+def _extract_cvss(vuln: dict, severity: str) -> float:
     """
     Extract float CVSS score from severity list entry where type == 'CVSS_V3'.
-    The score field is a CVSS vector string like 'CVSS:3.1/AV:N/AC:L/.../9.8'.
-    The numeric score is the last segment after the final '/'.
-    Returns 0.0 if anything fails or no CVSS_V3 entry exists.
+    If no explicit CVSS vector score is found, provides a fallback based on calculated severity.
     """
     severity_list = vuln.get("severity")
     if isinstance(severity_list, list):
@@ -62,24 +67,34 @@ def _extract_cvss(vuln: dict) -> float:
                     parts = score_str.split("/")
                     last_part = parts[-1]
                     try:
-                        return float(last_part)
+                        val = float(last_part)
+                        if 0.0 <= val <= 10.0:
+                            return val
                     except ValueError:
                         pass
-    return 0.0
+
+    # Standard fallback CVSS floats based on severity rating
+    severity_defaults = {
+        "CRITICAL": 9.5,
+        "HIGH": 7.5,
+        "MEDIUM": 5.5,
+        "LOW": 3.0,
+        "UNKNOWN": 0.0
+    }
+    return severity_defaults.get(severity, 0.0)
 
 
 def _extract_fix(vuln: dict, pkg_name: str) -> Optional[str]:
     """
     Extract fixed version string for the specified package.
     Matches package name inside affected, then searches ranges -> events for 'fixed' key.
-    Returns None if no fix version is found.
     """
     affected_list = vuln.get("affected")
     if isinstance(affected_list, list):
         for affected in affected_list:
             if isinstance(affected, dict):
                 pkg = affected.get("package", {})
-                if isinstance(pkg, dict) and pkg.get("name") == pkg_name:
+                if isinstance(pkg, dict) and (pkg.get("name") == pkg_name or pkg_name in pkg.get("name", "")):
                     ranges = affected.get("ranges", [])
                     if isinstance(ranges, list):
                         for range_entry in ranges:
@@ -92,11 +107,29 @@ def _extract_fix(vuln: dict, pkg_name: str) -> Optional[str]:
     return None
 
 
+async def _fetch_single_vuln_detail(client: httpx.AsyncClient, vuln_id: str) -> dict:
+    """Fetch and cache detailed OSV advisory record for a given vulnerability ID."""
+    if vuln_id in _VULN_CACHE:
+        return _VULN_CACHE[vuln_id]
+
+    url = f"{OSV_VULN_URL}/{vuln_id}"
+    try:
+        response = await client.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            _VULN_CACHE[vuln_id] = data
+            return data
+    except Exception:
+        pass
+    return {}
+
+
 async def query_vulnerabilities_batch(packages: List[dict]) -> Dict[str, list]:
     """
-    Hits https://api.osv.dev/v1/querybatch via POST to query vulnerabilities in batch.
+    Hits https://api.osv.dev/v1/querybatch via POST to query vulnerabilities in batch,
+    then fetches rich advisory details concurrently for accurate severity, CVSS scores, and fixes.
 
-    Input: packages is a list of {"name": ..., "version": ..., "ecosystem": ...} dicts (lowercase ecosystem).
+    Input: packages is a list of {"name": ..., "version": ..., "ecosystem": ...} dicts.
     Returns: Dict mapping "pkg_name@version" to list of parsed vulnerability dicts.
     """
     if not packages:
@@ -122,22 +155,47 @@ async def query_vulnerabilities_batch(packages: List[dict]) -> Dict[str, list]:
             data = response.json()
             results = data.get("results", [])
 
-            vuln_map = {}
+            # Step 1: Collect all raw vulnerability stubs & unique vulnerability IDs
+            batch_raw_map = {}
+            all_vuln_ids = set()
+
             for i, result in enumerate(results):
                 if i >= len(packages):
                     break
                 pkg = packages[i]
                 pkg_key = f"{pkg['name']}@{pkg['version']}"
                 raw_vulns = result.get("vulns", [])
-
-                parsed_list = []
+                batch_raw_map[pkg_key] = (pkg, raw_vulns)
                 for v in raw_vulns:
+                    vid = v.get("id")
+                    if vid:
+                        all_vuln_ids.add(vid)
+
+            # Step 2: Fetch details concurrently for uncached vuln IDs
+            uncached_ids = [vid for vid in all_vuln_ids if vid not in _VULN_CACHE]
+            if uncached_ids:
+                tasks = [_fetch_single_vuln_detail(client, vid) for vid in uncached_ids]
+                await asyncio.gather(*tasks, return_exceptions=True)
+
+            # Step 3: Build detailed parsed vulnerability objects per package
+            vuln_map = {}
+            for pkg_key, (pkg, raw_vulns) in batch_raw_map.items():
+                parsed_list = []
+                for v_stub in raw_vulns:
+                    vid = v_stub.get("id", "")
+                    v_detail = _VULN_CACHE.get(vid, v_stub)
+                    
+                    summary = v_detail.get("summary") or v_stub.get("summary") or f"Security advisory {vid}"
+                    severity = _extract_severity(v_detail)
+                    cvss = _extract_cvss(v_detail, severity)
+                    fix_ver = _extract_fix(v_detail, pkg["name"])
+
                     parsed_list.append({
-                        "id": v.get("id", ""),
-                        "summary": v.get("summary", ""),
-                        "severity": _extract_severity(v),
-                        "cvss_score": _extract_cvss(v),
-                        "fixed_version": _extract_fix(v, pkg["name"])
+                        "id": vid,
+                        "summary": summary,
+                        "severity": severity,
+                        "cvss_score": cvss,
+                        "fixed_version": fix_ver
                     })
 
                 vuln_map[pkg_key] = parsed_list
@@ -145,6 +203,7 @@ async def query_vulnerabilities_batch(packages: List[dict]) -> Dict[str, list]:
             return vuln_map
     except Exception:
         return {}
+
 
 
 if __name__ == "__main__":
