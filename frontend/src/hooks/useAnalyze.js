@@ -1,31 +1,29 @@
-import axios from 'axios'
-import { useGraphStore } from '../store/graphStore'
+import axios from 'axios';
+import { useGraphStore } from '../store/graphStore';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export function useAnalyze() {
-  const { setView, setGraphData, setError } = useGraphStore()
+  const { setView, setGraphData, setError } = useGraphStore();
 
-  async function analyze({ packageName, ecosystem }) {
-    if (!packageName || !packageName.trim()) return
-
-    setView('loading')
-    setError(null)
-
+  const analyze = async ({ packageName, ecosystem, version = 'latest', depth = 3 }) => {
+    setError(null);
+    setView('loading');
     try {
-      const response = await axios.post(`${BASE_URL}/api/analyze`, {
-        package:   packageName.trim(),
+      const { data } = await axios.post(`${API}/api/analyze`, {
+        package: packageName,
         ecosystem,
-        version:   'latest',
-        depth:     3,
-      })
-      setGraphData(response.data.data)
-      setView('graph')
-    } catch {
-      setError('Analysis failed — check package name and try again')
-      setView('idle')
+        version,
+        depth,
+      });
+      setGraphData(data.data);
+      setView('graph');
+    } catch (err) {
+      const msg = err?.response?.data?.detail || 'Backend unreachable. Is the API running?';
+      setError(msg);
+      setView('idle');
     }
-  }
+  };
 
-  return { analyze }
+  return { analyze };
 }

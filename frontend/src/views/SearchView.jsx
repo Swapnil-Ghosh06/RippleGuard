@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useGraphStore } from '../store/graphStore'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import CommandInput from '../components/CommandInput'
@@ -10,6 +11,7 @@ export default function SearchView() {
   const [query, setQuery]         = useState('')
   const [ecosystem, setEcosystem] = useState('npm')
   const { analyze }               = useAnalyze()
+  const error                     = useGraphStore((s) => s.error)
 
   // Refs for GSAP entrance
   const rgWordmark  = useRef(null)
@@ -60,6 +62,11 @@ export default function SearchView() {
           onSubmit={handleAnalyze}
           placeholder="package name…"
         />
+        {error && (
+          <p className="font-mono text-danger text-xs text-center mt-3 max-w-xs mx-auto">
+            {error}
+          </p>
+        )}
       </div>
 
       {/* 4 — Ecosystem toggle */}
