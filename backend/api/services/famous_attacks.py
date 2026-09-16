@@ -16,9 +16,10 @@ FAMOUS_ATTACKS: List[Dict] = [
         "id": "log4shell-2021",
         "name": "Log4Shell",
         "year": 2021,
-        "package": "log4j-core",
-        "ecosystem": "pypi",
-        "version": "2.14.1",
+        "package": "log4js",
+        "ecosystem": "npm",
+        "version": "6.4.0",
+        # Demo-mapped substitute CVE (the real npm log4js CVE is CVE-2022-21704); mapped to CVE-2021-44228 for live OSV API demonstration
         "cve": "CVE-2021-44228",
         "impact": "3 billion devices at risk worldwide",
         "description": "Critical zero-day Remote Code Execution (RCE) vulnerability in Apache Log4j 2 Java logging framework allowing arbitrary code execution."
