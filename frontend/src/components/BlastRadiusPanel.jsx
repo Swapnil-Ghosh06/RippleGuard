@@ -1,70 +1,105 @@
-import { useGraphStore } from '../store/graphStore'
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { useGraphStore } from '../store/graphStore';
 
-function EmptyState() {
+function ScoreCounter({ value }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const obj = { val: 0 };
+    gsap.to(obj, {
+      val: value,
+      duration: 1.4,
+      ease: 'power2.out',
+      onUpdate: () => {
+        if (ref.current) ref.current.textContent = Math.round(obj.val);
+      },
+    });
+  }, [value]);
+
   return (
-    <div className="h-full flex items-center justify-center">
-      <p className="font-mono text-muted text-xs text-center max-w-xs">
-        Inject a compromise to see the blast radius.
-      </p>
-    </div>
-  )
+    <span
+      ref={ref}
+      className="text-5xl font-black text-gold tabular-nums"
+      style={{ fontFamily: 'Montserrat, sans-serif' }}
+    >
+      0
+    </span>
+  );
 }
 
-function ScoreSection({ blastData }) {
-  return (
-    <div className="py-4 px-5">
-      <p className="font-mono text-muted text-xs tracking-widest mb-2">BLAST SCORE</p>
-      <div>
-        <span className="font-mono text-gold text-5xl font-medium">{blastData.blast_score}</span>
-        <span className="font-mono text-muted text-lg">/100</span>
-      </div>
-      <p className="font-mono text-dim text-xs mt-2">
-        {blastData.packages_affected} packages in blast zone
-      </p>
-    </div>
-  )
-}
+const SCORE_LABELS = [
+  { min: 75, label: 'CRITICAL BLAST', color: 'text-danger' },
+  { min: 50, label: 'HIGH IMPACT',    color: 'text-warn'   },
+  { min: 25, label: 'MODERATE RISK',  color: 'text-dim'    },
+  { min: 0,  label: 'CONTAINED',      color: 'text-safe'   },
+];
 
-function StatsSection({ blastData }) {
-  return (
-    <div className="py-4 px-5 flex flex-col gap-2">
-      <div className="flex justify-between items-center">
-        <span className="font-mono text-muted text-xs">DIRECT</span>
-        <span className="font-mono text-text text-xs">{blastData.direct_affected}</span>
-      </div>
-      <div className="flex justify-between items-center">
-        <span className="font-mono text-muted text-xs">TRANSITIVE</span>
-        <span className="font-mono text-text text-xs">{blastData.transitive_affected}</span>
-      </div>
-      <div className="flex justify-between items-center">
-        <span className="font-mono text-muted text-xs">DOWNLOADS AT RISK</span>
-        <span className="font-mono text-text text-xs">{blastData.monthly_downloads_affected}/mo</span>
-      </div>
-    </div>
-  )
-}
-
-function HumanTermsSection({ blastData }) {
-  return (
-    <div className="py-4 px-5">
-      <p className="font-mono text-muted text-xs tracking-widest mb-2">IMPACT EQUIVALENT</p>
-      <p className="font-sans text-text text-sm leading-relaxed">{blastData.human_comparison}</p>
-    </div>
-  )
+function getScoreLabel(score) {
+  return SCORE_LABELS.find(l => score >= l.min) ?? SCORE_LABELS[3];
 }
 
 export default function BlastRadiusPanel() {
-  const blastData = useGraphStore((s) => s.blastData)
+  const { blastData } = useGraphStore();
 
-  if (!blastData) return <EmptyState />
+  if (!blastData) {
+    return (
+      <div className="h-full flex items-center justify-center p-6">
+        <p className="font-mono text-muted text-xs text-center max-w-xs leading-relaxed">
+          Click a node in the graph<br />then inject a compromise<br />to see the blast radius.
+        </p>
+      </div>
+    );
+  }
+
+  const label = getScoreLabel(blastData.blast_score);
 
   return (
-    <div className="h-full flex flex-col">
-      <ScoreSection blastData={blastData} />
-      <div className="h-px bg-border" />
-      <StatsSection blastData={blastData} />
-      <div className="h-px bg-border" />
-      <HumanTermsSection blastData={blastData} />
+    <div className="flex flex-col">
+
+      {/* Score */}
+      <div className="px-5 py-5">
+        <p className="font-mono text-muted text-xs tracking-widest mb-3">BLAST SCORE</p>
+        <div className="flex items-end gap-2 mb-1">
+          <ScoreCounter value={blastData.blast_score} />
+          <span className="font-mono text-muted text-base mb-1">/100</span>
+        </div>
+        <span className={`font-mono text-xs tracking-widest ${label.color}`}>
+          {label.label}
+        </span>
+        <p className="font-mono text-dim text-xs mt-2">
+          {blastData.packages_affected} packages in blast zone
+        </p>
+      </div>
+
+      <div className="h-px bg-border mx-5" />
+
+      {/* Stats */}
+      <div className="px-5 py-4 flex flex-col gap-2">
+        {[
+          { label: 'DIRECT DEPS HIT',  value: blastData.direct_affected              },
+          { label: 'TRANSITIVE HIT',   value: blastData.transitive_affected           },
+          { label: 'DOWNLOADS/MONTH',  value: blastData.monthly_downloads_affected    },
+        ].map(row => (
+          <div key={row.label} className="flex justify-between items-center">
+            <span className="font-mono text-muted text-xs">{row.label}</span>
+            <span className="font-mono text-text text-xs">{row.value}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="h-px bg-border mx-5" />
+
+      {/* Human terms */}
+      <div className="px-5 py-4">
+        <p className="font-mono text-muted text-xs tracking-widest mb-2">IMPACT EQUIVALENT</p>
+        <p
+          className="text-sm text-text leading-relaxed"
+          style={{ fontFamily: 'Sora, sans-serif', fontWeight: 300 }}
+        >
+          {blastData.human_comparison}
+        </p>
+      </div>
     </div>
-  )
+  );
 }

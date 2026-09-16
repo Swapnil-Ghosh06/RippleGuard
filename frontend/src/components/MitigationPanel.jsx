@@ -1,43 +1,63 @@
-import { useGraphStore } from '../store/graphStore'
-
-function EmptyState() {
-  return (
-    <div className="h-full flex items-center justify-center">
-      <p className="font-mono text-muted text-xs text-center max-w-xs">
-        Mitigation actions will appear here.
-      </p>
-    </div>
-  )
-}
+import { useGraphStore } from '../store/graphStore';
 
 export default function MitigationPanel() {
-  const blastData = useGraphStore((s) => s.blastData)
+  const { blastData } = useGraphStore();
 
-  if (!blastData || !blastData.mitigations || blastData.mitigations.length === 0) {
-    return <EmptyState />
+  if (!blastData || !blastData.mitigations?.length) {
+    return (
+      <div className="h-full flex items-center justify-center p-6">
+        <p className="font-mono text-muted text-xs text-center max-w-xs leading-relaxed">
+          Mitigation actions<br />will appear here.
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="py-4 px-5 flex flex-col gap-1 mb-2">
-      <p className="font-mono text-muted text-xs tracking-widest mb-2">MITIGATION PRIORITY</p>
+    <div className="px-5 py-4">
+      <p className="font-mono text-muted text-xs tracking-widest mb-4">MITIGATION PRIORITY</p>
 
-      {blastData.mitigations.map((item) => (
-        <div key={item.package} className="py-3 border-b border-border last:border-0">
-          {/* First line — package name + reduction */}
-          <div className="flex justify-between">
-            <span className="font-mono text-text text-xs">{item.package}</span>
-            <span className="font-mono text-safe text-xs">{item.blast_reduction}% reduction</span>
-          </div>
+      <div className="flex flex-col gap-0">
+        {blastData.mitigations.map((item, i) => {
+          const pct      = item.blast_reduction;
+          const barColor = pct >= 80 ? 'bg-danger' : pct >= 50 ? 'bg-warn' : 'bg-safe';
 
-          {/* Second line — fix version */}
-          <p className="font-mono text-dim text-xs mt-1">Upgrade to {item.fix_version}</p>
+          return (
+            <div key={i} className="py-3 border-b border-border last:border-0">
 
-          {/* Third line — description (optional) */}
-          {item.description && (
-            <p className="font-sans text-muted text-xs mt-1 leading-relaxed">{item.description}</p>
-          )}
-        </div>
-      ))}
+              {/* Header row */}
+              <div className="flex justify-between items-start mb-1.5">
+                <span className="font-mono text-text text-xs leading-tight max-w-[60%]">
+                  {item.package}
+                </span>
+                <span className="font-mono text-safe text-xs shrink-0 ml-2">
+                  −{pct}%
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-full h-0.5 bg-border rounded-full mb-1.5 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${barColor} transition-all duration-700`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+
+              {/* Fix version */}
+              <p className="font-mono text-dim text-xs">
+                → upgrade to {item.fix_version}
+              </p>
+
+              {/* Description */}
+              {item.description && (
+                <p className="font-sans text-muted text-xs mt-1 leading-relaxed">
+                  {item.description}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
-  )
+  );
 }
