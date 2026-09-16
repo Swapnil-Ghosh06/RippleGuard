@@ -31,7 +31,8 @@ FAMOUS_ATTACKS: List[Dict] = [
         "package": "event-stream",
         "ecosystem": "npm",
         "version": "3.3.6",
-        "cve": "GHSA-1234-5678-9012",
+        # Real OSV advisory ID (aliased as CVE-2018-3757)
+        "cve": "GHSA-mh6f-8j2x-4483",
         "impact": "8M weekly downloads, targeted Copay Bitcoin wallet",
         "description": "Social engineering supply chain attack where a maintainer handed package ownership to a malicious actor who injected wallet-stealing payload into flatmap-stream."
     },
@@ -42,6 +43,7 @@ FAMOUS_ATTACKS: List[Dict] = [
         "package": "xz",
         "ecosystem": "pypi",
         "version": "5.6.0",
+        # Real backdoor CVE: CVE-2024-3094 (upstream C liblzma; demo mapped on PyPI)
         "cve": "CVE-2024-3094",
         "impact": "SSH server backdoor on millions of Linux servers",
         "description": "Multi-year social engineering campaign that inserted a sophisticated binary backdoor into liblzma/xz-utils to compromise OpenSSH servers."
@@ -53,7 +55,8 @@ FAMOUS_ATTACKS: List[Dict] = [
         "package": "colors",
         "ecosystem": "npm",
         "version": "1.4.1",
-        "cve": "GHSA-5678-9012-3456",
+        # Real OSV advisory ID for infinite loop protest sabotage
+        "cve": "GHSA-5rqg-jm4f-cqx7",
         "impact": "Infinite loop denial-of-service affecting 20M+ weekly downloads",
         "description": "Package maintainer intentionally sabotaged popular npm packages colors and faker with infinite loop code in protest of commercial uncompensated usage."
     }

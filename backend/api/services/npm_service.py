@@ -71,11 +71,30 @@ async def get_monthly_downloads(package: str) -> int:
 
 
 
+async def _fetch_npm_downloads_single(client: httpx.AsyncClient, package: str, sem: asyncio.Semaphore) -> tuple[str, int]:
+    async with sem:
+        url = f"https://api.npmjs.org/downloads/point/last-month/{package}"
+        try:
+            response = await client.get(url, timeout=3.5)
+            if response.status_code == 200:
+                data = response.json()
+                dl = data.get("downloads", 0)
+                if dl > 0:
+                    return package, dl
+        except Exception:
+            pass
+        return package, DEFAULT_DOWNLOAD_FALLBACKS.get(package.lower(), 1_000_000)
+
+
 async def get_downloads_batch(packages: list[str]) -> dict[str, int]:
-    """Fetch monthly download counts concurrently for a list of npm packages."""
-    tasks = [get_monthly_downloads(pkg) for pkg in packages]
-    results = await asyncio.gather(*tasks)
-    return dict(zip(packages, results))
+    """Fetch monthly download counts concurrently for a list of npm packages using pooled connections."""
+    if not packages:
+        return {}
+    sem = asyncio.Semaphore(15)
+    async with httpx.AsyncClient(limits=httpx.Limits(max_keepalive_connections=20, max_connections=30)) as client:
+        tasks = [_fetch_npm_downloads_single(client, pkg, sem) for pkg in packages]
+        results = await asyncio.gather(*tasks)
+    return dict(results)
 
 
 async def get_package_metadata(package: str) -> dict:

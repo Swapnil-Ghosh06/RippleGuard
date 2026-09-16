@@ -23,7 +23,10 @@ async def build_dependency_graph(
     max_depth: int = 3
 ) -> nx.DiGraph:
     """
-    BFS-based graph construction from deps.dev API per docs/TDD.md Section 3.1.
+    Constructs dependency graph via Google deps.dev API per docs/TDD.md Section 3.1.
+    Resolves full transitive dependency tree in a single call, pruning to max_depth.
+
+    Returns an empty DiGraph if the package or version cannot be resolved (triggering 404).
 
     Each node ID: package@version
     Each directed edge: (dependent) -> (dependency)
@@ -34,59 +37,51 @@ async def build_dependency_graph(
         - depth: int (0 for root)
         - is_root: bool
     """
-    G = nx.DiGraph()
-    queue = deque()
-    visited = set()
+    flat_nodes, flat_edges = await deps_service.get_all_deps_as_flat_list(package, ecosystem, version)
+    if not flat_nodes:
+        return nx.DiGraph()
 
-    root_id = f"{package}@{version}"
-    queue.append((root_id, package, ecosystem, version, 0))
-    G.add_node(
-        root_id,
-        name=package,
-        version=version,
-        ecosystem=ecosystem,
-        depth=0,
-        is_root=True
-    )
+    # Build adjacency list from flat_edges to compute depths from root (index 0)
+    temp_adj = {i: [] for i in range(len(flat_nodes))}
+    for u, v in flat_edges:
+        if 0 <= u < len(flat_nodes) and 0 <= v < len(flat_nodes):
+            temp_adj[u].append(v)
 
+    # BFS from root (index 0) to assign node depth up to max_depth
+    depths = {0: 0}
+    queue = deque([0])
     while queue:
-        node_id, pkg, eco, ver, depth = queue.popleft()
-
-        if node_id in visited or depth >= max_depth:
+        curr = queue.popleft()
+        curr_d = depths[curr]
+        if curr_d >= max_depth:
             continue
-        visited.add(node_id)
+        for nxt in temp_adj[curr]:
+            if nxt not in depths:
+                depths[nxt] = curr_d + 1
+                queue.append(nxt)
 
-        # Fetch direct dependencies from deps.dev
-        deps = await deps_service.get_dependencies(pkg, eco, ver)
+    G = nx.DiGraph()
+    id_map = {}
+    for idx, d in depths.items():
+        node = flat_nodes[idx]
+        nid = f"{node['name']}@{node['version']}"
+        id_map[idx] = nid
+        if nid not in G:
+            G.add_node(
+                nid,
+                name=node['name'],
+                version=node['version'],
+                ecosystem=node.get('ecosystem', ecosystem),
+                depth=d,
+                is_root=(idx == 0)
+            )
 
-        for dep in deps:
-            dep_id = f"{dep['name']}@{dep['version']}"
-
-            if dep_id not in G:
-                G.add_node(
-                    dep_id,
-                    name=dep['name'],
-                    version=dep['version'],
-                    ecosystem=eco,
-                    depth=depth + 1,
-                    is_root=False
-                )
-            else:
-                if depth + 1 < G.nodes[dep_id].get("depth", depth + 1):
-                    G.nodes[dep_id]["depth"] = depth + 1
-
-            # In the dependency graph, edge points from dependent to dependency
-            # (e.g. express depends on lodash -> express -> lodash)
+    # In RippleGuard graph convention, edges point from dependent to dependency
+    for u, v in flat_edges:
+        if u in depths and v in depths:
+            dep_id = id_map[v]
+            node_id = id_map[u]
             G.add_edge(dep_id, node_id)
-
-            if dep_id not in visited:
-                queue.append((
-                    dep_id,
-                    dep['name'],
-                    eco,
-                    dep['version'],
-                    depth + 1
-                ))
 
     return G
 
