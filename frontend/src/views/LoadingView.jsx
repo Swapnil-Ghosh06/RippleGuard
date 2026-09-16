@@ -1,81 +1,69 @@
-import { AnimatePresence, motion } from 'framer-motion'
-import useLoadingSteps from '../hooks/useLoadingSteps'
-import { useGraphStore } from '../store/graphStore'
+import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
-function StepDot({ index, activeIndex }) {
-  let colorClass = 'bg-muted'
-  if (index < activeIndex)  colorClass = 'bg-safe'
-  if (index === activeIndex) colorClass = 'bg-accent'
-  return <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${colorClass}`} />
-}
-
-function StepText({ text, index, activeIndex }) {
-  if (index < activeIndex) {
-    return <span className="font-mono text-xs text-dim">{text}</span>
-  }
-  if (index > activeIndex) {
-    return <span className="font-mono text-xs text-muted">{text}</span>
-  }
-  // Active step — Framer Motion fade+slide in
-  return (
-    <AnimatePresence mode="wait">
-      <motion.span
-        key={activeIndex}
-        className="font-mono text-xs text-text"
-        initial={{ opacity: 0, x: -6 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
-      >
-        {text}
-      </motion.span>
-    </AnimatePresence>
-  )
-}
-
-function LoadingState() {
-  const { steps, activeIndex } = useLoadingSteps()
-
-  return (
-    <div className="max-w-sm w-full flex flex-col gap-3">
-      <p className="font-sans text-text text-sm font-medium mb-2">Analyzing…</p>
-      {steps.map((step, index) => (
-        <div key={step.ms} className="flex items-center gap-3">
-          <StepDot index={index} activeIndex={activeIndex} />
-          <StepText text={step.text} index={index} activeIndex={activeIndex} />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function ErrorState({ error }) {
-  const { setError, setView } = useGraphStore()
-
-  function handleRetry() {
-    setError(null)
-    setView('idle')
-  }
-
-  return (
-    <div className="max-w-sm w-full flex flex-col gap-4">
-      <p className="font-mono text-danger text-sm">{error}</p>
-      <button
-        onClick={handleRetry}
-        className="font-sans text-sm font-medium border border-border text-text px-4 py-2 rounded-sm hover:bg-surface transition-colors duration-150 w-fit"
-      >
-        Try again
-      </button>
-    </div>
-  )
-}
+const STEPS = [
+  { ms: 0,    text: 'Resolving dependency graph…'          },
+  { ms: 900,  text: 'Fetching vulnerability data from OSV…' },
+  { ms: 1900, text: 'Calculating blast radius…'            },
+  { ms: 2600, text: 'Mapping propagation paths…'           },
+  { ms: 3100, text: 'Rendering graph…'                     },
+];
 
 export default function LoadingView() {
-  const error = useGraphStore((s) => s.error)
+  const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    const timers = STEPS.slice(1).map((step, i) =>
+      setTimeout(() => setCurrentStep(i + 1), step.ms)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-void">
-      {error ? <ErrorState error={error} /> : <LoadingState />}
+    <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden gap-8">
+
+      {/* Scan line */}
+      <div className="scanline" />
+
+      {/* Wordmark faded */}
+      <p
+        className="text-2xl font-black text-dim tracking-tight"
+        style={{ fontFamily: 'Montserrat, sans-serif' }}
+      >
+        Ripple<span className="text-accent" style={{ opacity: 0.6 }}>Guard</span>
+      </p>
+
+      {/* Step sequence */}
+      <div className="flex flex-col items-center gap-3 min-h-[120px] justify-center">
+        <AnimatePresence mode="popLayout">
+          {STEPS.slice(0, currentStep + 1).map((step, i) => (
+            <motion.p
+              key={step.text}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{
+                opacity: i === currentStep ? 1 : 0.25,
+                y: 0,
+              }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className={`font-mono text-xs text-center ${
+                i === currentStep ? 'text-text' : 'text-muted'
+              }`}
+            >
+              {i < currentStep ? '✓ ' : '› '}{step.text}
+            </motion.p>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-48 h-px bg-border overflow-hidden rounded-full">
+        <motion.div
+          className="h-full bg-accent"
+          initial={{ width: '0%' }}
+          animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
+        />
+      </div>
     </div>
-  )
+  );
 }
