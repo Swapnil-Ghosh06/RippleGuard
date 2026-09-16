@@ -90,9 +90,10 @@ All of these are **completely free, no API key, no rate-limit concern for demo s
 - Animation shows the blast spreading node by node in real time on the frontend
 
 ### F5 — Blast Radius Score
-- Calculated per injected node: `BlastScore = Σ(monthly_downloads of affected packages) * severity_weight`
+- Calculated per injected node: `BlastScore = Σ(monthly_downloads of affected packages) * severity_weight` (Formalized in TDD Section 3.2: `min(count/200, 1.0)*30 + min(log10(downloads)/9, 1.0)*60 + CVE_bonus`)
 - Displayed as a large number with a label: "**47M users potentially affected**"
 - Broken down: direct dependencies affected, transitive dependencies affected, estimated app count
+> **Note on Prototype Calibrations:** Earlier prototype documentation and draft mocks quoted uniform blast scores in the 65–75 range. Those were stub-only illustrative figures used during mock calibration before live network integration. Against live registries (npm, PyPI, deps.dev, OSV), blast scores dynamically reflect real graph topologies and real registry metrics (e.g. 0.0 for leaf packages with 0 dependents, 10.0 for zero-dependency packages with known CVEs like lodash, 60.3 for react, and 78.2 for high-connectivity frameworks like express).
 
 ### F6 — Mitigation Priority Engine
 - After compromise injection, backend ranks all vulnerable paths by fix priority
