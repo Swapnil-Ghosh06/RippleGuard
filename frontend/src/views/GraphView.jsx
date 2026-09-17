@@ -17,39 +17,41 @@ export default function GraphView() {
 
   return (
     <div
-      className="w-full flex flex-row overflow-hidden bg-void"
+      className="w-full flex flex-row overflow-hidden bg-white"
       style={{ height: 'calc(100vh - 56px)' }}
     >
-      {/* Left — Graph canvas (takes all remaining space with explicit height) */}
+      {/* Left — Graph canvas */}
       <div className="flex-1 min-w-0 h-full overflow-hidden relative flex flex-col">
         {error !== null ? (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-            <p className="font-mono text-danger text-sm text-center max-w-sm">{error}</p>
-            <button
-              onClick={handleStartOver}
-              className="font-sans text-sm border border-border text-text px-4 py-2 rounded-lg hover:bg-surface transition-colors duration-150"
-            >
-              Start over
-            </button>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-6">
+            <div className="rounded-2xl border border-border bg-white p-6 max-w-sm text-center shadow-sm">
+              <p className="font-sans text-danger text-sm mb-4">{error}</p>
+              <button
+                onClick={handleStartOver}
+                className="text-xs font-sans font-medium text-text bg-surface2 hover:bg-surface3 border border-border px-4 py-2 rounded-full transition-colors"
+              >
+                ← Back to Search
+              </button>
+            </div>
           </div>
         ) : (
           <GraphCanvas />
         )}
       </div>
 
-      {/* Right — Slide-in Security Dashboard Side Panel (Inspo 1) */}
+      {/* Right — Slide-in Minimalist Security Dashboard Side Panel */}
       <AnimatePresence>
         {graphData !== null && (
           <motion.aside
             key="side-panel"
-            className="w-96 shrink-0 h-full bg-surface border-l border-border flex flex-col overflow-y-auto shadow-2xl z-30"
-            initial={{ x: 384, opacity: 0 }}
+            className="w-[380px] shrink-0 h-full bg-white border-l border-border flex flex-col overflow-y-auto shadow-sm z-30"
+            initial={{ x: 380, opacity: 0 }}
             animate={{ x: 0,   opacity: 1 }}
-            exit={{ x: 384,    opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 280, damping: 30 }}
+            exit={{ x: 380,    opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
           >
             <BlastRadiusPanel />
-            <div className="h-px bg-border/80 mx-5 my-1" />
+            <div className="h-px bg-border mx-5 my-1" />
             <MitigationPanel />
           </motion.aside>
         )}
