@@ -8,7 +8,7 @@ function formatDownloads(n) {
   return n + ' dl/mo';
 }
 
-const PackageNode = memo(({ data }) => {
+const PackageNode = memo(({ id, data }) => {
   const {
     name,
     version,
@@ -22,7 +22,12 @@ const PackageNode = memo(({ data }) => {
     isDominoActive,
     isSandboxPatched,
     isSandboxProtected,
+    childCount = 0,
+    isExpanded = false,
+    onToggleExpand,
   } = data;
+
+  const nodeId = data?.id || id || (version ? `${name}@${version}` : name);
 
   const topSev = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].find(s =>
     vulnerabilities.some(v => v.severity === s)
@@ -55,19 +60,19 @@ const PackageNode = memo(({ data }) => {
 
   return (
     <div
-      className={`relative w-[195px] min-h-[102px] max-h-[114px] rounded-xl p-2.5 flex flex-col justify-between transition-all duration-200 cursor-pointer select-none ${cardStyle}`}
+      className={`relative min-w-[210px] max-w-[235px] rounded-xl p-3 flex flex-col justify-between transition-all duration-200 cursor-pointer select-none ${cardStyle}`}
     >
       {/* Left target handle */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-2 !h-2 !rounded-full !bg-zinc-400 !border-2 !border-white !-left-1"
+        className="!w-2.5 !h-2.5 !rounded-full !bg-zinc-400 !border-2 !border-white !-left-1.5"
       />
 
       {/* TOP ROW */}
       <div className="flex items-center justify-between gap-1 mb-1">
         <div className="flex items-center gap-1">
-          <span className="text-[9px] font-sans font-medium px-1.5 py-0.2 rounded-full bg-surface2 border border-border text-muted">
+          <span className="text-[9px] font-sans font-medium px-1.5 py-0.5 rounded-full bg-surface2 border border-border text-muted">
             {ecosystem}
           </span>
           <span className="text-[9px] font-sans text-muted">
@@ -76,18 +81,18 @@ const PackageNode = memo(({ data }) => {
         </div>
 
         {isSandboxPatched ? (
-          <span className="text-[9px] font-sans font-bold px-1.5 py-0.2 rounded-full border bg-emerald-500 text-white border-emerald-600 shadow-xs flex items-center gap-0.5">
+          <span className="text-[9px] font-sans font-bold px-1.5 py-0.5 rounded-full border bg-emerald-500 text-white border-emerald-600 shadow-xs flex items-center gap-0.5">
             <span>🛡️</span>
             <span>Patched</span>
           </span>
         ) : isSandboxProtected ? (
-          <span className="text-[9px] font-sans font-semibold px-1.5 py-0.2 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300 flex items-center gap-0.5">
+          <span className="text-[9px] font-sans font-semibold px-1.5 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300 flex items-center gap-0.5">
             <span>✓</span>
             <span>Shielded</span>
           </span>
         ) : dominoIndex ? (
           <span
-            className={`text-[9px] font-sans font-bold px-1.5 py-0.2 rounded-full border flex items-center gap-0.5 transition-all ${
+            className={`text-[9px] font-sans font-bold px-1.5 py-0.5 rounded-full border flex items-center gap-0.5 transition-all ${
               isDominoActive
                 ? 'bg-amber-500 text-white border-amber-600 shadow-sm animate-pulse'
                 : 'bg-amber-100 text-amber-900 border-amber-300'
@@ -97,12 +102,12 @@ const PackageNode = memo(({ data }) => {
             <span>{dominoIndex === 1 ? 'Origin #1' : `Domino #${dominoIndex}`}</span>
           </span>
         ) : blasted ? (
-          <span className="text-[9px] font-sans font-semibold text-rose-700 bg-rose-100/80 px-1.5 py-0.2 rounded-full border border-rose-200">
+          <span className="text-[9px] font-sans font-semibold text-rose-700 bg-rose-100/80 px-1.5 py-0.5 rounded-full border border-rose-200">
             ⚡ Tainted
           </span>
         ) : topSev ? (
           <span
-            className={`text-[9px] font-sans font-medium px-1.5 py-0.2 rounded-full border ${
+            className={`text-[9px] font-sans font-medium px-1.5 py-0.5 rounded-full border ${
               topSev === 'CRITICAL'
                 ? 'bg-rose-50 text-rose-700 border-rose-200'
                 : topSev === 'HIGH' || topSev === 'MEDIUM'
@@ -160,15 +165,37 @@ const PackageNode = memo(({ data }) => {
         )}
       </div>
 
-      {/* BOTTOM ROW */}
-      <div className="border-t border-border/50 pt-1 flex items-center justify-between text-[9px] text-muted font-sans">
-        <span>Package</span>
-        {monthly_downloads ? (
-          <span className="font-mono text-[9px] text-dim">
-            {formatDownloads(monthly_downloads)}
-          </span>
+      {/* BOTTOM ROW: Downloads on Left, Expand/Collapse Toggle on Right */}
+      <div className="border-t border-border/60 mt-1.5 pt-1.5 flex items-center justify-between text-[10px] text-muted font-sans gap-1">
+        <div>
+          {monthly_downloads ? (
+            <span className="font-mono text-[10px] text-dim">
+              {formatDownloads(monthly_downloads)}
+            </span>
+          ) : (
+            <span className="text-[10px] text-muted">0 dl/mo</span>
+          )}
+        </div>
+
+        {childCount > 0 ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onToggleExpand) onToggleExpand(nodeId);
+            }}
+            className={`text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full border transition-all cursor-pointer shadow-2xs flex items-center gap-1 ${
+              isExpanded
+                ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-300'
+                : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 animate-pulse'
+            }`}
+            title={isExpanded ? 'Collapse sub-dependencies' : `Reveal ${childCount} downstream dependencies`}
+          >
+            <span>{isExpanded ? '−' : '+'}</span>
+            <span>{isExpanded ? 'collapse' : `${childCount} deps`}</span>
+          </button>
         ) : (
-          <span className="opacity-0">-</span>
+          <span className="text-[9px] text-muted/60 uppercase font-sans">Leaf</span>
         )}
       </div>
 
@@ -176,7 +203,7 @@ const PackageNode = memo(({ data }) => {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-2 !h-2 !rounded-full !bg-zinc-400 !border-2 !border-white !-right-1"
+        className="!w-2.5 !h-2.5 !rounded-full !bg-zinc-400 !border-2 !border-white !-right-1.5"
       />
     </div>
   );

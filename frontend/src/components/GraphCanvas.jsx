@@ -60,10 +60,13 @@ const MOCK_BLAST = {
   ],
 };
 
+/**
+ * Intelligent DAG-layered layout calculation for visible nodes.
+ * Anchors children to parent positions and ensures comfortable vertical and horizontal spacing.
+ */
 function buildIntelligentLayout(nodes, edges) {
   if (!nodes || nodes.length === 0) return {};
 
-  // 1. Build node lookup and edge adjacency map
   const nodeMap = new Map();
   nodes.forEach(n => nodeMap.set(n.id, n));
 
@@ -93,9 +96,8 @@ function buildIntelligentLayout(nodes, edges) {
       parentId = vId;
       childId = uId;
     } else {
-      // Same depth linkage: if u is source and v is target in dependency direction
-      parentId = vId;
-      childId = uId;
+      parentId = uId;
+      childId = vId;
     }
 
     if (!childrenMap.get(parentId).includes(childId)) {
@@ -106,8 +108,7 @@ function buildIntelligentLayout(nodes, edges) {
     }
   });
 
-  // 2. Compute Longest-Path DAG Layering
-  // Roots (depth 0 or is_root) start at layer 0
+  // Topological / Depth Layering
   const roots = nodes.filter(n => n.is_root || n.depth === 0);
   const rootIds = new Set(roots.length > 0 ? roots.map(r => r.id) : [nodes[0].id]);
 
@@ -116,7 +117,6 @@ function buildIntelligentLayout(nodes, edges) {
     if (rootIds.has(n.id)) layerMap.set(n.id, 0);
   });
 
-  // Relax layers so downstream dependents move rightwards in DAG order
   let changed = true;
   let iterations = 0;
   while (changed && iterations < 15) {
@@ -142,7 +142,6 @@ function buildIntelligentLayout(nodes, edges) {
     if (!layerMap.has(n.id)) layerMap.set(n.id, n.depth ?? 0);
   });
 
-  // 3. Group nodes by computed topological layer
   const byLayer = {};
   for (const n of nodes) {
     const layer = layerMap.get(n.id);
@@ -153,14 +152,11 @@ function buildIntelligentLayout(nodes, edges) {
   const layers = Object.keys(byLayer).map(Number).sort((a, b) => a - b);
   const positions = {};
 
-  // Compact, sleek geometry:
-  // Card width is 195px -> X_STEP of 275 leaves 80px clean conduit for smooth edge routing.
-  // Card height is ~104px -> MIN_Y_GAP of 125 leaves 21px breathing room.
-  const X_STEP = 275;
-  const MIN_Y_GAP = 125;
+  const X_STEP = 310;
+  const MIN_Y_GAP = 135;
   const BASE_Y_CENTER = 300;
 
-  // 4. Layout Root Layer (Layer 0)
+  // Root Layer (Layer 0)
   const rootGroup = byLayer[layers[0]] || [];
   const rootTotalH = (rootGroup.length - 1) * MIN_Y_GAP;
   rootGroup.forEach((n, i) => {
@@ -170,14 +166,13 @@ function buildIntelligentLayout(nodes, edges) {
     };
   });
 
-  // 5. Layout subsequent layers (Layer >= 1)
+  // Subsequent Layers
   for (let idx = 1; idx < layers.length; idx++) {
     const l = layers[idx];
     const group = byLayer[l];
     const colX = l * X_STEP + 70;
 
     if (l === 1) {
-      // Direct dependencies of root: center around root center
       const totalH = (group.length - 1) * MIN_Y_GAP;
       const startY = BASE_Y_CENTER - totalH / 2;
       group.forEach((n, i) => {
@@ -187,7 +182,6 @@ function buildIntelligentLayout(nodes, edges) {
         };
       });
     } else {
-      // Downstream layers: Parent-anchored placement
       const groupWithIdeal = group.map(n => {
         const parents = parentsMap.get(n.id) || [];
         let idealY = BASE_Y_CENTER;
@@ -198,19 +192,15 @@ function buildIntelligentLayout(nodes, edges) {
         return { node: n, idealY };
       });
 
-      // Sort by idealY so nodes align cleanly top-to-bottom with parents
       groupWithIdeal.sort((a, b) => a.idealY - b.idealY);
-
       const yCoords = groupWithIdeal.map(item => item.idealY);
 
-      // Pass 1: Downward overlap resolution with strict MIN_Y_GAP
       for (let i = 1; i < yCoords.length; i++) {
         if (yCoords[i] < yCoords[i - 1] + MIN_Y_GAP) {
           yCoords[i] = yCoords[i - 1] + MIN_Y_GAP;
         }
       }
 
-      // Pass 2: Center cluster around average ideal Y of its parents
       const currentAvg = yCoords.reduce((a, b) => a + b, 0) / yCoords.length;
       const idealAvg = groupWithIdeal.reduce((a, b) => a + b.idealY, 0) / groupWithIdeal.length;
       const shift = idealAvg - currentAvg;
@@ -219,7 +209,6 @@ function buildIntelligentLayout(nodes, edges) {
         yCoords[i] += shift;
       }
 
-      // Pass 3: Final gap check
       for (let i = 1; i < yCoords.length; i++) {
         if (yCoords[i] < yCoords[i - 1] + MIN_Y_GAP) {
           yCoords[i] = yCoords[i - 1] + MIN_Y_GAP;
@@ -235,7 +224,6 @@ function buildIntelligentLayout(nodes, edges) {
     }
   }
 
-  // 6. Global coordinate normalization (positive margins)
   let minY = Infinity;
   let minX = Infinity;
   for (const pos of Object.values(positions)) {
@@ -256,19 +244,25 @@ function buildIntelligentLayout(nodes, edges) {
   return positions;
 }
 
+/**
+ * Auto Viewport Centering component
+ */
 function ViewportAutoFitter({ triggerKey }) {
   const { fitView } = useReactFlow();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fitView({ padding: 0.18, duration: 400 });
-    }, 70);
+      fitView({ padding: 0.22, duration: 450 });
+    }, 60);
     return () => clearTimeout(timer);
   }, [triggerKey, fitView]);
 
   return null;
 }
 
+/**
+ * Extracts or derives the Critical Domino Chain for the Butterfly Trace Stepper HUD.
+ */
 function extractCriticalChain(blastData, rawNodes, rawEdges, selectedNode) {
   if (blastData?.critical_chain && Array.isArray(blastData.critical_chain) && blastData.critical_chain.length >= 2) {
     return blastData.critical_chain;
@@ -320,6 +314,9 @@ function extractCriticalChain(blastData, rawNodes, rawEdges, selectedNode) {
   return longest;
 }
 
+/**
+ * Floating Butterfly Domino Stepper HUD
+ */
 function ButterflyStepperHUD({
   criticalChain,
   activeStep,
@@ -432,6 +429,9 @@ function ButterflyStepperHUD({
   );
 }
 
+/**
+ * Main Graph Canvas with Progressive Disclosure and Smooth Auto-Zoom
+ */
 function GraphCanvasInner() {
   const {
     graphData, blastData,
@@ -444,25 +444,59 @@ function GraphCanvasInner() {
   } = useGraphStore();
 
   const { simulate } = useSimulate();
+  const { fitView } = useReactFlow();
+
   const [blastSet, setBlastSet] = useState(new Set());
   const [localSelected, setLocalSelected] = useState(selectedNode);
-  const [prevSelectedNode, setPrevSelectedNode] = useState(selectedNode);
+  const [expandedSet, setExpandedSet] = useState(new Set());
 
-  if (selectedNode !== prevSelectedNode) {
-    setPrevSelectedNode(selectedNode);
-    setLocalSelected(selectedNode);
-  }
+  useEffect(() => {
+    if (selectedNode !== undefined && selectedNode !== localSelected) {
+      setLocalSelected(selectedNode);
+    }
+  }, [selectedNode, localSelected]);
 
-  const rawNodes = useMemo(
-    () => graphData?.nodes ?? graphData?.graph?.nodes ?? [],
-    [graphData]
-  );
-  const rawEdges = useMemo(
-    () => graphData?.edges ?? graphData?.graph?.edges ?? [],
-    [graphData]
-  );
+  const rawNodes = useMemo(() => graphData?.nodes ?? graphData?.graph?.nodes ?? [], [graphData]);
+  const rawEdges = useMemo(() => graphData?.edges ?? graphData?.graph?.edges ?? [], [graphData]);
 
-  const positions = useMemo(() => buildIntelligentLayout(rawNodes, rawEdges), [rawNodes, rawEdges]);
+  // Mapping parent -> dependencies
+  const childrenMap = useMemo(() => {
+    const map = {};
+    rawNodes.forEach(n => {
+      map[n.id] = [];
+    });
+    rawEdges.forEach(e => {
+      const u = typeof e.source === 'string' ? e.source : e.source?.id;
+      const v = typeof e.target === 'string' ? e.target : e.target?.id;
+      if (u && v && map[u]) {
+        if (!map[u].includes(v)) {
+          map[u].push(v);
+        }
+      }
+    });
+    return map;
+  }, [rawNodes, rawEdges]);
+
+  // Initialize expanded set
+  useEffect(() => {
+    if (!rawNodes.length) {
+      setExpandedSet(new Set());
+      return;
+    }
+
+    const rootNodes = rawNodes.filter(n => n.is_root || n.depth === 0);
+    const rootIds = rootNodes.length > 0 ? rootNodes.map(n => n.id) : [rawNodes[0].id];
+
+    if (rawNodes.length <= 8) {
+      const allWithChildren = new Set();
+      Object.entries(childrenMap).forEach(([id, children]) => {
+        if (children.length > 0) allWithChildren.add(id);
+      });
+      setExpandedSet(allWithChildren);
+    } else {
+      setExpandedSet(new Set(rootIds));
+    }
+  }, [rawNodes, childrenMap]);
 
   // Compute Butterfly Trace (Critical Domino Path)
   const criticalChain = useMemo(() => {
@@ -487,26 +521,6 @@ function GraphCanvasInner() {
     }
     return pairs;
   }, [criticalChain]);
-
-  // Autoplay timer for Domino Stepper
-  useEffect(() => {
-    if (!isDominoPlaying || criticalChain.length <= 1) return;
-
-    const timer = setInterval(() => {
-      setActiveDominoIndex((prev) => {
-        const next = prev === null ? 0 : prev + 1;
-        if (next >= criticalChain.length) {
-          setIsDominoPlaying(false);
-          return prev;
-        }
-        const nextNodeId = criticalChain[next];
-        if (nextNodeId) setSelectedNode(nextNodeId);
-        return next;
-      });
-    }, 950);
-
-    return () => clearInterval(timer);
-  }, [isDominoPlaying, criticalChain, setActiveDominoIndex, setIsDominoPlaying, setSelectedNode]);
 
   // Real-time Sandbox Contagion Containment BFS Math
   const { effectiveTaintedSet, protectedSet } = useMemo(() => {
@@ -565,12 +579,106 @@ function GraphCanvasInner() {
     };
   }, [blastSet, sandboxPatches, rawEdges, selectedNode, rawNodes]);
 
+  // Compute set of visible node IDs
+  const visibleNodeIds = useMemo(() => {
+    if (!rawNodes.length) return new Set();
+
+    const rootNodes = rawNodes.filter(n => n.is_root || n.depth === 0);
+    const startNodes = rootNodes.length > 0 ? rootNodes.map(n => n.id) : [rawNodes[0].id];
+
+    const visible = new Set(startNodes);
+    const queue = [...startNodes];
+
+    while (queue.length > 0) {
+      const curr = queue.shift();
+      if (expandedSet.has(curr)) {
+        const children = childrenMap[curr] || [];
+        for (const childId of children) {
+          if (!visible.has(childId)) {
+            visible.add(childId);
+            queue.push(childId);
+          }
+        }
+      }
+    }
+
+    const forced = [
+      ...criticalChain,
+      ...effectiveTaintedSet,
+      ...sandboxPatches,
+      localSelected,
+    ];
+    forced.forEach(id => {
+      if (id && rawNodes.some(n => n.id === id)) {
+        visible.add(id);
+      }
+    });
+
+    return visible;
+  }, [rawNodes, childrenMap, expandedSet, criticalChain, effectiveTaintedSet, sandboxPatches, localSelected]);
+
+  const visibleNodes = useMemo(() => {
+    return rawNodes.filter(n => visibleNodeIds.has(n.id));
+  }, [rawNodes, visibleNodeIds]);
+
+  const visibleEdges = useMemo(() => {
+    return rawEdges.filter(e => {
+      const u = typeof e.source === 'string' ? e.source : e.source?.id;
+      const v = typeof e.target === 'string' ? e.target : e.target?.id;
+      return visibleNodeIds.has(u) && visibleNodeIds.has(v);
+    });
+  }, [rawEdges, visibleNodeIds]);
+
+  // Layout for visible nodes
+  const positions = useMemo(() => buildIntelligentLayout(visibleNodes, visibleEdges), [visibleNodes, visibleEdges]);
+
+  // Progressive Disclosure Expand / Collapse toggles
+  const toggleExpand = useCallback((nodeId) => {
+    setExpandedSet(prev => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) {
+        next.delete(nodeId);
+      } else {
+        next.add(nodeId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleExpandAll = useCallback(() => {
+    const allWithChildren = new Set();
+    Object.entries(childrenMap).forEach(([id, children]) => {
+      if (children.length > 0) allWithChildren.add(id);
+    });
+    setExpandedSet(allWithChildren);
+  }, [childrenMap]);
+
+  const handleFocusDirect = useCallback(() => {
+    const rootNodes = rawNodes.filter(n => n.is_root || n.depth === 0);
+    const rootIds = rootNodes.length > 0 ? rootNodes.map(n => n.id) : [rawNodes[0]?.id].filter(Boolean);
+    setExpandedSet(new Set(rootIds));
+  }, [rawNodes]);
+
+  const handleFitView = useCallback(() => {
+    fitView({ duration: 500, padding: 0.25 });
+  }, [fitView]);
+
+  // Auto-Zoom on visible nodes change
+  useEffect(() => {
+    if (!visibleNodes.length) return;
+    const timer = setTimeout(() => {
+      fitView({ duration: 500, padding: 0.25 });
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [visibleNodes.length, fitView]);
+
+  // React Flow Nodes
   const rfNodes = useMemo(() => {
     const activeDominoNodeId = (activeDominoIndex !== null && activeDominoIndex !== undefined)
       ? criticalChain[activeDominoIndex]
       : null;
 
-    return rawNodes.map(n => ({
+    return visibleNodes.map(n => ({
       id: n.id,
       type: 'package',
       position: positions[n.id] ?? { x: 0, y: 0 },
@@ -582,12 +690,29 @@ function GraphCanvasInner() {
         isDominoActive: activeDominoNodeId === n.id,
         isSandboxPatched: sandboxPatches.includes(n.id),
         isSandboxProtected: protectedSet.has(n.id),
+        childCount: childrenMap[n.id]?.length ?? 0,
+        isExpanded: expandedSet.has(n.id),
+        onToggleExpand: toggleExpand,
       },
     }));
-  }, [rawNodes, positions, effectiveTaintedSet, localSelected, dominoIndexMap, activeDominoIndex, criticalChain, sandboxPatches, protectedSet]);
+  }, [
+    visibleNodes,
+    positions,
+    effectiveTaintedSet,
+    localSelected,
+    dominoIndexMap,
+    activeDominoIndex,
+    criticalChain,
+    sandboxPatches,
+    protectedSet,
+    childrenMap,
+    expandedSet,
+    toggleExpand,
+  ]);
 
+  // React Flow Edges
   const rfEdges = useMemo(() => {
-    return rawEdges.map((e, i) => {
+    return visibleEdges.map((e, i) => {
       const u = typeof e.source === 'string' ? e.source : e.source?.id;
       const v = typeof e.target === 'string' ? e.target : e.target?.id;
       const isCriticalPath = criticalEdgePairs.has(`${u}->${v}`);
@@ -601,7 +726,7 @@ function GraphCanvasInner() {
         );
 
       return {
-        id: `e-${i}`,
+        id: `e-${u}-${v}-${i}`,
         source: u,
         target: v,
         type: 'smoothstep',
@@ -627,7 +752,7 @@ function GraphCanvasInner() {
         },
       };
     });
-  }, [rawEdges, effectiveTaintedSet, criticalEdgePairs, activeDominoIndex, criticalChain, sandboxPatches]);
+  }, [visibleEdges, effectiveTaintedSet, criticalEdgePairs, activeDominoIndex, criticalChain, sandboxPatches]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
@@ -635,15 +760,34 @@ function GraphCanvasInner() {
   useEffect(() => { setNodes(rfNodes); }, [rfNodes, setNodes]);
   useEffect(() => { setEdges(rfEdges); }, [rfEdges, setEdges]);
 
-  const [prevGraphData, setPrevGraphData] = useState(graphData);
-  if (graphData !== prevGraphData) {
-    setPrevGraphData(graphData);
+  // Autoplay timer for Domino Stepper
+  useEffect(() => {
+    if (!isDominoPlaying || criticalChain.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setActiveDominoIndex((prev) => {
+        const next = prev === null ? 0 : prev + 1;
+        if (next >= criticalChain.length) {
+          setIsDominoPlaying(false);
+          return prev;
+        }
+        const nextNodeId = criticalChain[next];
+        if (nextNodeId) setSelectedNode(nextNodeId);
+        return next;
+      });
+    }, 950);
+
+    return () => clearInterval(timer);
+  }, [isDominoPlaying, criticalChain, setActiveDominoIndex, setIsDominoPlaying, setSelectedNode]);
+
+  // Reset states on new graphData
+  useEffect(() => {
     setBlastSet(new Set());
     setLocalSelected(null);
     setActiveDominoIndex(null);
     setIsDominoPlaying(false);
     clearSandboxPatches();
-  }
+  }, [graphData, setBlastData, clearSandboxPatches, setActiveDominoIndex, setIsDominoPlaying]);
 
   const handleInject = useCallback(async () => {
     if (!localSelected || isSimulating) return;
@@ -696,6 +840,12 @@ function GraphCanvasInner() {
     setSelectedNode(next);
   }, [localSelected, setSelectedNode]);
 
+  const onNodeDoubleClick = useCallback((_, node) => {
+    if (childrenMap[node.id]?.length > 0) {
+      toggleExpand(node.id);
+    }
+  }, [childrenMap, toggleExpand]);
+
   const handleDominoStepChange = useCallback((step) => {
     setActiveDominoIndex(step);
     const targetNodeId = criticalChain[step];
@@ -723,19 +873,26 @@ function GraphCanvasInner() {
     );
   }
 
+  const isFullView = visibleNodes.length === rawNodes.length;
+
   return (
     <div className="w-full h-full flex flex-col bg-white relative overflow-hidden">
-      {/* Top Floating Pill */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 select-none flex-wrap">
+      {/* Top Floating Controls & Indicators */}
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 select-none flex-wrap max-w-[calc(100%-2rem)]">
+        {/* Main Stats Pill */}
         <div className="bg-white/95 backdrop-blur-md border border-border px-3.5 py-1.5 rounded-full flex items-center gap-2.5 text-xs font-sans shadow-sm">
           <div className="flex items-center gap-1.5 font-medium text-text">
             <span className="w-2 h-2 rounded-full bg-black" />
             <span>Dependency Canvas</span>
           </div>
           <span className="text-border">·</span>
-          <span className="text-muted">{rawNodes.length} packages</span>
+          <span className="text-muted font-medium">
+            {visibleNodes.length === rawNodes.length
+              ? `${rawNodes.length} packages`
+              : `${visibleNodes.length} of ${rawNodes.length} packages`}
+          </span>
           <span className="text-border">·</span>
-          <span className="text-muted">{rawEdges.length} links</span>
+          <span className="text-muted">{visibleEdges.length} links</span>
 
           {blastData && (
             <>
@@ -777,6 +934,45 @@ function GraphCanvasInner() {
           )}
         </div>
 
+        {/* View Layout Controls (Focus Direct / Expand All / Zoom Fit) */}
+        {rawNodes.length > 1 && (
+          <div className="bg-white/95 backdrop-blur-md border border-border px-1.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+            <button
+              type="button"
+              onClick={handleFocusDirect}
+              className={`px-2.5 py-0.5 text-[11px] font-sans font-medium rounded-full cursor-pointer transition-colors ${
+                !isFullView
+                  ? 'bg-surface2 text-text font-semibold'
+                  : 'text-muted hover:text-text hover:bg-surface'
+              }`}
+              title="Focus on Root & Direct dependencies"
+            >
+              Focus View
+            </button>
+            <button
+              type="button"
+              onClick={handleExpandAll}
+              className={`px-2.5 py-0.5 text-[11px] font-sans font-medium rounded-full cursor-pointer transition-colors ${
+                isFullView
+                  ? 'bg-surface2 text-text font-semibold'
+                  : 'text-muted hover:text-text hover:bg-surface'
+              }`}
+              title="Expand all downstream dependency branches"
+            >
+              Expand All
+            </button>
+            <span className="text-border text-xs">|</span>
+            <button
+              type="button"
+              onClick={handleFitView}
+              className="px-2 py-0.5 text-[11px] font-sans text-muted hover:text-text hover:bg-surface rounded-full cursor-pointer transition-colors"
+              title="Auto Zoom to Fit Graph"
+            >
+              Fit View ⤢
+            </button>
+          </div>
+        )}
+
         {rawNodes.length === 1 && (
           <div className="bg-amber-50/95 border border-amber-200/80 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-sans text-amber-900 shadow-xs">
             <span>ℹ️</span>
@@ -793,11 +989,12 @@ function GraphCanvasInner() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
+          onNodeDoubleClick={onNodeDoubleClick}
           nodeTypes={NODE_TYPES}
           edgeTypes={EDGE_TYPES}
           fitView
           fitViewOptions={{ padding: 0.25 }}
-          minZoom={0.25}
+          minZoom={0.2}
           maxZoom={2}
           style={{ background: '#ffffff' }}
           proOptions={{ hideAttribution: true }}
@@ -819,8 +1016,7 @@ function GraphCanvasInner() {
             maskColor="rgba(255, 255, 255, 0.65)"
           />
 
-          {/* Smooth Auto Viewport Centering & Padding */}
-          <ViewportAutoFitter triggerKey={`${rawNodes.map(n => n.id).join(',')}-${blastData ? 'blast' : 'idle'}`} />
+          <ViewportAutoFitter triggerKey={`${visibleNodes.map(n => n.id).join(',')}-${blastData ? 'blast' : 'idle'}`} />
         </ReactFlow>
 
         {/* Floating Butterfly Domino Stepper HUD */}
