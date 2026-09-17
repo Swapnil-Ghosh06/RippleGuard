@@ -459,19 +459,39 @@ function GraphCanvasInner() {
   const rawNodes = useMemo(() => graphData?.nodes ?? graphData?.graph?.nodes ?? [], [graphData]);
   const rawEdges = useMemo(() => graphData?.edges ?? graphData?.graph?.edges ?? [], [graphData]);
 
-  // Mapping parent -> dependencies
+  // Mapping parent -> dependencies (depth-aware)
   const childrenMap = useMemo(() => {
     const map = {};
+    const nodeMap = new Map();
     rawNodes.forEach(n => {
       map[n.id] = [];
+      nodeMap.set(n.id, n);
     });
+
     rawEdges.forEach(e => {
-      const u = typeof e.source === 'string' ? e.source : e.source?.id;
-      const v = typeof e.target === 'string' ? e.target : e.target?.id;
-      if (u && v && map[u]) {
-        if (!map[u].includes(v)) {
-          map[u].push(v);
-        }
+      const uId = typeof e.source === 'string' ? e.source : e.source?.id;
+      const vId = typeof e.target === 'string' ? e.target : e.target?.id;
+      const u = nodeMap.get(uId);
+      const v = nodeMap.get(vId);
+      if (!u || !v) return;
+
+      const dU = u.depth ?? 0;
+      const dV = v.depth ?? 0;
+
+      let parentId, childId;
+      if (dU < dV) {
+        parentId = uId;
+        childId = vId;
+      } else if (dV < dU) {
+        parentId = vId;
+        childId = uId;
+      } else {
+        parentId = uId;
+        childId = vId;
+      }
+
+      if (map[parentId] && !map[parentId].includes(childId)) {
+        map[parentId].push(childId);
       }
     });
     return map;
