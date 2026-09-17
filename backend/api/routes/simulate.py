@@ -17,7 +17,8 @@ from api.models.response_models import (
 from api.services.graph_service import (
     simulate_compromise,
     build_dependency_graph,
-    _graph_storage
+    _graph_storage,
+    _pkg_name
 )
 from api.services import npm_service, pypi_service, osv_service
 
@@ -138,7 +139,7 @@ async def simulate_compromise_route(request: SimulateRequest):
     elif comp_node in _graph_storage:
         graph_entry = _graph_storage[comp_node]
     else:
-        pkg_name = comp_node.split("@")[0]
+        pkg_name = _pkg_name(comp_node)
         if pkg_name in _graph_storage:
             graph_entry = _graph_storage[pkg_name]
 
@@ -241,14 +242,16 @@ async def simulate_compromise_route(request: SimulateRequest):
 
     # Ensure compromised node exists in graph
     if comp_node not in G.nodes:
-        matching = [n for n in G.nodes if n.startswith(comp_node.split("@")[0])]
+        comp_pkg = _pkg_name(comp_node)
+        matching = [n for n in G.nodes if n == comp_pkg or n.startswith(f"{comp_pkg}@")]
         if matching:
             comp_node = matching[0]
         else:
+            ver = comp_node.rsplit("@", 1)[1] if "@" in comp_node and comp_node.rfind("@") > 0 else "latest"
             G.add_node(
                 comp_node,
-                name=comp_node.split("@")[0],
-                version=comp_node.split("@")[1] if "@" in comp_node else "latest",
+                name=comp_pkg,
+                version=ver,
                 ecosystem="npm",
                 depth=0,
                 is_root=True

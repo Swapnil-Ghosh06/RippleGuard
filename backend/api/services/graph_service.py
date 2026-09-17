@@ -323,7 +323,7 @@ def rank_mitigations(
         saved_affected = (saved_subtree & all_affected) | ({node} if node in all_affected else set())
         unique_saved_pkgs = {_pkg_name(n) for n in saved_affected}
         eliminated_downloads = sum(
-            _get_dl(download_data, pkg) or max([_get_dl(download_data, n) for n in saved_affected if n.split("@")[0] == pkg], default=0)
+            _get_dl(download_data, pkg) or max([_get_dl(download_data, n) for n in saved_affected if _pkg_name(n) == pkg], default=0)
             for pkg in unique_saved_pkgs
         )
         if node == compromised_node:
@@ -383,7 +383,7 @@ def simulate_compromise(
     Per docs/TDD.md Section 3.2.
     """
     if compromised_node not in G:
-        G.add_node(compromised_node, name=compromised_node.split("@")[0], version="latest", depth=0, is_root=False)
+        G.add_node(compromised_node, name=_pkg_name(compromised_node), version="latest", depth=0, is_root=False)
 
     G_rev = G.reverse(copy=True)
     G_prop = G_rev

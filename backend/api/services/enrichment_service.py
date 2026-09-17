@@ -80,6 +80,14 @@ PACKAGE_DOMAINS = {
 
 import re
 
+def _pkg_name(node_id: str) -> str:
+    """Extract package name from node ID like 'pkg@1.0' or '@scope/pkg@1.0'."""
+    if not node_id:
+        return ""
+    if "@" in node_id:
+        return node_id.rsplit("@", 1)[0]
+    return node_id
+
 def generate_vulnerability_impact_summary(vuln: dict, package_name: str = "") -> str:
     """
     Generates a natural, non-repetitive, one-sentence plain-language explanation
@@ -99,10 +107,8 @@ def generate_vulnerability_impact_summary(vuln: dict, package_name: str = "") ->
         cwe_ids = [cwe_ids]
     cwe_set = {str(c).strip().upper() for c in cwe_ids}
 
-    pkg = package_name or v.get("package", "")
-    if "@" in pkg:
-        pkg = pkg.split("@")[0]
-    pkg = pkg or "this package"
+    raw_pkg = package_name or v.get("package", "")
+    pkg = _pkg_name(raw_pkg) or "this package"
 
     sum_lower = summary.lower()
     det_lower = details.lower()
@@ -280,7 +286,7 @@ def generate_blast_summary(
     Generates a qualitative paragraph describing WHAT actually breaks in real applications,
     which kinds of systems are affected, and the concrete operational failure modes.
     """
-    comp_pkg = compromised_node.split("@")[0] if "@" in compromised_node else compromised_node
+    comp_pkg = _pkg_name(compromised_node)
     eco_str = "Python" if ecosystem.lower() == "pypi" else "JavaScript/Node.js"
 
     # Identify primary compromised package domain
@@ -323,7 +329,7 @@ def generate_blast_summary(
 
     # Case 2: Multi-package cascading compromise
     # Inspect affected packages to identify secondary functional domains hit
-    affected_pkgs = [n.split("@")[0] for n in affected_nodes if n != compromised_node]
+    affected_pkgs = [_pkg_name(n) for n in affected_nodes if n != compromised_node]
     detected_domains = []
     for pkg in affected_pkgs:
         for k, v in PACKAGE_DOMAINS.items():
@@ -342,7 +348,7 @@ def generate_blast_summary(
         impact_scope = f"{comp_role} and its dependent runtime ecosystem"
 
     # Analyze critical transmission corridor
-    chain_pkgs = [n.split("@")[0] for n in (critical_chain or []) if n != compromised_node]
+    chain_pkgs = [_pkg_name(n) for n in (critical_chain or []) if n != compromised_node]
     if chain_pkgs:
         chain_highlight = f"through critical chokepoints like {', '.join(chain_pkgs[:2])}"
     else:
@@ -393,8 +399,8 @@ def generate_mitigation_reasoning(
     effort = str(action.get("effort", "LOW")).upper()
     fixed_ver = action.get("fixed_version", "a patched release")
 
-    pkg = node.split("@")[0] if "@" in node else node
-    comp_pkg = compromised_node.split("@")[0] if "@" in compromised_node else compromised_node
+    pkg = _pkg_name(node)
+    comp_pkg = _pkg_name(compromised_node)
     is_root = (node == compromised_node) or (pkg == comp_pkg)
 
     if is_root or pct >= 99.0:
