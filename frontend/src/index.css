@@ -1,9 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme inline {
   --font-family-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-family-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-family-mono: 'JetBrains Mono', monospace;
+  --font-family-hand: 'Caveat', cursive, sans-serif;
 
   /* ── Minimalist Editorial Palette ─────────── */
   --color-void:         #ffffff; /* Pure, serene white */
@@ -59,6 +61,11 @@
   .font-editorial {
     font-family: 'Fraunces', Georgia, serif;
     font-optical-sizing: auto;
+  }
+
+  /* Handwritten Sketch Font */
+  .font-hand {
+    font-family: 'Caveat', cursive, sans-serif !important;
   }
 
   /* Soft Watercolor Pastel Highlights (Just like reference) */
