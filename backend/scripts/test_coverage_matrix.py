@@ -18,7 +18,7 @@ import sys
 import time
 import json
 from pathlib import Path
-from statistics import median, mean
+from statistics import median, mean, stdev
 
 # Ensure backend root is on sys.path
 backend_root = Path(__file__).resolve().parent.parent
@@ -216,13 +216,18 @@ def run_matrix():
 
     min_blast = min(blast_scores) if blast_scores else 0.0
     max_blast = max(blast_scores) if blast_scores else 0.0
-    med_blast = round(median(blast_scores), 1) if blast_scores else 0.0
+    med_blast = round(median(blast_scores), 2) if blast_scores else 0.0
+    stdev_blast = round(stdev(blast_scores), 2) if len(blast_scores) >= 2 else 0.0
+    sorted_blasts = sorted(blast_scores)
+    q25 = round(sorted_blasts[len(sorted_blasts) // 4], 1) if sorted_blasts else 0.0
+    q75 = round(sorted_blasts[(3 * len(sorted_blasts)) // 4], 1) if sorted_blasts else 0.0
+    iqr_blast = round(q75 - q25, 1)
     avg_latency = round(mean(latencies), 2) if latencies else 0.0
 
     print("\n" + "=" * 80)
     print(f"Coverage Summary: {pass_count}/{len(PACKAGES_MATRIX)} Passed ({pass_rate}%) | {fail_count} Failed")
     if blast_scores:
-        print(f"Blast Score Stats : Min={min_blast} | Max={max_blast} | Median={med_blast}")
+        print(f"Blast Score Stats : Min={min_blast} | Max={max_blast} | Median={med_blast} | StDev={stdev_blast} | IQR={iqr_blast}")
     print(f"Average Latency   : {avg_latency}s")
     print("=" * 80)
 
@@ -235,7 +240,7 @@ def run_matrix():
         f.write(f"**Passed:** {pass_count} / {len(PACKAGES_MATRIX)} ({pass_rate}%)\n")
         f.write(f"**Failed:** {fail_count}\n")
         if blast_scores:
-            f.write(f"**Blast Score Range:** Min: `{min_blast}`, Median: `{med_blast}`, Max: `{max_blast}`\n")
+            f.write(f"**Blast Score Distribution:** Min: `{min_blast}`, Q1 (25%): `{q25}`, Median: `{med_blast}`, Q3 (75%): `{q75}`, Max: `{max_blast}`, IQR: `{iqr_blast}`, Std Dev: `{stdev_blast}`\n")
         f.write(f"**Average Latency:** `{avg_latency}s`\n\n")
 
         f.write("## 1. Full Package Coverage Matrix\n\n")
