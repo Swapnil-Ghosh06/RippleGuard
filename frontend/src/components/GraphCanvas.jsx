@@ -7,6 +7,8 @@ import ReactFlow, {
   useEdgesState,
   MarkerType,
   BackgroundVariant,
+  ReactFlowProvider,
+  useReactFlow,
 } from 'reactflow';
 import { useGraphStore } from '../store/graphStore';
 import { useSimulate } from '../hooks/useSimulate';
@@ -40,54 +42,99 @@ function buildIntelligentLayout(nodes, edges) {
     const dU = u.depth ?? 0;
     const dV = v.depth ?? 0;
 
+    let parentId, childId;
     if (dU < dV) {
-      parentsMap.get(vId)?.push(uId);
-      childrenMap.get(uId)?.push(vId);
+      parentId = uId;
+      childId = vId;
     } else if (dV < dU) {
-      parentsMap.get(uId)?.push(vId);
-      childrenMap.get(vId)?.push(uId);
+      parentId = vId;
+      childId = uId;
     } else {
-      childrenMap.get(uId)?.push(vId);
+      // Same depth linkage: if u is source and v is target in dependency direction
+      parentId = vId;
+      childId = uId;
+    }
+
+    if (!childrenMap.get(parentId).includes(childId)) {
+      childrenMap.get(parentId).push(childId);
+    }
+    if (!parentsMap.get(childId).includes(parentId)) {
+      parentsMap.get(childId).push(parentId);
     }
   });
 
-  // 2. Group nodes by depth
-  const byDepth = {};
-  for (const n of nodes) {
-    const d = n.depth ?? 0;
-    if (!byDepth[d]) byDepth[d] = [];
-    byDepth[d].push(n);
+  // 2. Compute Longest-Path DAG Layering
+  // Roots (depth 0 or is_root) start at layer 0
+  const roots = nodes.filter(n => n.is_root || n.depth === 0);
+  const rootIds = new Set(roots.length > 0 ? roots.map(r => r.id) : [nodes[0].id]);
+
+  const layerMap = new Map();
+  nodes.forEach(n => {
+    if (rootIds.has(n.id)) layerMap.set(n.id, 0);
+  });
+
+  // Relax layers so downstream dependents move rightwards in DAG order
+  let changed = true;
+  let iterations = 0;
+  while (changed && iterations < 15) {
+    changed = false;
+    iterations++;
+    nodes.forEach(n => {
+      if (rootIds.has(n.id)) return;
+      const parents = parentsMap.get(n.id) || [];
+      if (parents.length > 0) {
+        const maxParent = Math.max(...parents.map(p => layerMap.get(p) ?? 0));
+        const newLayer = maxParent + 1;
+        if (layerMap.get(n.id) !== newLayer) {
+          layerMap.set(n.id, newLayer);
+          changed = true;
+        }
+      } else {
+        if (!layerMap.has(n.id)) layerMap.set(n.id, n.depth ?? 1);
+      }
+    });
   }
 
-  const depths = Object.keys(byDepth).map(Number).sort((a, b) => a - b);
+  nodes.forEach(n => {
+    if (!layerMap.has(n.id)) layerMap.set(n.id, n.depth ?? 0);
+  });
+
+  // 3. Group nodes by computed topological layer
+  const byLayer = {};
+  for (const n of nodes) {
+    const layer = layerMap.get(n.id);
+    if (!byLayer[layer]) byLayer[layer] = [];
+    byLayer[layer].push(n);
+  }
+
+  const layers = Object.keys(byLayer).map(Number).sort((a, b) => a - b);
   const positions = {};
 
-  // Geometry tokens:
-  // Card width is 215px -> X_STEP of 320 leaves 105px horizontal conduit for smooth edge routing.
-  // Card height is ~140px -> MIN_Y_GAP of 185 leaves 45px vertical breathing room between stacked cards.
-  const X_STEP = 320;
-  const MIN_Y_GAP = 185;
-  const BASE_Y_CENTER = 360;
+  // Compact, sleek geometry:
+  // Card width is 195px -> X_STEP of 275 leaves 80px clean conduit for smooth edge routing.
+  // Card height is ~104px -> MIN_Y_GAP of 125 leaves 21px breathing room.
+  const X_STEP = 275;
+  const MIN_Y_GAP = 125;
+  const BASE_Y_CENTER = 300;
 
-  // 3. Layout Root Layer (Depth 0)
-  const rootGroup = byDepth[depths[0]] || [];
+  // 4. Layout Root Layer (Layer 0)
+  const rootGroup = byLayer[layers[0]] || [];
   const rootTotalH = (rootGroup.length - 1) * MIN_Y_GAP;
   rootGroup.forEach((n, i) => {
     positions[n.id] = {
-      x: 80,
+      x: 70,
       y: Math.round(BASE_Y_CENTER - rootTotalH / 2 + i * MIN_Y_GAP),
     };
   });
 
-  // 4. Layout subsequent layers (Depth >= 1)
-  for (let idx = 1; idx < depths.length; idx++) {
-    const d = depths[idx];
-    const group = byDepth[d];
-    const colX = d * X_STEP + 80;
+  // 5. Layout subsequent layers (Layer >= 1)
+  for (let idx = 1; idx < layers.length; idx++) {
+    const l = layers[idx];
+    const group = byLayer[l];
+    const colX = l * X_STEP + 70;
 
-    if (d === 1) {
-      // Level 1: Direct dependencies of root.
-      // Symmetrically center around level 0 center with strict 185px vertical gap.
+    if (l === 1) {
+      // Direct dependencies of root: center around root center
       const totalH = (group.length - 1) * MIN_Y_GAP;
       const startY = BASE_Y_CENTER - totalH / 2;
       group.forEach((n, i) => {
@@ -97,7 +144,7 @@ function buildIntelligentLayout(nodes, edges) {
         };
       });
     } else {
-      // Levels 2, 3, etc.: Barycentric positioning based on upstream parent Y coordinates.
+      // Downstream layers: Parent-anchored placement
       const groupWithIdeal = group.map(n => {
         const parents = parentsMap.get(n.id) || [];
         let idealY = BASE_Y_CENTER;
@@ -108,20 +155,19 @@ function buildIntelligentLayout(nodes, edges) {
         return { node: n, idealY };
       });
 
-      // Sort by idealY so nodes naturally align top-to-bottom relative to their parents
+      // Sort by idealY so nodes align cleanly top-to-bottom with parents
       groupWithIdeal.sort((a, b) => a.idealY - b.idealY);
 
-      // Pass 1: Initial placement
       const yCoords = groupWithIdeal.map(item => item.idealY);
 
-      // Pass 2: Downward overlap resolution with strict MIN_Y_GAP
+      // Pass 1: Downward overlap resolution with strict MIN_Y_GAP
       for (let i = 1; i < yCoords.length; i++) {
         if (yCoords[i] < yCoords[i - 1] + MIN_Y_GAP) {
           yCoords[i] = yCoords[i - 1] + MIN_Y_GAP;
         }
       }
 
-      // Pass 3: Center cluster around the average ideal Y of its parents
+      // Pass 2: Center cluster around average ideal Y of its parents
       const currentAvg = yCoords.reduce((a, b) => a + b, 0) / yCoords.length;
       const idealAvg = groupWithIdeal.reduce((a, b) => a + b.idealY, 0) / groupWithIdeal.length;
       const shift = idealAvg - currentAvg;
@@ -130,7 +176,7 @@ function buildIntelligentLayout(nodes, edges) {
         yCoords[i] += shift;
       }
 
-      // Pass 4: Final verification pass ensuring no overlap
+      // Pass 3: Final gap check
       for (let i = 1; i < yCoords.length; i++) {
         if (yCoords[i] < yCoords[i - 1] + MIN_Y_GAP) {
           yCoords[i] = yCoords[i - 1] + MIN_Y_GAP;
@@ -146,7 +192,7 @@ function buildIntelligentLayout(nodes, edges) {
     }
   }
 
-  // 5. Global coordinate normalization (positive margins)
+  // 6. Global coordinate normalization (positive margins)
   let minY = Infinity;
   let minX = Infinity;
   for (const pos of Object.values(positions)) {
@@ -154,8 +200,8 @@ function buildIntelligentLayout(nodes, edges) {
     if (pos.x < minX) minX = pos.x;
   }
 
-  const offsetY = minY < 70 ? 70 - minY : 0;
-  const offsetX = minX < 60 ? 60 - minX : 0;
+  const offsetY = minY < 50 ? 50 - minY : 0;
+  const offsetX = minX < 50 ? 50 - minX : 0;
 
   if (offsetY !== 0 || offsetX !== 0) {
     for (const pos of Object.values(positions)) {
@@ -165,6 +211,19 @@ function buildIntelligentLayout(nodes, edges) {
   }
 
   return positions;
+}
+
+function ViewportAutoFitter({ triggerKey }) {
+  const { fitView } = useReactFlow();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fitView({ padding: 0.18, duration: 400 });
+    }, 70);
+    return () => clearTimeout(timer);
+  }, [triggerKey, fitView]);
+
+  return null;
 }
 
 function extractCriticalChain(blastData, rawNodes, rawEdges, selectedNode) {
@@ -330,7 +389,7 @@ function ButterflyStepperHUD({
   );
 }
 
-export default function GraphCanvas() {
+function GraphCanvasInner() {
   const {
     graphData, blastData,
     setBlastData, selectedNode, setSelectedNode,
@@ -751,6 +810,9 @@ export default function GraphCanvas() {
             nodeColor={n => n.data?.isSandboxPatched ? '#10b981' : n.data?.dominoIndex ? '#f59e0b' : n.data?.blasted ? '#e11d48' : n.data?.vulnerabilities?.length ? '#d97706' : '#e4e4e7'}
             maskColor="rgba(255, 255, 255, 0.65)"
           />
+
+          {/* Smooth Auto Viewport Centering & Padding */}
+          <ViewportAutoFitter triggerKey={`${rawNodes.map(n => n.id).join(',')}-${blastData ? 'blast' : 'idle'}`} />
         </ReactFlow>
 
         {/* Floating Butterfly Domino Stepper HUD */}
@@ -834,5 +896,13 @@ export default function GraphCanvas() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function GraphCanvas() {
+  return (
+    <ReactFlowProvider>
+      <GraphCanvasInner />
+    </ReactFlowProvider>
   );
 }
