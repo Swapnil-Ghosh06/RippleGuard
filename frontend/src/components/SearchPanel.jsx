@@ -723,20 +723,20 @@ export default function SearchPanel() {
               </div>
             )}
 
-            {/* Capsule Pill Search Bar (Matching Reference Input Shape) */}
+            {/* Capsule Pill Search Bar */}
             <div
               ref={searchContainerRef}
-              className="mt-8 w-full max-w-lg relative"
+              className="mt-8 w-full max-w-2xl relative"
             >
               <div
-                className={`w-full rounded-full bg-white border p-1.5 flex items-center gap-2 transition-all duration-200 shadow-sm ${
+                className={`w-full rounded-full bg-white border p-1.5 pl-4 pr-1.5 flex items-center gap-2.5 transition-all duration-200 shadow-sm ${
                   isFocused
-                    ? 'border-text ring-2 ring-black/5 shadow-md'
+                    ? 'border-stone-950 ring-4 ring-black/5 shadow-md'
                     : 'border-stone-300 hover:border-stone-400'
                 }`}
               >
                 {/* Search icon & input */}
-                <div className="pl-4 flex items-center gap-2.5 flex-1 min-w-0">
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
                   <svg
                     className="w-4 h-4 text-stone-400 shrink-0"
                     fill="none"
@@ -764,17 +764,17 @@ export default function SearchPanel() {
                     onKeyDown={handleKeyDown}
                     placeholder={
                       eco === 'npm'
-                        ? 'Enter npm package (e.g. express, lodash, react)...'
-                        : 'Enter PyPI package (e.g. django, flask, fastapi)...'
+                        ? 'Search npm package (e.g. express, lodash, react)...'
+                        : 'Search PyPI package (e.g. django, flask, fastapi)...'
                     }
-                    className="w-full bg-transparent font-sans text-sm sm:text-base text-text placeholder:text-stone-400 outline-none font-normal"
+                    className="w-full bg-transparent font-sans text-sm sm:text-base text-stone-900 placeholder:text-stone-400 outline-none font-normal"
                     spellCheck={false}
                     autoComplete="off"
                   />
                 </div>
 
                 {/* Ecosystem pill switch */}
-                <div className="flex items-center bg-surface2 border border-border rounded-full p-0.5 shrink-0 select-none">
+                <div className="flex items-center bg-stone-100/90 border border-stone-200/70 rounded-full p-0.5 shrink-0 select-none">
                   {['npm', 'pypi'].map(e => (
                     <button
                       key={e}
@@ -785,10 +785,10 @@ export default function SearchPanel() {
                         setShowDropdown(true);
                         setSelectedIndex(0);
                       }}
-                      className={`px-3 py-1 rounded-full text-xs font-sans font-medium transition-all cursor-pointer ${
+                      className={`px-3 py-1 rounded-full text-xs font-sans font-semibold tracking-wider transition-all cursor-pointer ${
                         eco === e
-                          ? 'bg-white text-text font-semibold shadow-xs'
-                          : 'text-muted hover:text-text'
+                          ? 'bg-white text-stone-950 shadow-xs'
+                          : 'text-stone-400 hover:text-stone-800'
                       }`}
                     >
                       {e.toUpperCase()}
@@ -796,13 +796,14 @@ export default function SearchPanel() {
                   ))}
                 </div>
 
-                {/* Solid Black Capsule CTA Button (Matching Reference "Start Trial") */}
+                {/* Solid Black Capsule CTA Button */}
                 <button
                   type="button"
                   onClick={() => handleAnalyze()}
-                  className="bg-text hover:bg-neutral-800 text-white font-sans font-medium text-xs px-6 py-2.5 rounded-full cursor-pointer transition-all shrink-0 select-none shadow-sm"
+                  className="bg-stone-950 hover:bg-black text-white font-sans font-medium text-xs px-5 sm:px-6 py-2.5 rounded-full cursor-pointer transition-all shrink-0 select-none shadow-sm hover:shadow active:scale-98 flex items-center gap-1.5"
                 >
-                  Analyze ↵
+                  <span>Analyze</span>
+                  <span className="font-mono text-xs opacity-60">↵</span>
                 </button>
               </div>
 
@@ -897,18 +898,20 @@ export default function SearchPanel() {
             </div>
 
             {/* Attack Replay Chips */}
-            <div className="mt-5 flex flex-wrap items-center gap-2 select-none">
-              <span className="text-xs text-muted font-sans mr-1">
-                {eco.toUpperCase()} Attacks:
-              </span>
+            <div className="mt-5 w-full max-w-2xl flex flex-wrap items-center gap-2 select-none">
+              <div className="flex items-center gap-1.5 text-xs text-stone-500 font-sans font-medium mr-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                <span>{eco.toUpperCase()} Attacks:</span>
+              </div>
 
               <button
                 type="button"
                 onClick={() => handleSelectPackage(activeAttacks[0])}
-                className="bg-danger/10 hover:bg-danger/20 border border-danger/30 text-danger font-sans text-xs px-3.5 py-1.5 rounded-full transition-all cursor-pointer flex items-center mr-1 font-medium"
+                className="bg-stone-900 hover:bg-black text-white font-sans text-xs px-3.5 py-1.5 rounded-full transition-all cursor-pointer flex items-center gap-1.5 font-medium shadow-2xs hover:shadow-xs active:scale-98"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-danger animate-ping inline-block mr-1.5" />
-                <span>Quick Demo ↗</span>
+                <span>⚡</span>
+                <span>Quick Demo</span>
+                <span className="text-[10px] text-stone-400 font-mono">({activeAttacks[0]?.package})</span>
               </button>
 
               {activeAttacks.map(a => (
@@ -916,10 +919,11 @@ export default function SearchPanel() {
                   key={a.id}
                   type="button"
                   onClick={() => handleSelectPackage(a)}
-                  className={`border text-xs px-3 py-1 rounded-full font-sans font-medium transition-all cursor-pointer flex items-center gap-1.5 ${a.pillClass}`}
+                  className="bg-white hover:bg-stone-50 text-stone-800 hover:text-stone-950 border border-stone-200/80 hover:border-stone-400 text-xs px-3 py-1.5 rounded-full font-sans font-medium transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:shadow-xs group active:scale-98"
+                  title={a.summary}
                 >
-                  <span className="font-semibold">{a.package}</span>
-                  <span className="opacity-70 text-[10px]">({a.label})</span>
+                  <span className="font-semibold text-stone-900">{a.package}</span>
+                  <span className="text-[10px] text-stone-400 font-sans">({a.label})</span>
                 </button>
               ))}
             </div>
