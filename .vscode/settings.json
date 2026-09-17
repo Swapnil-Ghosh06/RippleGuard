@@ -16,6 +16,12 @@
     "venv",
     "vercel",
     "Vite",
-    "wordmark"
+    "wordmark",
+    "gsap",
+    "jndi",
+    "exfiltration",
+    "chokepoint",
+    "chokepoints",
+    "neighbourhood"
   ]
 }
