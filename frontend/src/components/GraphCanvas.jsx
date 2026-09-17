@@ -6,6 +6,7 @@ import ReactFlow, {
   MiniMap,
   useNodesState,
   useEdgesState,
+  useViewport,
   MarkerType,
   BackgroundVariant,
 } from 'reactflow';
@@ -14,6 +15,7 @@ import 'reactflow/dist/style.css';
 import { useGraphStore } from '../store/graphStore';
 import { useSimulate } from '../hooks/useSimulate';
 import { removeNodeAndDescendants, calculateBlastRadiusDelta } from '../utils/graphMutations';
+import { findCriticalChain, ButterflyTraceOverlay } from '../utils/butterflyTrace';
 import PackageNode from './nodes/PackageNode';
 import NodeDetail from './NodeDetail';
 
@@ -70,7 +72,42 @@ const MOCK_BLAST = {
     { node: 'minimatch@3.0.4', delay_ms: 870, event: 'CASCADE', msg: 'Path matcher engine tainted' },
     { node: 'ms@2.1.3', delay_ms: 900, event: 'CASCADE', msg: 'Time parser utility tainted' },
   ],
+  propagation_paths: [
+    ['lodash@4.17.20', 'express@4.18.1', 'webpack@5.88.0', 'next@13.4.0'],
+    ['lodash@4.17.20', 'react@18.2.0', 'axios@1.4.0'],
+    ['lodash@4.17.20', 'chalk@5.3.0'],
+  ],
 };
+
+function ButterflyTraceViewportLayer({ criticalChainNodeIds, getNodePosition, visible }) {
+  const { x, y, zoom } = useViewport();
+
+  if (!visible || !criticalChainNodeIds || criticalChainNodeIds.length < 2) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        transform: `translate(${x}px, ${y}px) scale(${zoom})`,
+        transformOrigin: '0 0',
+        zIndex: 5,
+      }}
+    >
+      <ButterflyTraceOverlay
+        criticalChainNodeIds={criticalChainNodeIds}
+        getNodePosition={getNodePosition}
+        visible={visible}
+      />
+    </div>
+  );
+}
 
 function buildLayout(nodes) {
   const byDepth = {};
@@ -110,6 +147,7 @@ export default function GraphCanvas() {
 
   const { simulate } = useSimulate();
   const [blastSet, setBlastSet] = useState(new Set());
+  const [criticalChainNodeIds, setCriticalChainNodeIds] = useState([]);
   const [localSelected, setLocalSelected] = useState(null);
   const [detailNode, setDetailNode] = useState(null);
   const [toast, setToast] = useState(null);
@@ -119,6 +157,7 @@ export default function GraphCanvas() {
   if (graphData !== prevGraphData) {
     setPrevGraphData(graphData);
     setBlastSet(new Set());
+    setCriticalChainNodeIds([]);
     setLocalSelected(null);
     setDetailNode(null);
     setToast(null);
@@ -218,6 +257,12 @@ export default function GraphCanvas() {
     const maxDelay = propOrder.length ? Math.max(...propOrder.map((p, i) => p.delay_ms ?? i * 150)) : 800;
     const finalTimer = setTimeout(() => {
       setIsSimulating(false);
+      const paths =
+        blast.propagation_paths && blast.propagation_paths.length > 0
+          ? blast.propagation_paths
+          : [propOrder.map((p) => (typeof p.node === 'string' ? p.node : p.node?.id || p.node))];
+      const longestChain = findCriticalChain(paths);
+      setCriticalChainNodeIds(longestChain);
     }, maxDelay + 200);
     timers.push(finalTimer);
   }, [localSelected, isSimulating, simulate, setBlastData, setIsSimulating, setSelectedNode]);
@@ -225,6 +270,7 @@ export default function GraphCanvas() {
   const handleReset = useCallback(() => {
     setBlastData(null);
     setBlastSet(new Set());
+    setCriticalChainNodeIds([]);
   }, [setBlastData]);
 
   const handleRemoveNode = useCallback(
@@ -246,6 +292,7 @@ export default function GraphCanvas() {
       setDetailNode(null);
       setLocalSelected(null);
       setSelectedNode(null);
+      setCriticalChainNodeIds((prev) => prev.filter((id) => id !== nodeId));
 
       const nodeName = targetNode?.data?.label || targetNode?.data?.name || nodeId;
       setToast({
@@ -254,6 +301,20 @@ export default function GraphCanvas() {
       });
     },
     [nodes, edges, setNodes, setEdges, setSelectedNode]
+  );
+
+  const getNodePosition = useCallback(
+    (nodeId) => {
+      const node = nodes.find((n) => n.id === nodeId);
+      if (!node || !node.position) return null;
+      const w = node.width ?? 180;
+      const h = node.height ?? 65;
+      return {
+        x: node.position.x + w / 2,
+        y: node.position.y + h / 2,
+      };
+    },
+    [nodes]
   );
 
   const onNodeClick = useCallback(
@@ -299,6 +360,15 @@ export default function GraphCanvas() {
                   {blastSet.size}/{rawNodes.length} compromised
                 </span>
               </span>
+              {criticalChainNodeIds.length >= 2 && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="text-amber-700 font-medium flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                    <span>🦋</span>
+                    <span>Critical Chain: {criticalChainNodeIds.length} hops</span>
+                  </span>
+                </>
+              )}
             </>
           )}
         </div>
@@ -321,6 +391,13 @@ export default function GraphCanvas() {
           style={{ background: '#ffffff' }}
           proOptions={{ hideAttribution: true }}
         >
+          {/* Butterfly Trace Overlay Layer synced with React Flow viewport */}
+          <ButterflyTraceViewportLayer
+            criticalChainNodeIds={criticalChainNodeIds}
+            getNodePosition={getNodePosition}
+            visible={Boolean(blastData) && criticalChainNodeIds.length >= 2}
+          />
+
           <Background
             variant={BackgroundVariant.Dots}
             gap={24}
