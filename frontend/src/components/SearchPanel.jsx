@@ -154,7 +154,7 @@ export default function SearchPanel() {
           <div className="lg:col-span-7 flex flex-col items-start text-left">
 
             {/* Overline tag */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface2 border border-border text-[11px] font-mono text-muted mb-6 select-none">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface2 border border-border text-[11px] font-sans font-medium tracking-wide text-muted mb-6 select-none">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>LIVE BLAST RADIUS ENGINE</span>
               <span className="text-border">·</span>
@@ -283,13 +283,13 @@ export default function SearchPanel() {
                           >
                             <div className="min-w-0 flex-1 pr-3">
                               <div className="flex items-center gap-2 mb-0.5">
-                                <span className="font-mono text-xs font-semibold text-text truncate">
+                                <span className="font-sans text-xs font-semibold text-text truncate">
                                   {scenario.package}@{scenario.version}
                                 </span>
-                                <span className="text-[10px] font-mono text-muted border border-border px-1.5 py-0.2 rounded">
+                                <span className="text-[10px] font-sans font-medium text-muted border border-border px-1.5 py-0.5 rounded uppercase">
                                   {scenario.ecosystem}
                                 </span>
-                                <span className="text-[11px] font-mono text-muted">
+                                <span className="text-[11px] font-sans text-muted">
                                   {scenario.cve}
                                 </span>
                               </div>
@@ -322,7 +322,7 @@ export default function SearchPanel() {
               <button
                 type="button"
                 onClick={() => handleSelectScenario(ATTACK_SCENARIOS[0])}
-                className="bg-danger/10 hover:bg-danger/20 border border-danger/30 text-danger font-mono text-[10px] px-3 py-1.5 rounded-full transition-all cursor-pointer flex items-center mr-1"
+                className="bg-danger/10 hover:bg-danger/20 border border-danger/30 text-danger font-sans text-xs px-3.5 py-1.5 rounded-full transition-all cursor-pointer flex items-center mr-1 font-medium"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-danger animate-ping inline-block mr-1.5" />
                 <span>Quick Demo ↗</span>
@@ -426,7 +426,7 @@ export default function SearchPanel() {
         {/* ======================================================== */}
         <div id="how-it-works" className="mt-24 pt-16 border-t border-border/70">
           <div className="text-left mb-8">
-            <p className="font-mono text-[10px] text-muted tracking-widest uppercase mb-2">
+            <p className="font-sans text-[11px] font-semibold text-muted tracking-wider uppercase mb-2">
               SYSTEM ARCHITECTURE
             </p>
             <h3 className="font-serif font-normal text-3xl text-text tracking-tight">
@@ -437,7 +437,7 @@ export default function SearchPanel() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
             {/* Step 1 */}
             <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-xs hover:border-stone-400 transition-all duration-200 flex flex-col">
-              <span className="font-mono text-[10px] text-muted border border-border/80 px-2 py-0.5 rounded-md mb-4 inline-block w-fit">
+              <span className="font-sans text-xs font-semibold text-muted border border-border/80 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
                 01
               </span>
               <h4 className="font-serif font-semibold text-base text-text mb-2">
@@ -450,7 +450,7 @@ export default function SearchPanel() {
 
             {/* Step 2 */}
             <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-xs hover:border-stone-400 transition-all duration-200 flex flex-col">
-              <span className="font-mono text-[10px] text-muted border border-border/80 px-2 py-0.5 rounded-md mb-4 inline-block w-fit">
+              <span className="font-sans text-xs font-semibold text-muted border border-border/80 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
                 02
               </span>
               <h4 className="font-serif font-semibold text-base text-text mb-2">
@@ -463,7 +463,7 @@ export default function SearchPanel() {
 
             {/* Step 3 */}
             <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-xs hover:border-stone-400 transition-all duration-200 flex flex-col">
-              <span className="font-mono text-[10px] text-muted border border-border/80 px-2 py-0.5 rounded-md mb-4 inline-block w-fit">
+              <span className="font-sans text-xs font-semibold text-muted border border-border/80 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
                 03
               </span>
               <h4 className="font-serif font-semibold text-base text-text mb-2">
@@ -481,29 +481,29 @@ export default function SearchPanel() {
         {/* ======================================================== */}
         <div className="mt-12 w-full bg-surface2/80 border border-border/80 rounded-2xl px-6 py-6 flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
-            <span className="font-mono text-2xl font-bold text-text">3.5M+</span>
-            <span className="font-mono text-[11px] text-muted">npm & PyPI indexed</span>
+            <span className="font-serif text-3xl font-normal text-text tracking-tight">3.5M+</span>
+            <span className="font-sans text-xs text-muted">npm & PyPI indexed</span>
           </div>
 
           <div className="hidden sm:block w-px h-8 bg-border" />
 
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
-            <span className="font-mono text-2xl font-bold text-text">82M/mo</span>
-            <span className="font-mono text-[11px] text-muted">lodash monthly downloads</span>
+            <span className="font-serif text-3xl font-normal text-text tracking-tight">82M/mo</span>
+            <span className="font-sans text-xs text-muted">lodash monthly downloads</span>
           </div>
 
           <div className="hidden sm:block w-px h-8 bg-border" />
 
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
-            <span className="font-mono text-2xl font-bold text-text">$4.88M</span>
-            <span className="font-mono text-[11px] text-muted">avg breach cost (IBM 2024)</span>
+            <span className="font-serif text-3xl font-normal text-text tracking-tight">$4.88M</span>
+            <span className="font-sans text-xs text-muted">avg breach cost (IBM 2024)</span>
           </div>
 
           <div className="hidden sm:block w-px h-8 bg-border" />
 
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
-            <span className="font-mono text-2xl font-bold text-text">96%</span>
-            <span className="font-mono text-[11px] text-muted">apps with open source</span>
+            <span className="font-serif text-3xl font-normal text-text tracking-tight">96%</span>
+            <span className="font-sans text-xs text-muted">apps with open source</span>
           </div>
         </div>
 
