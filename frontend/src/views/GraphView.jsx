@@ -4,6 +4,8 @@ import { useGraphStore } from '../store/graphStore';
 import GraphCanvas from '../components/GraphCanvas';
 import BlastRadiusPanel from '../components/BlastRadiusPanel';
 import MitigationPanel from '../components/MitigationPanel';
+import CompareView from '../components/CompareView';
+
 
 export default function GraphView() {
   const graphData    = useGraphStore((s) => s.graphData);
@@ -176,25 +178,7 @@ export default function GraphView() {
             <div className="flex-1 overflow-y-auto">
               {activeTab === 'blast' && <BlastRadiusPanel />}
               {activeTab === 'mitigation' && <MitigationPanel />}
-              {activeTab === 'compare' && (
-                <div className="mt-8 flex flex-col items-center gap-4 px-6 text-center">
-                  <svg className="w-10 h-10 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <circle cx="9" cy="12" r="6" />
-                    <circle cx="15" cy="12" r="6" />
-                  </svg>
-                  <h4 className="font-mono text-xs font-bold text-text">
-                    Scenario Comparison
-                  </h4>
-                  <p className="font-sans text-xs text-muted leading-relaxed max-w-xs">
-                    Run a simulation first, then inject a second compromise to compare blast radii side by side.
-                  </p>
-                  {blastData && (
-                    <p className="text-accent font-mono text-xs bg-surface2 px-3 py-2 rounded-lg border border-border/60">
-                      Scenario A locked in. Select a different node and inject to compare.
-                    </p>
-                  )}
-                </div>
-              )}
+              {activeTab === 'compare' && <CompareView />}
             </div>
           </motion.aside>
         )}
