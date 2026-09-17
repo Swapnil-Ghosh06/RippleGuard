@@ -81,8 +81,11 @@ export async function getLayoutedElements(nodes, edges) {
  * @returns {{ layoutedNodes: Array<object>, layoutedEdges: Array<object>, isLayouting: boolean }}
  */
 export function useGraphLayout(rawNodes, rawEdges) {
-  const [layouted, setLayouted] = useState({ nodes: [], edges: [] });
-  const [isLayouting, setIsLayouting] = useState(false);
+  const [layouted, setLayouted] = useState({ nodes: [], edges: [], sourceNodes: null });
+
+  // Derive loading state during render to avoid cascading renders
+  const hasNodes = Boolean(rawNodes && rawNodes.length > 0);
+  const isLayouting = hasNodes && layouted.sourceNodes !== rawNodes;
 
   useEffect(() => {
     if (!rawNodes || rawNodes.length === 0) {
@@ -90,19 +93,17 @@ export function useGraphLayout(rawNodes, rawEdges) {
     }
 
     let isCurrent = true;
-    setIsLayouting(true);
 
     getLayoutedElements(rawNodes, rawEdges)
       .then(({ nodes, edges }) => {
         if (isCurrent) {
-          setLayouted({ nodes, edges });
-          setIsLayouting(false);
+          setLayouted({ nodes, edges, sourceNodes: rawNodes });
         }
       })
       .catch((error) => {
         if (isCurrent) {
           console.error('Error during useGraphLayout calculation:', error);
-          setIsLayouting(false);
+          setLayouted({ nodes: [], edges: rawEdges || [], sourceNodes: rawNodes });
         }
       });
 
@@ -111,12 +112,10 @@ export function useGraphLayout(rawNodes, rawEdges) {
     };
   }, [rawNodes, rawEdges]);
 
-  const hasNodes = Boolean(rawNodes && rawNodes.length > 0);
-
   return {
     layoutedNodes: hasNodes ? layouted.nodes : [],
     layoutedEdges: hasNodes ? layouted.edges : (rawEdges || []),
-    isLayouting: hasNodes ? isLayouting : false,
+    isLayouting,
   };
 }
 
