@@ -15,6 +15,7 @@ from api.models.response_models import (
 )
 from api.services.graph_service import build_dependency_graph, _graph_storage
 from api.services import npm_service, pypi_service, osv_service
+from api.services.enrichment_service import generate_vulnerability_impact_summary
 
 router = APIRouter(tags=["analyze"])
 
@@ -148,7 +149,8 @@ async def analyze_package(request: AnalyzeRequest):
                 cvss_score=float(v.get("cvss_score", 0.0)),
                 summary=v.get("summary", ""),
                 affected_versions=v.get("affected_versions", []),
-                fixed_version=v.get("fixed_version")
+                fixed_version=v.get("fixed_version"),
+                impact_summary=v.get("impact_summary") or generate_vulnerability_impact_summary(v, name)
             )
             for v in raw_vulns
         ]

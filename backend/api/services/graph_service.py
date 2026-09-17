@@ -11,6 +11,10 @@ from typing import Dict, List, Tuple, Any, Optional
 import networkx as nx
 
 from api.services import deps_service
+from api.services.enrichment_service import (
+    generate_blast_summary,
+    generate_mitigation_reasoning
+)
 
 # In-memory storage for analyzed graphs, enabling fast /simulate without rebuilding
 _graph_storage: Dict[str, Dict[str, Any]] = {}
@@ -248,14 +252,22 @@ def rank_mitigations(
         elimination_pct = (eliminated_downloads / max(total_blast_downloads, 1)) * 100.0
         elimination_pct = round(min(elimination_pct, 100.0), 1)
 
-        actions.append({
+        act_dict = {
             "node": node,
             "action": f"Upgrade {pkg_name} to {fixed_ver}",
             "eliminates_blast_percent": elimination_pct,
             "affected_packages_resolved": len(saved_affected),
+            "fixed_version": fixed_ver,
             "effort": classify_effort(node, G),
             "saved_nodes": saved_affected
-        })
+        }
+        act_dict["why_this_matters"] = generate_mitigation_reasoning(
+            action=act_dict,
+            compromised_node=compromised_node,
+            total_affected=len(all_affected),
+            total_downloads=total_blast_downloads
+        )
+        actions.append(act_dict)
 
     # Sort descending by eliminates_blast_percent
     actions.sort(key=lambda x: x["eliminates_blast_percent"], reverse=True)
@@ -368,6 +380,18 @@ def simulate_compromise(
 
     estimated_apps = max(int(total_downloads / 35000), len(affected) * 150, 0)
 
+    eco = G.nodes[compromised_node].get("ecosystem", "npm") if compromised_node in G.nodes else "npm"
+    blast_summary = generate_blast_summary(
+        compromised_node=compromised_node,
+        affected_nodes=list(affected),
+        propagation_paths=propagation_paths,
+        critical_chain=critical_chain,
+        total_downloads=total_downloads,
+        blast_score=blast_score,
+        ecosystem=eco,
+        shadow_dependencies=shadow_dependencies
+    )
+
     return {
         "compromised_node": compromised_node,
         "propagation": {
@@ -381,12 +405,14 @@ def simulate_compromise(
             "total_monthly_downloads_affected": total_downloads,
             "estimated_apps_affected": estimated_apps,
             "blast_score": blast_score,
+            "blast_summary": blast_summary,
             "severity_breakdown": {
                 "critical_path_nodes": crit_count,
                 "high_impact_nodes": high_count,
                 "medium_impact_nodes": med_count
             }
         },
+        "blast_summary": blast_summary,
         "mitigation": {
             "priority_actions": priority_actions,
             "minimum_fix_set": minimum_fix_set
