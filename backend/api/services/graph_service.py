@@ -334,6 +334,7 @@ def rank_mitigations(
 
         act_dict = {
             "node": node,
+            "package_name": pkg_name,
             "action": f"Upgrade {pkg_name} to {fixed_ver}",
             "eliminates_blast_percent": elimination_pct,
             "affected_packages_resolved": len(saved_affected),

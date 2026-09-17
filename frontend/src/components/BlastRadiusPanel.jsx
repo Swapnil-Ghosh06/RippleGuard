@@ -21,7 +21,7 @@ function ScoreCounter({ value }) {
   return (
     <span
       ref={ref}
-      className="text-5xl font-normal text-white tracking-tight tabular-nums font-serif"
+      className="text-5xl font-bold text-white tracking-tight tabular-nums font-display"
     >
       0
     </span>
@@ -333,13 +333,13 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
     const totalVulnerable = rawNodes.filter(n => (n.vulnerabilities || []).length > 0).length;
 
     return (
-      <div className="flex flex-col gap-4 p-5 select-none text-zinc-100">
+      <div className="flex flex-col gap-4 p-5 select-none text-zinc-100 font-sans">
         {/* Header Badge */}
         <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-          <span className="font-mono text-[11px] font-bold text-zinc-400 tracking-wider uppercase">
+          <span className="font-heading text-[11px] font-bold text-zinc-400 tracking-wider uppercase">
             Ecosystem Reconnaissance
           </span>
-          <span className="inline-flex items-center gap-1.5 text-xs text-amber-400 font-medium">
+          <span className="inline-flex items-center gap-1.5 text-xs text-amber-400 font-heading font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
             Vulnerability Audit
           </span>
@@ -348,7 +348,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
         {/* Tree Overview Summary Card */}
         <div className="rounded-2xl bg-zinc-900/90 border border-zinc-800 p-4 shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider font-mono">
+            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider font-heading">
               Analyzed Target
             </span>
             <span className="text-[10px] font-mono border border-zinc-700 bg-zinc-800/80 px-2 py-0.5 rounded-full text-zinc-300">
@@ -356,43 +356,43 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
             </span>
           </div>
 
-          <h3 className="font-mono text-base font-bold text-white truncate mb-1">
+          <h3 className="font-heading text-base font-bold text-white truncate mb-1">
             {rootNode?.name || rootNode?.id || 'Dependency Graph'}
             {rootNode?.version && <span className="text-zinc-400 font-normal text-xs ml-1">@{rootNode.version}</span>}
           </h3>
 
           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-zinc-800 text-center">
             <div>
-              <p className="font-serif text-xl text-white font-normal">{rawNodes.length}</p>
-              <p className="text-[10px] text-zinc-400 font-sans">Packages</p>
+              <p className="font-display text-xl text-white font-bold">{rawNodes.length}</p>
+              <p className="text-[11px] text-zinc-400 font-sans">Packages</p>
             </div>
             <div>
-              <p className="font-serif text-xl text-white font-normal">{rawEdges.length}</p>
-              <p className="text-[10px] text-zinc-400 font-sans">Linkages</p>
+              <p className="font-display text-xl text-white font-bold">{rawEdges.length}</p>
+              <p className="text-[11px] text-zinc-400 font-sans">Linkages</p>
             </div>
             <div>
-              <p className={`font-serif text-xl font-normal ${totalVulnerable > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+              <p className={`font-display text-xl font-bold ${totalVulnerable > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
                 {totalVulnerable}
               </p>
-              <p className="text-[10px] text-zinc-400 font-sans">Known CVEs</p>
+              <p className="text-[11px] text-zinc-400 font-sans">Known CVEs</p>
             </div>
           </div>
         </div>
 
         {/* Threat Origin Candidate Card */}
         {highestRiskNode && (
-          <div className="rounded-2xl bg-rose-950/25 border border-rose-800/50 p-4 shadow-lg">
+          <div className="rounded-2xl bg-[#171c2a] border border-[#263147] p-4 shadow-lg">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-rose-300 font-sans flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-rose-300 font-heading flex items-center gap-1.5 uppercase tracking-wider">
                 <span>⚠️</span>
                 <span>Critical Contagion Origin</span>
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-900/60 text-rose-300 font-bold border border-rose-700/60">
+              <span className="text-[10px] font-heading font-bold px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-800/80">
                 {highestRiskNode.vulnerabilities?.[0]?.severity || 'HIGH RISK'}
               </span>
             </div>
 
-            <p className="font-mono text-xs font-bold text-zinc-100 mb-1">
+            <p className="font-heading text-xs font-bold text-zinc-100 mb-1">
               {highestRiskNode.id}
             </p>
 
@@ -403,7 +403,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
             <button
               onClick={() => handleTriggerSim(highestRiskNode.id)}
               disabled={isSimulating}
-              className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-[0.99] disabled:opacity-50 text-white font-sans text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all"
+              className="w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-rose-500/40 hover:border-rose-400 text-rose-300 active:scale-[0.99] disabled:opacity-50 font-heading text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all"
             >
               <span>⚡</span>
               <span>{isSimulating ? 'Simulating Cascade…' : `Simulate Breach on ${highestRiskNode.name || 'Target'}`}</span>
@@ -415,14 +415,14 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
         {selectedNode && selectedNode !== highestRiskNode?.id && (
           <div className="rounded-xl bg-zinc-900/90 border border-zinc-800 p-3.5 shadow-md">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-zinc-200 font-sans">Canvas Selected Node</span>
+              <span className="text-xs font-semibold text-zinc-200 font-heading">Canvas Selected Node</span>
               <span className="text-[10px] font-mono text-zinc-400">depth {activeTargetNode?.depth ?? 0}</span>
             </div>
-            <p className="font-mono text-xs font-bold text-white mb-2">{selectedNode}</p>
+            <p className="font-heading text-xs font-bold text-white mb-2">{selectedNode}</p>
             <button
               onClick={() => handleTriggerSim(selectedNode)}
               disabled={isSimulating}
-              className="w-full py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-sans text-xs font-medium transition-colors"
+              className="w-full py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-heading text-xs font-medium transition-colors cursor-pointer"
             >
               ⚡ Model Contagion from this Node
             </button>
@@ -450,10 +450,10 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
 
       {/* Top Header Status */}
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-        <span className="font-mono text-[11px] font-bold text-zinc-400 tracking-wider uppercase">
+        <span className="font-heading text-[11px] font-bold text-zinc-400 tracking-wider uppercase">
           Blast Radius Assessment
         </span>
-        <span className="inline-flex items-center gap-1.5 text-xs text-rose-400 font-medium">
+        <span className="inline-flex items-center gap-1.5 text-xs text-rose-400 font-heading font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
           Threat Active ({score}/100)
         </span>
@@ -464,7 +464,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
         <button
           type="button"
           onClick={() => setViewMode('executive')}
-          className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-mono font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-heading font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             viewMode === 'executive'
               ? 'bg-zinc-800 text-white shadow-xs border border-zinc-700/60'
               : 'text-zinc-400 hover:text-zinc-200'
@@ -476,7 +476,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
         <button
           type="button"
           onClick={() => setViewMode('forensics')}
-          className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-mono font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-heading font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             viewMode === 'forensics'
               ? 'bg-zinc-800 text-white shadow-xs border border-zinc-700/60'
               : 'text-zinc-400 hover:text-zinc-200'
@@ -491,7 +491,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
       {/* MODE A: EXECUTIVE SUMMARY (Clean & Punchy) */}
       {/* ========================================== */}
       {viewMode === 'executive' && (
-        <div className="flex flex-col gap-3.5">
+        <div className="flex flex-col gap-3.5 font-sans">
           {/* 1. Score Hero Card */}
           <div className="rounded-2xl bg-zinc-900/90 border border-zinc-800 p-4 shadow-lg relative overflow-hidden">
             <div className="flex items-end justify-between mb-3">
@@ -513,16 +513,16 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
               {/* Threat severity pill */}
               <div className={`px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${label.bg} ${label.border}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${label.dot}`} />
-                <span className={`text-xs font-semibold font-sans ${label.color}`}>
+                <span className={`text-xs font-semibold font-heading uppercase tracking-wider ${label.color}`}>
                   {label.label}
                 </span>
               </div>
             </div>
 
-            {/* Glowing Gradient Progress Bar */}
-            <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden mb-2.5">
+            {/* Subtle Gradient Progress Bar */}
+            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden mb-2.5">
               <div
-                className="h-full bg-gradient-to-r from-amber-400 via-rose-500 to-rose-600 rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(244,63,94,0.5)]"
+                className="h-full bg-gradient-to-r from-amber-400 via-rose-500 to-rose-600 rounded-full transition-all duration-1000"
                 style={{ width: `${Math.min(100, Math.max(8, score))}%` }}
               />
             </div>
@@ -535,74 +535,74 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
           {/* 2. Structured Telemetry Matrix (Direct, Transitive, Downloads, Max Depth) */}
           <div className={`grid gap-2.5 ${isExpanded ? 'grid-cols-4' : 'grid-cols-2'}`}>
             {/* Direct Hits */}
-            <div className="rounded-xl bg-zinc-900/80 border border-zinc-800/80 p-3 flex flex-col justify-between shadow-sm">
-              <div className="flex items-center justify-between text-zinc-400 mb-1 text-xs font-sans">
+            <div className="rounded-xl bg-[#141a29]/90 border border-[#222c40] p-3 flex flex-col justify-between shadow-sm hover:border-[#334155] transition-all">
+              <div className="flex items-center justify-between text-zinc-400 mb-1 text-xs font-heading uppercase tracking-wider font-semibold">
                 <span>Direct Hits</span>
-                <span>🎯</span>
+                <span className="text-xs">🎯</span>
               </div>
               <div>
-                <span className="font-serif text-2xl font-normal text-white">
+                <span className="font-display text-2xl font-bold text-white tracking-tight">
                   {blastData.direct_affected}
                 </span>
                 <span className="text-xs text-zinc-400 ml-1 font-sans">pkgs</span>
               </div>
-              <span className="text-[10px] text-zinc-400 font-sans">Tier 1 dependencies</span>
+              <span className="text-[10px] text-zinc-500 font-sans">Tier 1 dependencies</span>
             </div>
 
             {/* Transitive Cascade */}
-            <div className="rounded-xl bg-zinc-900/80 border border-zinc-800/80 p-3 flex flex-col justify-between shadow-sm">
-              <div className="flex items-center justify-between text-amber-400 mb-1 text-xs font-sans">
+            <div className="rounded-xl bg-[#141a29]/90 border border-[#222c40] p-3 flex flex-col justify-between shadow-sm hover:border-[#334155] transition-all">
+              <div className="flex items-center justify-between text-zinc-400 mb-1 text-xs font-heading uppercase tracking-wider font-semibold">
                 <span>Transitive</span>
-                <span>⚡</span>
+                <span className="text-xs text-amber-400">⚡</span>
               </div>
               <div>
-                <span className="font-serif text-2xl font-normal text-amber-400">
+                <span className="font-display text-2xl font-bold text-amber-400 tracking-tight">
                   {blastData.transitive_affected}
                 </span>
                 <span className="text-xs text-zinc-400 ml-1 font-sans">pkgs</span>
               </div>
-              <span className="text-[10px] text-zinc-400 font-sans">Deep cascade infection</span>
+              <span className="text-[10px] text-zinc-500 font-sans">Deep cascade infection</span>
             </div>
 
             {/* Downloads Exposed */}
-            <div className="rounded-xl bg-zinc-900/80 border border-zinc-800/80 p-3 flex flex-col justify-between shadow-sm">
-              <div className="flex items-center justify-between text-rose-400 mb-1 text-xs font-sans">
+            <div className="rounded-xl bg-[#141a29]/90 border border-[#222c40] p-3 flex flex-col justify-between shadow-sm hover:border-[#334155] transition-all">
+              <div className="flex items-center justify-between text-zinc-400 mb-1 text-xs font-heading uppercase tracking-wider font-semibold">
                 <span>Downloads</span>
-                <span>⚠️</span>
+                <span className="text-xs text-rose-400">⚠️</span>
               </div>
               <div>
-                <span className="font-serif text-2xl font-normal text-rose-400">
+                <span className="font-display text-2xl font-bold text-rose-400 tracking-tight">
                   {blastData.monthly_downloads_affected}
                 </span>
               </div>
-              <span className="text-[10px] text-zinc-400 font-sans">Monthly exposure</span>
+              <span className="text-[10px] text-zinc-500 font-sans">Monthly exposure</span>
             </div>
 
             {/* Max Depth Frontier */}
-            <div className="rounded-xl bg-zinc-900/80 border border-zinc-800/80 p-3 flex flex-col justify-between shadow-sm">
-              <div className="flex items-center justify-between text-emerald-400 mb-1 text-xs font-sans">
+            <div className="rounded-xl bg-[#141a29]/90 border border-[#222c40] p-3 flex flex-col justify-between shadow-sm hover:border-[#334155] transition-all">
+              <div className="flex items-center justify-between text-zinc-400 mb-1 text-xs font-heading uppercase tracking-wider font-semibold">
                 <span>Max Depth</span>
-                <span>📐</span>
+                <span className="text-xs text-emerald-400">📐</span>
               </div>
               <div>
-                <span className="font-serif text-2xl font-normal text-white">
+                <span className="font-display text-2xl font-bold text-white tracking-tight">
                   Level {maxDepth}
                 </span>
               </div>
-              <span className="text-[10px] text-zinc-400 font-sans">Propagation frontier</span>
+              <span className="text-[10px] text-zinc-500 font-sans">Propagation frontier</span>
             </div>
           </div>
 
           {/* 3. Interactive "What-If" Sandbox Card */}
-          <div className="rounded-2xl bg-emerald-950/30 border border-emerald-800/50 p-4 shadow-md">
+          <div className="rounded-2xl bg-[#131926] border border-[#232f48] p-4 shadow-lg relative">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="text-base animate-pulse">🧪</span>
+                <span className="text-sm text-emerald-400">🧪</span>
                 <div>
-                  <h4 className="font-mono text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                  <h4 className="font-heading text-xs font-bold text-zinc-100 uppercase tracking-wider">
                     Interactive "What-If" Sandbox
                   </h4>
-                  <p className="text-[10px] text-emerald-400/80 font-sans">
+                  <p className="text-[10px] text-zinc-400 font-sans">
                     Virtual Patch & Surgical Containment
                   </p>
                 </div>
@@ -613,18 +613,18 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                   <button
                     type="button"
                     onClick={clearSandboxPatches}
-                    className="text-[10px] font-mono text-emerald-400 hover:text-emerald-200 underline cursor-pointer"
+                    className="text-[10px] font-heading font-medium text-emerald-400 hover:text-emerald-300 underline cursor-pointer"
                   >
                     Reset
                   </button>
                 )}
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-900/60 text-emerald-300 font-bold border border-emerald-700/60">
+                <span className="text-[10px] font-heading font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                   {sandboxPatches.length} Patched
                 </span>
               </div>
             </div>
 
-            <p className="text-xs text-emerald-200/90 font-sans mb-3 leading-relaxed">
+            <p className="text-xs text-zinc-300 font-sans mb-3 leading-relaxed">
               Experiment with virtual patches on any dependency to preview contagion containment live before touching production code.
             </p>
 
@@ -638,29 +638,29 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                   applyOptimalPatchSet([highestRiskNode.id]);
                 }
               }}
-              className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all mb-2"
+              className="w-full py-2.5 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 active:scale-[0.99] text-emerald-300 border border-emerald-500/40 hover:border-emerald-400 font-heading text-xs font-semibold flex items-center justify-center gap-2 shadow-sm cursor-pointer transition-all mb-2"
             >
               <span>🛡️</span>
               <span>Apply Optimal Patch Set</span>
             </button>
 
             {sandboxPatches.length > 0 && (
-              <div className="flex flex-col gap-1.5 pt-2 border-t border-emerald-800/60">
-                <span className="text-[10px] font-mono font-bold text-emerald-300 uppercase tracking-wider">
+              <div className="flex flex-col gap-1.5 pt-2 border-t border-zinc-800">
+                <span className="text-[10px] font-heading font-bold text-zinc-400 uppercase tracking-wider">
                   Active Virtual Patches:
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {sandboxPatches.map((pkgId) => (
                     <span
                       key={pkgId}
-                      className="inline-flex items-center gap-1 bg-emerald-950/80 border border-emerald-700/60 text-emerald-200 text-[11px] font-mono font-medium px-2 py-1 rounded-lg shadow-xs"
+                      className="inline-flex items-center gap-1 bg-zinc-800/90 border border-zinc-700/80 text-zinc-200 text-xs font-heading font-medium px-2 py-0.5 rounded-lg shadow-xs"
                     >
-                      <span>🛡️</span>
+                      <span className="text-emerald-400">🛡️</span>
                       <span className="truncate max-w-[170px]">{pkgId}</span>
                       <button
                         type="button"
                         onClick={() => toggleSandboxPatch(pkgId)}
-                        className="text-emerald-400 hover:text-emerald-100 font-bold ml-1 cursor-pointer"
+                        className="text-zinc-400 hover:text-rose-400 font-bold ml-1 cursor-pointer"
                         title="Remove patch"
                       >
                         ✕
@@ -669,9 +669,9 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                   ))}
                 </div>
 
-                <div className="mt-1 p-2 rounded-xl bg-emerald-900/40 border border-emerald-800/60 text-xs font-sans text-emerald-200 flex items-center justify-between">
+                <div className="mt-1 p-2.5 rounded-xl bg-zinc-900/90 border border-emerald-500/30 text-xs font-sans text-zinc-300 flex items-center justify-between">
                   <span>Risk Reduction:</span>
-                  <span className="font-mono font-bold text-emerald-300">
+                  <span className="font-display font-bold text-emerald-400">
                     −{sandboxStats.scoreDelta} pts ({sandboxStats.pctReduction}% eliminated)
                   </span>
                 </div>
@@ -681,15 +681,15 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
 
           {/* 4. The Butterfly Domino Chain Hero */}
           {criticalChain.length > 1 && (
-            <div className="rounded-2xl bg-amber-950/20 border border-amber-800/40 p-4 shadow-md">
+            <div className="rounded-2xl bg-[#131926] border border-[#232f48] p-4 shadow-lg">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-base animate-pulse">🦋</span>
+                  <span className="text-sm text-amber-400">🦋</span>
                   <div>
-                    <h4 className="font-mono text-xs font-bold text-amber-300 uppercase tracking-wider">
+                    <h4 className="font-heading text-xs font-bold text-zinc-100 uppercase tracking-wider">
                       The Butterfly Trace
                     </h4>
-                    <p className="text-[10px] text-amber-400/80 font-sans">
+                    <p className="text-[10px] text-zinc-400 font-sans">
                       Deadliest Domino Chain ({criticalChain.length} hops)
                     </p>
                   </div>
@@ -707,7 +707,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                       setIsDominoPlaying(true);
                     }
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-sans text-xs font-semibold flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 active:scale-[0.99] text-amber-300 border border-amber-500/40 hover:border-amber-400 font-heading text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all"
                 >
                   <span>{isDominoPlaying ? '⏸' : '▶'}</span>
                   <span>{isDominoPlaying ? 'Pause Cascade' : 'Play Cascade'}</span>
@@ -727,14 +727,14 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                         setActiveDominoIndex(idx);
                         setSelectedNode(nodeId);
                       }}
-                      className={`p-2 rounded-xl border flex items-center justify-between gap-2 text-xs cursor-pointer transition-all ${
+                      className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 text-xs cursor-pointer transition-all ${
                         isCurrent
-                          ? 'bg-amber-900/60 border-amber-500 ring-2 ring-amber-400/50 shadow-md'
-                          : 'bg-zinc-900/80 border-zinc-800/80 hover:border-amber-700/60'
+                          ? 'bg-[#1e2538] border-amber-400/80 ring-1 ring-amber-400/50 shadow-md'
+                          : 'bg-zinc-900/80 border-zinc-800 hover:border-zinc-700'
                       }`}
                     >
                       <div className="min-w-0 flex-1 flex items-center gap-2">
-                        <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0 ${
+                        <span className={`text-[9px] font-heading font-semibold px-2 py-0.5 rounded border shrink-0 uppercase tracking-wider ${
                           isStart
                             ? 'bg-rose-950/80 text-rose-300 border-rose-800'
                             : isEnd
@@ -743,12 +743,12 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                         }`}>
                           {isStart ? 'Origin' : isEnd ? 'Frontier' : `Hop #${idx}`}
                         </span>
-                        <span className="font-mono text-xs font-bold text-white truncate">
+                        <span className="font-heading text-xs font-semibold text-white truncate">
                           {nodeId}
                         </span>
                       </div>
 
-                      <span className="font-mono text-[10px] text-amber-400 font-semibold shrink-0">
+                      <span className="font-heading text-[11px] text-amber-400 hover:text-amber-300 font-semibold shrink-0">
                         {isCurrent ? '● Active' : 'Inspect →'}
                       </span>
                     </div>

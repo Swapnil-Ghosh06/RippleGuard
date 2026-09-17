@@ -32,12 +32,24 @@ export function useSimulate() {
         transitive_affected:           0,
         monthly_downloads_affected:    formatDownloads(raw.blast_radius?.total_monthly_downloads_affected ?? raw.total_monthly_downloads ?? 0),
         human_comparison:              raw.blast_summary || raw.blast_radius?.blast_summary || getHumanComparison(raw.blast_radius?.total_monthly_downloads_affected ?? 0),
-        mitigations: (raw.mitigation?.priority_actions ?? []).map(a => ({
-          package:         a.node ?? a.action,
-          fix_version:     a.fixed_version ?? (a.action ? (a.action.match(/to\s+([^\s]+)/)?.[1] ?? 'patched') : 'patched'),
-          blast_reduction: a.eliminates_blast_percent ?? 0,
-          description:     a.why_this_matters || (a.effort ? `Effort: ${a.effort}` : null),
-        })),
+        mitigations: (raw.mitigation?.priority_actions ?? []).map(a => {
+          let pkgName = a.package_name || (a.node ? a.node.split('@')[0] : '');
+          if (!pkgName && a.action) {
+            const m = a.action.match(/Upgrade\s+([^\s]+)\s+to/i);
+            if (m) pkgName = m[1];
+          }
+          if (!pkgName) pkgName = a.node || 'dependency';
+          const fixVer = a.fixed_version ?? (a.action ? (a.action.match(/to\s+([^\s]+)/)?.[1] ?? 'patched') : 'patched');
+          const cleanFixVer = fixVer.toLowerCase() === 'patched' ? 'latest' : fixVer;
+          return {
+            package:         pkgName,
+            node:            a.node || `${pkgName}@${fixVer}`,
+            fix_version:     fixVer,
+            blast_reduction: a.eliminates_blast_percent ?? 0,
+            command:         `npm install ${pkgName}@${cleanFixVer}`,
+            description:     a.why_this_matters || (a.effort ? `Effort: ${a.effort}` : null),
+          };
+        }),
         propagation_order: propOrder,
         affected_nodes:    affected,
         critical_chain:    raw.critical_chain ?? raw.propagation?.critical_chain ?? [],

@@ -148,6 +148,8 @@ class MitigationAction(BaseModel):
     """Recommended mitigation step to eliminate compromise blast radius."""
 
     action: str = Field(..., description="Recommended mitigation step")
+    node: Optional[str] = Field(default=None, description="The specific node id or package string")
+    package_name: Optional[str] = Field(default=None, description="Clean package name")
     eliminates_blast_percent: float = Field(..., description="Percentage of blast radius eliminated by this fix")
     affected_packages_resolved: int = Field(default=0, description="Number of affected packages saved")
     fixed_version: Optional[str] = Field(default=None, description="Patched version string")

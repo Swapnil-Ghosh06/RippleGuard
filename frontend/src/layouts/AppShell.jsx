@@ -56,35 +56,28 @@ export default function AppShell({ children }) {
     <div className="min-h-screen bg-white text-text flex flex-col selection:bg-yellow-100 selection:text-black">
       {/* Editorial Minimalist Header matching Channel:D reference */}
       <header className="h-[64px] flex items-center justify-between px-6 sm:px-12 shrink-0 fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-200/80">
-        {/* Left — Brand Wordmark */}
-        <div className="flex items-center gap-4">
+        {/* Left — Brand Logo + Wordmark */}
+        <div className="flex items-center gap-3">
           <div
             onClick={handleNewAnalysis}
-            className="flex items-center gap-2 cursor-pointer group select-none"
+            className="flex items-center gap-2.5 cursor-pointer group select-none"
           >
-            <span className="font-serif font-bold text-2xl tracking-tight text-text">
-              Ripple<span className="text-stone-400 font-light">:</span>Guard
+            {/* Water drop logo icon */}
+            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 shadow-sm">
+              <img
+                src="/logo.png"
+                alt="RippleGuard Logo"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {/* Wordmark — clean DM Sans + subtle weight contrast */}
+            <span
+              className="text-[17px] font-bold tracking-tight text-stone-900 select-none"
+              style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.01em' }}
+            >
+              Ripple<span className="font-light text-stone-400">Guard</span>
             </span>
           </div>
-
-          {view !== 'idle' && (
-            <div
-              className="inline-flex items-center gap-2 text-xs px-2.5 py-1 rounded-full border transition-all duration-200 select-none"
-              style={{
-                color: status.color,
-                backgroundColor: status.bg,
-                borderColor: status.border,
-              }}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${status.pulse ? 'animate-ping' : ''}`}
-                style={{ backgroundColor: status.dotColor }}
-              />
-              <span className="font-medium tracking-tight font-sans">
-                {status.label}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Center / Right — Navigation & Actions */}
