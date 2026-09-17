@@ -78,6 +78,10 @@ async def analyze_package(request: AnalyzeRequest):
                 detail=f"Package '{request.package}' not found or has no resolvable dependency tree."
             )
 
+        root_candidates = [n for n in G.nodes if G.nodes[n].get("is_root")]
+        if root_candidates:
+            version = G.nodes[root_candidates[0]]["version"]
+
         node_ids = list(G.nodes)
         packages_for_osv = [
             {

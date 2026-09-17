@@ -19,6 +19,8 @@ Downstream Data Contract:
 """
 
 import asyncio
+import urllib.parse
+from packaging.version import parse as parse_version
 import httpx
 
 
@@ -35,13 +37,41 @@ async def get_all_deps_as_flat_list(
     """
     sys_map = {"npm": "npm", "pypi": "pypi"}
     sys = sys_map.get(ecosystem.lower(), ecosystem.lower())
-    encoded_pkg = package.replace("/", "%2F")
+    encoded_pkg = urllib.parse.quote(package, safe="")
     url = f"https://api.deps.dev/v3/systems/{sys}/packages/{encoded_pkg}/versions/{version}:dependencies"
 
     try:
         async with httpx.AsyncClient(timeout=20.0) as client:
             response = await client.get(url)
             if response.status_code == 404:
+                # If a newly published version is not yet indexed on deps.dev,
+                # attempt to find the latest version that deps.dev has indexed for this package.
+                try:
+                    pkg_url = f"https://api.deps.dev/v3/systems/{sys}/packages/{encoded_pkg}"
+                    pkg_res = await client.get(pkg_url)
+                    if pkg_res.status_code == 200:
+                        versions_data = pkg_res.json().get("versions", [])
+                        raw_vers = [v.get("versionKey", {}).get("version") for v in versions_data if v.get("versionKey", {}).get("version")]
+                        parsed_vers = []
+                        for rv in raw_vers:
+                            try:
+                                parsed_vers.append((parse_version(rv), rv))
+                            except Exception:
+                                pass
+                        parsed_vers.sort(reverse=True)
+                        candidates = [rv for pv, rv in parsed_vers if not pv.is_prerelease] or [rv for pv, rv in parsed_vers]
+                        for cand in candidates[:5]:
+                            if cand == version:
+                                continue
+                            cand_url = f"https://api.deps.dev/v3/systems/{sys}/packages/{encoded_pkg}/versions/{cand}:dependencies"
+                            cand_res = await client.get(cand_url)
+                            if cand_res.status_code == 200:
+                                response = cand_res
+                                break
+                except Exception:
+                    pass
+
+            if response.status_code != 200:
                 return ([], [])
             response.raise_for_status()
             data = response.json()
