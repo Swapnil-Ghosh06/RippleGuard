@@ -49,17 +49,17 @@ export default function CompareView({ isExpanded = false }) {
 
   if (!blastData) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-8 text-center select-none text-zinc-400">
-        <div className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 mb-4">
-          <svg className="w-5 h-5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <div className="h-full flex flex-col items-center justify-center p-8 text-center select-none text-[#7a6a55]">
+        <div className="w-12 h-12 rounded-full bg-[#ede8da] border border-[#d4c9b0] flex items-center justify-center text-[#7a6a55] mb-4">
+          <svg className="w-5 h-5 text-[#7a6a55]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="9" cy="12" r="6" />
             <circle cx="15" cy="12" r="6" />
           </svg>
         </div>
-        <h4 className="font-serif font-normal text-lg text-white mb-1">
+        <h4 className="font-serif font-normal text-lg text-[#2c2416] mb-1">
           Awaiting Initial Simulation
         </h4>
-        <p className="text-xs text-zinc-400 max-w-xs font-sans leading-relaxed">
+        <p className="text-xs text-[#7a6a55] max-w-xs font-sans leading-relaxed">
           Inject a compromise into any package on the canvas first. Once Scenario A is established, you can compare its blast radius against another package side by side.
         </p>
       </div>
@@ -125,10 +125,10 @@ export default function CompareView({ isExpanded = false }) {
   const nodeBDownloads = comp?.node_b?.blast_radius?.total_monthly_downloads_affected ?? '0';
 
   return (
-    <div className="flex flex-col gap-3.5 p-4 sm:p-5 select-none text-zinc-100">
+    <div className="flex flex-col gap-3.5 p-4 sm:p-5 select-none text-[#2c2416]">
       {/* Top Header Label */}
-      <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-        <span className="font-mono text-[11px] font-bold text-zinc-400 tracking-wider uppercase">
+      <div className="flex items-center justify-between pb-2 border-b border-[#d4c9b0]">
+        <span className="font-mono text-[11px] font-bold text-[#7a6a55] tracking-wider uppercase">
           Scenario Comparison
         </span>
         <span className="inline-flex items-center gap-1.5 text-xs text-amber-400 font-medium font-mono">
@@ -137,23 +137,23 @@ export default function CompareView({ isExpanded = false }) {
       </div>
 
       {/* Target Selector Bar */}
-      <div className="rounded-2xl bg-zinc-900/90 border border-zinc-800 p-4 flex flex-col gap-3 shadow-md">
+      <div className="rounded-2xl bg-[#ede8da] border border-[#d4c9b0] p-4 flex flex-col gap-3 shadow-md">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-sans font-medium text-zinc-300">Baseline (Target A):</span>
-          <span className="font-mono text-xs font-bold text-rose-300 bg-rose-950/80 border border-rose-800 px-2 py-0.5 rounded-full truncate max-w-[180px]">
+          <span className="font-sans font-medium text-[#4a3f32]">Baseline (Target A):</span>
+          <span className="font-mono text-xs font-bold text-rose-600 bg-rose-100 border border-rose-800 px-2 py-0.5 rounded-full truncate max-w-[180px]">
             {nodeAId}
           </span>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-[11px] text-zinc-400 font-sans font-medium">
+          <label className="text-[11px] text-[#7a6a55] font-sans font-medium">
             Select Target B to compare against:
           </label>
           <div className="flex gap-2">
             <select
               value={selectedNodeB}
               onChange={(e) => setSelectedNodeB(e.target.value)}
-              className="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-amber-400 cursor-pointer"
+              className="flex-1 bg-[#e8e1cc] border border-[#c4b49a] rounded-xl px-3 py-1.5 text-xs font-mono text-[#2c2416] focus:outline-none focus:border-amber-400 cursor-pointer"
             >
               <option value="">Choose package from graph...</option>
               {candidateNodes.map((id) => (
@@ -167,7 +167,7 @@ export default function CompareView({ isExpanded = false }) {
               type="button"
               onClick={handleCompare}
               disabled={!selectedNodeB || loading}
-              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-sans font-semibold text-zinc-950 cursor-pointer transition-colors shrink-0 shadow-sm"
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-sans font-semibold text-[#2c2416] cursor-pointer transition-colors shrink-0 shadow-sm"
             >
               {loading ? 'Comparing...' : 'Compare'}
             </button>
@@ -180,14 +180,14 @@ export default function CompareView({ isExpanded = false }) {
       {/* Hero Comparative Synthesis Banner */}
       {comp && comp.summary && (
         <div className="rounded-2xl bg-amber-950/25 border border-amber-800/50 p-4 shadow-md">
-          <div className="flex items-center gap-1.5 mb-1.5 text-amber-300 text-xs font-semibold">
+          <div className="flex items-center gap-1.5 mb-1.5 text-amber-700 text-xs font-semibold">
             <span>⚖️</span>
             <span className="font-mono uppercase text-[10px] tracking-wider">Comparative Threat Verdict</span>
           </div>
-          <p className="text-sm font-bold text-white leading-snug font-sans">
+          <p className="text-sm font-bold text-[#2c2416] leading-snug font-sans">
             &ldquo;{comp.summary}&rdquo;
           </p>
-          <p className="text-xs text-zinc-400 mt-1.5 font-sans leading-relaxed">
+          <p className="text-xs text-[#7a6a55] mt-1.5 font-sans leading-relaxed">
             Prioritizing defenses on the higher-scoring target eliminates exponential downstream blast contagion.
           </p>
         </div>
@@ -197,36 +197,36 @@ export default function CompareView({ isExpanded = false }) {
       {comp && (
         <div className="grid grid-cols-2 gap-2.5 select-none">
           {/* Scenario A Card */}
-          <div className="rounded-2xl bg-zinc-900/90 border border-rose-800/60 p-3.5 flex flex-col justify-between shadow-md">
+          <div className="rounded-2xl bg-[#ede8da] border border-rose-400 p-3.5 flex flex-col justify-between shadow-md">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-rose-950/80 text-rose-300 font-semibold border border-rose-800">
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-rose-100 text-rose-600 font-semibold border border-rose-800">
                   Target A
                 </span>
                 <span className="text-xs">🎯</span>
               </div>
-              <p className="font-mono text-xs font-bold text-white truncate mb-2" title={nodeAId}>
+              <p className="font-mono text-xs font-bold text-[#2c2416] truncate mb-2" title={nodeAId}>
                 {nodeAId}
               </p>
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-baseline justify-between border-t border-zinc-800 pt-2">
-                <span className="text-[11px] text-zinc-400 font-sans">Score:</span>
+              <div className="flex items-baseline justify-between border-t border-[#d4c9b0] pt-2">
+                <span className="text-[11px] text-[#7a6a55] font-sans">Score:</span>
                 <span className="font-serif text-2xl font-bold text-rose-400">
                   {nodeAScore}
                 </span>
               </div>
 
               <div className="flex items-baseline justify-between text-xs">
-                <span className="text-[11px] text-zinc-400 font-sans">Exposure:</span>
-                <span className="font-mono font-semibold text-white">
+                <span className="text-[11px] text-[#7a6a55] font-sans">Exposure:</span>
+                <span className="font-mono font-semibold text-[#2c2416]">
                   {nodeADownloads}
                 </span>
               </div>
 
-              <div className="pt-1.5 border-t border-zinc-800">
-                <p className="text-[11px] text-zinc-400 font-sans leading-tight">
+              <div className="pt-1.5 border-t border-[#d4c9b0]">
+                <p className="text-[11px] text-[#7a6a55] font-sans leading-tight">
                   {getHumanComparison(nodeADownloads)}
                 </p>
               </div>
@@ -234,36 +234,36 @@ export default function CompareView({ isExpanded = false }) {
           </div>
 
           {/* Scenario B Card */}
-          <div className="rounded-2xl bg-zinc-900/90 border border-zinc-800 p-3.5 flex flex-col justify-between shadow-md">
+          <div className="rounded-2xl bg-[#ede8da] border border-[#d4c9b0] p-3.5 flex flex-col justify-between shadow-md">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300 font-semibold border border-zinc-700">
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-[#e2d9c0] text-[#4a3f32] font-semibold border border-[#c4b49a]">
                   Target B
                 </span>
                 <span className="text-xs">🛡️</span>
               </div>
-              <p className="font-mono text-xs font-bold text-white truncate mb-2" title={selectedNodeB}>
+              <p className="font-mono text-xs font-bold text-[#2c2416] truncate mb-2" title={selectedNodeB}>
                 {selectedNodeB || 'Scenario B'}
               </p>
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-baseline justify-between border-t border-zinc-800 pt-2">
-                <span className="text-[11px] text-zinc-400 font-sans">Score:</span>
+              <div className="flex items-baseline justify-between border-t border-[#d4c9b0] pt-2">
+                <span className="text-[11px] text-[#7a6a55] font-sans">Score:</span>
                 <span className="font-serif text-2xl font-bold text-amber-400">
                   {nodeBScore}
                 </span>
               </div>
 
               <div className="flex items-baseline justify-between text-xs">
-                <span className="text-[11px] text-zinc-400 font-sans">Exposure:</span>
-                <span className="font-mono font-semibold text-white">
+                <span className="text-[11px] text-[#7a6a55] font-sans">Exposure:</span>
+                <span className="font-mono font-semibold text-[#2c2416]">
                   {nodeBDownloads}
                 </span>
               </div>
 
-              <div className="pt-1.5 border-t border-zinc-800">
-                <p className="text-[11px] text-zinc-400 font-sans leading-tight">
+              <div className="pt-1.5 border-t border-[#d4c9b0]">
+                <p className="text-[11px] text-[#7a6a55] font-sans leading-tight">
                   {getHumanComparison(nodeBDownloads)}
                 </p>
               </div>
@@ -274,9 +274,9 @@ export default function CompareView({ isExpanded = false }) {
 
       {/* How to use hint */}
       {!comp && (
-        <div className="rounded-2xl bg-zinc-900/80 border border-zinc-800 p-4 text-center">
-          <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-            Select any dependency from the dropdown above and click <span className="font-semibold text-white">&ldquo;Compare&rdquo;</span> to evaluate comparative risk ratios and blast radius deltas.
+        <div className="rounded-2xl bg-[#ede8da] border border-[#d4c9b0] p-4 text-center">
+          <p className="text-xs text-[#7a6a55] font-sans leading-relaxed">
+            Select any dependency from the dropdown above and click <span className="font-semibold text-[#2c2416]">&ldquo;Compare&rdquo;</span> to evaluate comparative risk ratios and blast radius deltas.
           </p>
         </div>
       )}

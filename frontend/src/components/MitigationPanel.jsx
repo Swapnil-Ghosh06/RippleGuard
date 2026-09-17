@@ -7,7 +7,7 @@ export default function MitigationPanel({ isExpanded = false }) {
 
   if (!blastData || !blastData.mitigations?.length) {
     return (
-      <div className="p-6 text-center select-none text-zinc-400">
+      <div className="p-6 text-center select-none text-[#7a6a55]">
         <p className="text-xs font-sans leading-relaxed">
           Recommended mitigation steps<br />will populate once simulation runs.
         </p>
@@ -22,10 +22,10 @@ export default function MitigationPanel({ isExpanded = false }) {
   };
 
   return (
-    <div className="flex flex-col gap-3.5 p-4 sm:p-5 select-none text-zinc-100">
+    <div className="flex flex-col gap-3.5 p-4 sm:p-5 select-none text-[#2c2416]">
       {/* Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-        <span className="font-mono text-[11px] font-bold text-zinc-400 tracking-wider uppercase">
+      <div className="flex items-center justify-between pb-2 border-b border-[#d4c9b0]">
+        <span className="font-mono text-[11px] font-bold text-[#7a6a55] tracking-wider uppercase">
           Priority Mitigations
         </span>
         <span className="text-xs text-emerald-400 font-medium">
@@ -35,7 +35,7 @@ export default function MitigationPanel({ isExpanded = false }) {
 
       {/* Sandbox status pill if active */}
       {sandboxPatches.length > 0 && (
-        <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-xs font-sans text-emerald-300 flex items-center justify-between shadow-sm">
+        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-sans text-emerald-700 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-1.5">
             <span className="animate-pulse">🛡️</span>
             <span><strong>{sandboxPatches.length}</strong> patch(es) active in Sandbox</span>
@@ -62,28 +62,28 @@ export default function MitigationPanel({ isExpanded = false }) {
           return (
             <div
               key={i}
-              className={`rounded-2xl bg-zinc-900/90 border p-4 flex flex-col gap-2.5 shadow-md transition-all ${
-                isPatchedInSandbox ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-950/20' : 'border-zinc-800 hover:border-zinc-700'
+              className={`rounded-2xl bg-[#ede8da] border p-4 flex flex-col gap-2.5 shadow-md transition-all ${
+                isPatchedInSandbox ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50' : 'border-[#d4c9b0] hover:border-[#c4b49a]'
               }`}
             >
               {/* Top Row */}
               <div className="flex items-center justify-between gap-2 select-none">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="w-5 h-5 rounded-full bg-zinc-800 border border-zinc-700 text-[11px] font-mono text-zinc-400 flex items-center justify-center shrink-0">
+                  <span className="w-5 h-5 rounded-full bg-[#e2d9c0] border border-[#c4b49a] text-[11px] font-mono text-[#7a6a55] flex items-center justify-center shrink-0">
                     {i + 1}
                   </span>
-                  <span className="font-mono text-xs font-bold text-white truncate">
+                  <span className="font-mono text-xs font-bold text-[#2c2416] truncate">
                     {item.package}
                   </span>
                 </div>
 
-                <span className="bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 text-xs font-mono font-semibold px-2 py-0.5 rounded-full shrink-0">
+                <span className="bg-emerald-100 text-emerald-700 border border-emerald-400 text-xs font-mono font-semibold px-2 py-0.5 rounded-full shrink-0">
                   −{pct}% Blast
                 </span>
               </div>
 
               {/* Progress Reduction Bar */}
-              <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+              <div className="w-full h-1 bg-[#e2d9c0] rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full ${barColor} transition-all duration-700`}
                   style={{ width: `${pct}%` }}
@@ -91,12 +91,12 @@ export default function MitigationPanel({ isExpanded = false }) {
               </div>
 
               {/* Command box with copy button */}
-              <div className="flex items-center justify-between gap-2 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 font-mono text-xs text-zinc-200">
+              <div className="flex items-center justify-between gap-2 bg-[#e8e1cc] border border-[#d4c9b0] rounded-xl px-3 py-1.5 font-mono text-xs text-[#2c2416]">
                 <span className="truncate">{patchCmd}</span>
                 <button
                   type="button"
                   onClick={() => handleCopy(patchCmd, i)}
-                  className="text-xs font-sans font-medium text-emerald-400 hover:text-emerald-300 shrink-0 ml-2 cursor-pointer transition-colors"
+                  className="text-xs font-sans font-medium text-emerald-400 hover:text-emerald-700 shrink-0 ml-2 cursor-pointer transition-colors"
                 >
                   {isCopied ? '✓ Copied' : 'Copy'}
                 </button>
@@ -104,7 +104,7 @@ export default function MitigationPanel({ isExpanded = false }) {
 
               {/* Description */}
               {item.description && (
-                <p className="text-xs text-zinc-400 leading-relaxed font-sans">
+                <p className="text-xs text-[#7a6a55] leading-relaxed font-sans">
                   {item.description}
                 </p>
               )}
@@ -115,8 +115,8 @@ export default function MitigationPanel({ isExpanded = false }) {
                 onClick={() => toggleSandboxPatch(item.package)}
                 className={`mt-1 py-2 px-3 rounded-xl font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border shadow-sm ${
                   isPatchedInSandbox
-                    ? 'bg-emerald-950 text-emerald-300 border-emerald-600 hover:bg-emerald-900'
-                    : 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border-emerald-800/80'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-400 hover:bg-emerald-100'
+                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300'
                 }`}
               >
                 <span>🛡️</span>
