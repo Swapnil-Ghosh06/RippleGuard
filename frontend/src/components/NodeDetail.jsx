@@ -186,9 +186,15 @@ export default function NodeDetail({
         <button
           type="button"
           onClick={() => onRemoveNode && onRemoveNode(node.id)}
-          className="w-full py-2 px-3 rounded-lg font-mono text-xs font-medium text-slate-300 border border-[#1a2d4a] hover:bg-[#162238] hover:text-white transition-colors cursor-pointer"
+          disabled={data.isRoot}
+          title={data.isRoot ? 'Cannot remove the root package — try analyzing a different package instead' : 'Remove Node'}
+          className={`w-full py-2 px-3 rounded-lg font-mono text-xs font-medium border transition-colors cursor-pointer ${
+            data.isRoot
+              ? 'border-slate-800 text-slate-600 bg-slate-900/30 cursor-not-allowed'
+              : 'text-slate-300 border-[#1a2d4a] hover:bg-[#162238] hover:text-white'
+          }`}
         >
-          Remove Node
+          {data.isRoot ? 'Root Package Cannot Be Removed' : 'Remove Node'}
         </button>
       </div>
     </motion.aside>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import ReactFlow, {
   Background,
   Controls,
@@ -13,6 +13,7 @@ import 'reactflow/dist/style.css';
 
 import { useGraphStore } from '../store/graphStore';
 import { useSimulate } from '../hooks/useSimulate';
+import { removeNodeAndDescendants, calculateBlastRadiusDelta } from '../utils/graphMutations';
 import PackageNode from './nodes/PackageNode';
 import NodeDetail from './NodeDetail';
 
@@ -111,6 +112,7 @@ export default function GraphCanvas() {
   const [blastSet, setBlastSet] = useState(new Set());
   const [localSelected, setLocalSelected] = useState(null);
   const [detailNode, setDetailNode] = useState(null);
+  const [toast, setToast] = useState(null);
   const [prevGraphData, setPrevGraphData] = useState(graphData);
 
   // Reset local state when a new package graphData is analyzed without useEffect cascading render
@@ -119,7 +121,17 @@ export default function GraphCanvas() {
     setBlastSet(new Set());
     setLocalSelected(null);
     setDetailNode(null);
+    setToast(null);
   }
+
+  // Auto-dismiss result toast after 4 seconds
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => {
+      setToast(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const rawNodes = useMemo(
     () => graphData?.nodes ?? graphData?.graph?.nodes ?? [],
@@ -217,13 +229,31 @@ export default function GraphCanvas() {
 
   const handleRemoveNode = useCallback(
     (nodeId) => {
-      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+      const targetNode = nodes.find((n) => n.id === nodeId);
+      if (targetNode?.data?.isRoot || targetNode?.data?.depth === 0) {
+        setToast({
+          type: 'warn',
+          text: 'Cannot remove the root package — try analyzing a different package instead',
+        });
+        return;
+      }
+
+      const mutation = removeNodeAndDescendants(nodes, edges, nodeId);
+      const delta = calculateBlastRadiusDelta(nodes, mutation.nodes);
+
+      setNodes(mutation.nodes);
+      setEdges(mutation.edges);
       setDetailNode(null);
       setLocalSelected(null);
       setSelectedNode(null);
+
+      const nodeName = targetNode?.data?.label || targetNode?.data?.name || nodeId;
+      setToast({
+        type: 'success',
+        text: `Removed ${nodeName} — reduced blast radius by ${delta.percentReduced}%, ${delta.nodesRemoved} packages affected`,
+      });
     },
-    [setNodes, setEdges, setSelectedNode]
+    [nodes, edges, setNodes, setEdges, setSelectedNode]
   );
 
   const onNodeClick = useCallback(
@@ -367,6 +397,34 @@ export default function GraphCanvas() {
             onInjectCompromise={handleInject}
             onRemoveNode={handleRemoveNode}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Client-side mutation result toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.96 }}
+            transition={{ duration: 0.18 }}
+            className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl border shadow-xl flex items-center gap-2.5 font-mono text-xs backdrop-blur-md select-none ${
+              toast.type === 'warn'
+                ? 'bg-amber-950/90 border-amber-500/60 text-amber-200 shadow-amber-950/30'
+                : 'bg-[#0d1829]/95 border-[#1a2d4a] text-emerald-300 shadow-emerald-950/30'
+            }`}
+          >
+            <span>{toast.type === 'warn' ? '⚠️' : '🛡️'}</span>
+            <span>{toast.text}</span>
+            <button
+              type="button"
+              onClick={() => setToast(null)}
+              className="ml-2 text-slate-400 hover:text-white cursor-pointer leading-none text-sm"
+              aria-label="Dismiss toast"
+            >
+              ×
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
