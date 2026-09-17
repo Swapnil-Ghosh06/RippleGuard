@@ -24,6 +24,7 @@ export default {
         serif: ['Fraunces', 'Georgia', 'serif'],
         sans:  ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
         mono:  ['JetBrains Mono', 'monospace'],
+        hand:  ['Caveat', 'cursive'],
       },
     },
   },
