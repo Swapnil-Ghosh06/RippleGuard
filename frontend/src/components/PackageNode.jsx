@@ -43,13 +43,13 @@ const PackageNode = memo(({ data }) => {
 
   return (
     <div
-      className={`relative min-w-[195px] max-w-[220px] rounded-xl p-3.5 transition-all duration-200 cursor-pointer select-none ${cardStyle}`}
+      className={`relative w-[245px] rounded-2xl p-4 transition-all duration-200 cursor-pointer select-none ${cardStyle}`}
     >
       {/* Left target handle */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-2 !h-2 !rounded-full !bg-zinc-400 !border-2 !border-white !-left-1"
+        className="!w-2.5 !h-2.5 !rounded-full !bg-zinc-400 !border-2 !border-white !-left-1.5"
       />
 
       {/* TOP ROW */}
@@ -87,39 +87,39 @@ const PackageNode = memo(({ data }) => {
       </div>
 
       {/* PACKAGE NAME */}
-      <div className="mb-1 truncate max-w-full">
-        <span className="font-sans text-xs font-bold text-text">
+      <div className="mb-1.5 truncate max-w-full">
+        <span className="font-sans text-sm font-bold text-text">
           {name}
         </span>
         {version && (
-          <span className="font-mono text-[10px] text-muted ml-1">
+          <span className="font-mono text-xs text-muted ml-1.5">
             @{version}
           </span>
         )}
       </div>
 
       {/* DESCRIPTION / SUMMARY */}
-      <div className="min-h-[28px] mb-1.5">
+      <div className="min-h-[30px] mb-2">
         {blasted ? (
-          <p className="text-[11px] text-rose-700 font-medium leading-relaxed truncate font-sans">
+          <p className="text-xs text-rose-700 font-medium leading-relaxed truncate font-sans">
             Compromise chain active
           </p>
         ) : mainCVE?.summary ? (
-          <p className="text-[11px] text-muted line-clamp-2 leading-relaxed font-sans">
+          <p className="text-xs text-muted line-clamp-2 leading-relaxed font-sans">
             {mainCVE.summary}
           </p>
         ) : (
-          <p className="text-[11px] text-muted/80 leading-relaxed font-sans">
+          <p className="text-xs text-muted/80 leading-relaxed font-sans">
             No known CVEs detected
           </p>
         )}
       </div>
 
       {/* BOTTOM ROW */}
-      <div className="border-t border-border/60 mt-1.5 pt-1.5 flex items-center justify-between text-[10px] text-muted font-sans">
+      <div className="border-t border-border/60 mt-2 pt-2 flex items-center justify-between text-[11px] text-muted font-sans">
         <span>Package</span>
         {monthly_downloads ? (
-          <span className="font-mono text-[10px] text-dim">
+          <span className="font-mono text-xs text-dim">
             {formatDownloads(monthly_downloads)}
           </span>
         ) : (

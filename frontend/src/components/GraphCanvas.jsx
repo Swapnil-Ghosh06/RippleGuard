@@ -23,8 +23,8 @@ function buildLayout(nodes, edges) {
     byDepth[d].push(n);
   }
 
-  const X_STEP = 280;
-  const Y_STEP = 135;
+  const X_STEP = 390;
+  const Y_STEP = 210;
   const positions = {};
 
   for (const [depth, group] of Object.entries(byDepth)) {
@@ -33,7 +33,7 @@ function buildLayout(nodes, edges) {
     group.forEach((n, i) => {
       positions[n.id] = {
         x: d * X_STEP + 80,
-        y: i * Y_STEP - totalH / 2 + 280,
+        y: i * Y_STEP - totalH / 2 + 300,
       };
     });
   }
