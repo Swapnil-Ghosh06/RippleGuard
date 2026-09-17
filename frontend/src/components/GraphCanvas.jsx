@@ -41,12 +41,177 @@ function buildLayout(nodes, edges) {
   return positions;
 }
 
+function extractCriticalChain(blastData, rawNodes, rawEdges, selectedNode) {
+  if (blastData?.critical_chain && Array.isArray(blastData.critical_chain) && blastData.critical_chain.length >= 2) {
+    return blastData.critical_chain;
+  }
+  if (!blastData || !rawNodes.length) return [];
+
+  const startId = selectedNode || rawNodes.find(n => n.is_root)?.id || rawNodes[0]?.id;
+  if (!startId) return [];
+
+  if (blastData.propagation_order && blastData.propagation_order.length >= 2) {
+    const propNodes = blastData.propagation_order
+      .map(p => typeof p.node === 'string' ? p.node : p.node?.id)
+      .filter(Boolean);
+    if (propNodes.length >= 2) {
+      const idx = propNodes.indexOf(startId);
+      if (idx !== -1 && idx < propNodes.length - 1) {
+        return propNodes.slice(idx, idx + 4);
+      }
+      return propNodes.slice(0, 4);
+    }
+  }
+
+  const adj = {};
+  rawEdges.forEach(e => {
+    const u = typeof e.source === 'string' ? e.source : e.source?.id;
+    const v = typeof e.target === 'string' ? e.target : e.target?.id;
+    if (u && v) {
+      if (!adj[u]) adj[u] = [];
+      if (!adj[v]) adj[v] = [];
+      adj[v].push(u);
+      adj[u].push(v);
+    }
+  });
+
+  let longest = [startId];
+  const q = [[startId]];
+  while (q.length > 0) {
+    const path = q.shift();
+    const curr = path[path.length - 1];
+    const neighbors = (adj[curr] || []).filter(n => !path.includes(n));
+    if (neighbors.length === 0) {
+      if (path.length > longest.length) longest = path;
+    } else {
+      for (const nxt of neighbors) {
+        if (path.length < 5) q.push([...path, nxt]);
+      }
+    }
+  }
+  return longest;
+}
+
+function ButterflyStepperHUD({
+  criticalChain,
+  activeStep,
+  onStepChange,
+  isPlaying,
+  onTogglePlay,
+  onClose,
+}) {
+  if (!criticalChain || criticalChain.length <= 1) return null;
+  const currentStep = activeStep ?? 0;
+  const currentNode = criticalChain[currentStep];
+  const isOrigin = currentStep === 0;
+  const isFrontier = currentStep === criticalChain.length - 1;
+
+  return (
+    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 max-w-[95vw] sm:max-w-xl w-full px-4 select-none">
+      <div className="bg-white/95 backdrop-blur-md border border-amber-300 shadow-[0_8px_30px_rgb(245,158,11,0.22)] rounded-2xl p-3.5 flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base animate-pulse">🦋</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-sans text-xs font-bold text-amber-950 uppercase tracking-wider">
+                Butterfly Domino Trace
+              </span>
+              <span className="text-[10px] font-mono text-amber-800 bg-amber-100/90 px-1.5 py-0.5 rounded border border-amber-200">
+                Hop {currentStep + 1} of {criticalChain.length}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[10px] font-sans font-medium px-2 py-0.5 rounded-full border ${
+              isOrigin
+                ? 'bg-rose-100 text-rose-800 border-rose-200 font-semibold'
+                : isFrontier
+                ? 'bg-purple-100 text-purple-800 border-purple-200 font-semibold'
+                : 'bg-amber-100 text-amber-800 border-amber-200'
+            }`}>
+              {isOrigin ? '⚡ Compromise Origin' : isFrontier ? '🏁 Exposure Frontier' : 'Cascading Link'}
+            </span>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-5 h-5 rounded-full hover:bg-surface2 flex items-center justify-center text-muted hover:text-text text-xs cursor-pointer ml-1"
+              title="Close Stepper"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Current Node Display & Stepper Controls */}
+        <div className="flex items-center justify-between gap-3 pt-1 border-t border-amber-100">
+          <div className="min-w-0 flex-1">
+            <p className="font-mono text-xs font-bold text-text truncate">
+              {currentNode}
+            </p>
+            <p className="text-[10px] text-muted font-sans truncate">
+              {isOrigin
+                ? 'Attacker entrypoint exploiting package vulnerability'
+                : `Infected via upstream parent dependency linkage`}
+            </p>
+          </div>
+
+          {/* Stepper Buttons */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => onStepChange(0)}
+              disabled={currentStep === 0}
+              className="px-2 py-1 rounded-lg bg-surface2 hover:bg-surface3 disabled:opacity-40 text-text font-mono text-[10px] cursor-pointer"
+              title="Reset to Origin"
+            >
+              ⏮
+            </button>
+            <button
+              type="button"
+              onClick={() => onStepChange(Math.max(0, currentStep - 1))}
+              disabled={currentStep === 0}
+              className="px-2.5 py-1 rounded-lg bg-surface2 hover:bg-surface3 disabled:opacity-40 text-text font-sans text-xs font-semibold cursor-pointer"
+              title="Previous Hop"
+            >
+              ◀
+            </button>
+            <button
+              type="button"
+              onClick={onTogglePlay}
+              className={`px-3 py-1 rounded-lg font-sans text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-xs ${
+                isPlaying
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
+                  : 'bg-amber-500 hover:bg-amber-600 text-white'
+              }`}
+            >
+              <span>{isPlaying ? '⏸' : '▶'}</span>
+              <span>{isPlaying ? 'Pause' : 'Cascade'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onStepChange(Math.min(criticalChain.length - 1, currentStep + 1))}
+              disabled={currentStep === criticalChain.length - 1}
+              className="px-2.5 py-1 rounded-lg bg-surface2 hover:bg-surface3 disabled:opacity-40 text-text font-sans text-xs font-semibold cursor-pointer"
+              title="Next Hop"
+            >
+              ▶
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function GraphCanvas() {
   const {
     graphData, blastData,
     setBlastData, selectedNode, setSelectedNode,
     isSimulating, setIsSimulating,
-    setActiveTab,
+    activeTab, setActiveTab,
+    activeDominoIndex, setActiveDominoIndex,
+    isDominoPlaying, setIsDominoPlaying,
   } = useGraphStore();
 
   const { simulate } = useSimulate();
@@ -64,7 +229,55 @@ export default function GraphCanvas() {
 
   const positions = useMemo(() => buildLayout(rawNodes, rawEdges), [rawNodes]);
 
+  // Compute Butterfly Trace (Critical Domino Path)
+  const criticalChain = useMemo(() => {
+    return extractCriticalChain(blastData, rawNodes, rawEdges, selectedNode);
+  }, [blastData, rawNodes, rawEdges, selectedNode]);
+
+  const dominoIndexMap = useMemo(() => {
+    const map = {};
+    criticalChain.forEach((nodeId, idx) => {
+      map[nodeId] = idx + 1; // 1-indexed
+    });
+    return map;
+  }, [criticalChain]);
+
+  const criticalEdgePairs = useMemo(() => {
+    const pairs = new Set();
+    for (let i = 0; i < criticalChain.length - 1; i++) {
+      const a = criticalChain[i];
+      const b = criticalChain[i + 1];
+      pairs.add(`${a}->${b}`);
+      pairs.add(`${b}->${a}`);
+    }
+    return pairs;
+  }, [criticalChain]);
+
+  // Autoplay timer for Domino Stepper
+  useEffect(() => {
+    if (!isDominoPlaying || criticalChain.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setActiveDominoIndex((prev) => {
+        const next = prev === null ? 0 : prev + 1;
+        if (next >= criticalChain.length) {
+          setIsDominoPlaying(false);
+          return prev;
+        }
+        const nextNodeId = criticalChain[next];
+        if (nextNodeId) setSelectedNode(nextNodeId);
+        return next;
+      });
+    }, 950);
+
+    return () => clearInterval(timer);
+  }, [isDominoPlaying, criticalChain, setActiveDominoIndex, setIsDominoPlaying, setSelectedNode]);
+
   const rfNodes = useMemo(() => {
+    const activeDominoNodeId = (activeDominoIndex !== null && activeDominoIndex !== undefined)
+      ? criticalChain[activeDominoIndex]
+      : null;
+
     return rawNodes.map(n => ({
       id: n.id,
       type: 'package',
@@ -73,36 +286,51 @@ export default function GraphCanvas() {
         ...n,
         blasted: blastSet.has(n.id),
         selected: localSelected === n.id,
+        dominoIndex: dominoIndexMap[n.id] ?? null,
+        isDominoActive: activeDominoNodeId === n.id,
       },
     }));
-  }, [rawNodes, positions, blastSet, localSelected]);
+  }, [rawNodes, positions, blastSet, localSelected, dominoIndexMap, activeDominoIndex, criticalChain]);
 
   const rfEdges = useMemo(() => {
-    const criticalSet = new Set(blastData?.critical_chain ?? []);
-
     return rawEdges.map((e, i) => {
-      const isCriticalPath = criticalSet.has(e.source) && criticalSet.has(e.target);
-      const isHot = blastSet.has(e.source) || blastSet.has(e.target);
+      const u = typeof e.source === 'string' ? e.source : e.source?.id;
+      const v = typeof e.target === 'string' ? e.target : e.target?.id;
+      const isCriticalPath = criticalEdgePairs.has(`${u}->${v}`);
+      const isHot = blastSet.has(u) || blastSet.has(v);
+
+      const isCurrentDominoHop = activeDominoIndex !== null && activeDominoIndex > 0 &&
+        (
+          (criticalChain[activeDominoIndex - 1] === u && criticalChain[activeDominoIndex] === v) ||
+          (criticalChain[activeDominoIndex - 1] === v && criticalChain[activeDominoIndex] === u)
+        );
 
       return {
         id: `e-${i}`,
-        source: e.source,
-        target: e.target,
+        source: u,
+        target: v,
         type: 'smoothstep',
         animated: isHot || isCriticalPath,
         style: {
-          stroke: isCriticalPath ? '#ca8a04' : isHot ? '#e11d48' : '#d4d4d8',
-          strokeWidth: isCriticalPath ? 2.5 : isHot ? 2 : 1.25,
+          stroke: isCurrentDominoHop
+            ? '#f59e0b'
+            : isCriticalPath
+            ? '#d97706'
+            : isHot
+            ? '#e11d48'
+            : '#d4d4d8',
+          strokeWidth: isCurrentDominoHop ? 4.5 : isCriticalPath ? 3.5 : isHot ? 2 : 1.25,
+          strokeDasharray: isCriticalPath ? '6 4' : undefined,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isCriticalPath ? '#ca8a04' : isHot ? '#e11d48' : '#a1a1aa',
-          width: 12,
-          height: 12,
+          color: isCurrentDominoHop ? '#f59e0b' : isCriticalPath ? '#d97706' : isHot ? '#e11d48' : '#a1a1aa',
+          width: isCriticalPath ? 14 : 12,
+          height: isCriticalPath ? 14 : 12,
         },
       };
     });
-  }, [rawEdges, blastSet, blastData]);
+  }, [rawEdges, blastSet, criticalEdgePairs, activeDominoIndex, criticalChain]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
@@ -113,6 +341,8 @@ export default function GraphCanvas() {
   useEffect(() => {
     setBlastSet(new Set());
     setLocalSelected(null);
+    setActiveDominoIndex(null);
+    setIsDominoPlaying(false);
   }, [graphData]);
 
   const MOCK_BLAST = {
@@ -122,6 +352,12 @@ export default function GraphCanvas() {
     transitive_affected: 6,
     monthly_downloads_affected: '438M',
     human_comparison: "Exposure exceeds 330M endpoints monthly — equivalent to compromising every active internet user in the US.",
+    critical_chain: [
+      'lodash@4.17.20',
+      'express@4.18.1',
+      'webpack@5.88.0',
+      'next@13.4.0',
+    ],
     mitigations: [
       {
         package: 'lodash@4.17.20',
@@ -136,13 +372,6 @@ export default function GraphCanvas() {
         blast_reduction: 61,
         command: 'npm update minimatch@3.0.5',
         description: 'Neutralizes catastrophic ReDoS backtracking in glob pattern evaluation.'
-      },
-      {
-        package: 'semver@7.5.4',
-        fix_version: '7.5.4',
-        blast_reduction: 38,
-        command: 'npm update semver@7.5.4',
-        description: 'Resolves regular expression denial of service in range comparison engine.'
       },
     ],
     propagation_order: [
@@ -178,22 +407,30 @@ export default function GraphCanvas() {
     propOrder.forEach(({ node, delay_ms }, idx) => {
       const delay = delay_ms ?? (idx * 150);
       const t = setTimeout(() => {
-        setBlastSet(prev => new Set([...prev, typeof node === 'string' ? node : node?.id || node]));
+        setBlastSet(prev => {
+          const s = new Set(prev);
+          s.add(typeof node === 'string' ? node : node?.id);
+          return s;
+        });
       }, delay);
       timers.push(t);
     });
 
-    const maxDelay = propOrder.length ? Math.max(...propOrder.map((p, i) => p.delay_ms ?? (i * 150))) : 800;
+    const maxDelay = propOrder.length ? Math.max(...propOrder.map(p => p.delay_ms ?? 0)) + 300 : 1200;
     const finalTimer = setTimeout(() => {
       setIsSimulating(false);
-    }, maxDelay + 200);
+    }, maxDelay);
     timers.push(finalTimer);
   }, [localSelected, isSimulating, simulate, setBlastData, setIsSimulating, setSelectedNode, setActiveTab]);
 
   const handleReset = useCallback(() => {
     setBlastData(null);
     setBlastSet(new Set());
-  }, [setBlastData]);
+    setLocalSelected(null);
+    setSelectedNode(null);
+    setActiveDominoIndex(null);
+    setIsDominoPlaying(false);
+  }, [setBlastData, setSelectedNode, setActiveDominoIndex, setIsDominoPlaying]);
 
   const onNodeClick = useCallback((_, node) => {
     setLocalSelected(prev => {
@@ -202,6 +439,25 @@ export default function GraphCanvas() {
       return next;
     });
   }, [setSelectedNode]);
+
+  const handleDominoStepChange = useCallback((step) => {
+    setActiveDominoIndex(step);
+    const targetNodeId = criticalChain[step];
+    if (targetNodeId) setSelectedNode(targetNodeId);
+  }, [criticalChain, setActiveDominoIndex, setSelectedNode]);
+
+  const handleTogglePlayDomino = useCallback(() => {
+    if (isDominoPlaying) {
+      setIsDominoPlaying(false);
+    } else {
+      if (activeDominoIndex === null || activeDominoIndex >= criticalChain.length - 1) {
+        setActiveDominoIndex(0);
+        const originId = criticalChain[0];
+        if (originId) setSelectedNode(originId);
+      }
+      setIsDominoPlaying(true);
+    }
+  }, [isDominoPlaying, activeDominoIndex, criticalChain, setIsDominoPlaying, setActiveDominoIndex, setSelectedNode]);
 
   if (!rawNodes.length) {
     return (
@@ -232,6 +488,25 @@ export default function GraphCanvas() {
                 <span>⚡</span>
                 <span>{blastSet.size}/{rawNodes.length} compromised</span>
               </span>
+
+              {criticalChain.length > 1 && (
+                <>
+                  <span className="text-border">·</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveDominoIndex(0);
+                      const originId = criticalChain[0];
+                      if (originId) setSelectedNode(originId);
+                      setIsDominoPlaying(true);
+                    }}
+                    className="text-amber-900 font-bold flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 px-2.5 py-0.5 rounded-full border border-amber-300 cursor-pointer transition-all active:scale-95"
+                  >
+                    <span>🦋</span>
+                    <span>Domino Trace ({criticalChain.length})</span>
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>
@@ -267,10 +542,25 @@ export default function GraphCanvas() {
 
           <MiniMap
             className="!bg-white !border !border-border !rounded-xl !shadow-sm"
-            nodeColor={n => n.data?.blasted ? '#e11d48' : n.data?.vulnerabilities?.length ? '#d97706' : '#e4e4e7'}
+            nodeColor={n => n.data?.dominoIndex ? '#f59e0b' : n.data?.blasted ? '#e11d48' : n.data?.vulnerabilities?.length ? '#d97706' : '#e4e4e7'}
             maskColor="rgba(255, 255, 255, 0.65)"
           />
         </ReactFlow>
+
+        {/* Floating Butterfly Domino Stepper HUD */}
+        {blastData && criticalChain.length > 1 && activeDominoIndex !== null && (
+          <ButterflyStepperHUD
+            criticalChain={criticalChain}
+            activeStep={activeDominoIndex}
+            onStepChange={handleDominoStepChange}
+            isPlaying={isDominoPlaying}
+            onTogglePlay={handleTogglePlayDomino}
+            onClose={() => {
+              setActiveDominoIndex(null);
+              setIsDominoPlaying(false);
+            }}
+          />
+        )}
       </div>
 
       {/* Minimalist Bottom Toolbar */}
@@ -283,6 +573,11 @@ export default function GraphCanvas() {
               <span className="font-mono text-xs font-semibold text-text bg-surface2 border border-border rounded-md px-2 py-0.5">
                 {localSelected}
               </span>
+              {dominoIndexMap[localSelected] && (
+                <span className="font-sans text-[10px] font-bold text-amber-900 bg-amber-100 border border-amber-300 rounded px-1.5 py-0.5">
+                  🦋 Domino Hop #{dominoIndexMap[localSelected]}
+                </span>
+              )}
             </div>
           ) : (
             <p className="text-xs text-muted font-sans">

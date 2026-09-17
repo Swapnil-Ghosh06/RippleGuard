@@ -97,6 +97,8 @@ export default function BlastRadiusPanel() {
     graphData,
     isSimulating, setIsSimulating,
     setActiveTab,
+    activeDominoIndex, setActiveDominoIndex,
+    isDominoPlaying, setIsDominoPlaying,
   } = useGraphStore();
 
   const { simulate } = useSimulate();
@@ -155,6 +157,58 @@ export default function BlastRadiusPanel() {
       .slice(0, 3);
   }, [blastData, rawNodes, rawEdges]);
 
+  // Critical Butterfly Domino Chain (Idea 2 from CREATIVE_IDEAS.md)
+  const criticalChain = useMemo(() => {
+    if (blastData?.critical_chain && Array.isArray(blastData.critical_chain) && blastData.critical_chain.length >= 2) {
+      return blastData.critical_chain;
+    }
+    if (!blastData || !rawNodes.length) return [];
+
+    const startId = selectedNode || rawNodes.find(n => n.is_root)?.id || rawNodes[0]?.id;
+    if (!startId) return [];
+
+    if (blastData.propagation_order && blastData.propagation_order.length >= 2) {
+      const propNodes = blastData.propagation_order
+        .map(p => typeof p.node === 'string' ? p.node : p.node?.id)
+        .filter(Boolean);
+      if (propNodes.length >= 2) {
+        const idx = propNodes.indexOf(startId);
+        if (idx !== -1 && idx < propNodes.length - 1) {
+          return propNodes.slice(idx, idx + 4);
+        }
+        return propNodes.slice(0, 4);
+      }
+    }
+
+    const adj = {};
+    rawEdges.forEach(e => {
+      const u = typeof e.source === 'string' ? e.source : e.source?.id;
+      const v = typeof e.target === 'string' ? e.target : e.target?.id;
+      if (u && v) {
+        if (!adj[u]) adj[u] = [];
+        if (!adj[v]) adj[v] = [];
+        adj[v].push(u);
+        adj[u].push(v);
+      }
+    });
+
+    let longest = [startId];
+    const q = [[startId]];
+    while (q.length > 0) {
+      const path = q.shift();
+      const curr = path[path.length - 1];
+      const neighbors = (adj[curr] || []).filter(n => !path.includes(n));
+      if (neighbors.length === 0) {
+        if (path.length > longest.length) longest = path;
+      } else {
+        for (const nxt of neighbors) {
+          if (path.length < 5) q.push([...path, nxt]);
+        }
+      }
+    }
+    return longest;
+  }, [blastData, rawNodes, rawEdges, selectedNode]);
+
   // Selected node details (defaults to selectedNode or highestRiskNode or rootNode)
   const activeTargetNode = useMemo(() => {
     if (selectedNode) {
@@ -189,6 +243,12 @@ export default function BlastRadiusPanel() {
           transitive_affected: 6,
           monthly_downloads_affected: '438M',
           human_comparison: "Exposure exceeds 330M endpoints monthly — equivalent to compromising every active internet user in the US.",
+          critical_chain: [
+            target,
+            'express@4.18.1',
+            'webpack@5.88.0',
+            'next@13.4.0',
+          ],
           mitigations: [
             {
               package: 'lodash@4.17.20',
@@ -469,7 +529,119 @@ export default function BlastRadiusPanel() {
         </p>
       </div>
 
-      {/* 4. Shadow Dependency Revealer (Chokepoint Analyzer) */}
+      {/* 4. The Butterfly Trace (Critical Domino Path Hero) */}
+      {criticalChain.length > 1 && (
+        <div className="rounded-2xl bg-amber-50/70 border border-amber-300 p-4 shadow-xs">
+          <div className="flex items-center justify-between mb-2 select-none">
+            <div className="flex items-center gap-2">
+              <span className="text-base animate-pulse">🦋</span>
+              <div>
+                <h4 className="font-sans text-xs font-bold text-amber-950 uppercase tracking-wider">
+                  The Butterfly Trace
+                </h4>
+                <p className="text-[10px] text-amber-800 font-sans">
+                  Critical Domino Chain ({criticalChain.length} hops)
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (isDominoPlaying) {
+                  setIsDominoPlaying(false);
+                } else {
+                  setActiveDominoIndex(0);
+                  const origin = criticalChain[0];
+                  if (origin) setSelectedNode(origin);
+                  setIsDominoPlaying(true);
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-sans text-xs font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition-all"
+            >
+              <span>{isDominoPlaying ? '⏸' : '▶'}</span>
+              <span>{isDominoPlaying ? 'Pause Cascade' : 'Play Domino Trace'}</span>
+            </button>
+          </div>
+
+          <p className="text-[11px] text-amber-900/90 font-sans mb-3 leading-relaxed">
+            The single deadliest transmission path through your dependency tree. A micro-change at the origin ripples all the way to production leaves.
+          </p>
+
+          {/* Sequential Domino Chain Hops */}
+          <div className="flex flex-col gap-2">
+            {criticalChain.map((nodeId, idx) => {
+              const isStart = idx === 0;
+              const isEnd = idx === criticalChain.length - 1;
+              const isCurrent = activeDominoIndex === idx;
+              const matchingNode = rawNodes.find(n => n.id === nodeId);
+              const downloads = matchingNode?.monthly_downloads;
+
+              return (
+                <div
+                  key={nodeId}
+                  onClick={() => {
+                    setActiveDominoIndex(idx);
+                    setSelectedNode(nodeId);
+                  }}
+                  className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 text-xs cursor-pointer transition-all ${
+                    isCurrent
+                      ? 'bg-amber-100/95 border-amber-500 ring-2 ring-amber-400/60 shadow-xs scale-[1.01]'
+                      : 'bg-white border-amber-200/80 hover:border-amber-400'
+                  }`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className={`text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border ${
+                        isStart
+                          ? 'bg-rose-100 text-rose-800 border-rose-200'
+                          : isEnd
+                          ? 'bg-purple-100 text-purple-800 border-purple-200'
+                          : 'bg-amber-100 text-amber-900 border-amber-300'
+                      }`}>
+                        {isStart ? 'Origin' : isEnd ? 'Frontier' : `Hop #${idx}`}
+                      </span>
+                      <span className="font-mono text-xs font-bold text-text truncate">
+                        {nodeId}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted font-sans">
+                      {isStart
+                        ? 'Exploit entrypoint package'
+                        : isEnd
+                        ? 'Downstream consumer exposed'
+                        : `Transitive parent linkage`}
+                      {downloads ? ` · ${formatDownloads(downloads)} dl/mo` : ''}
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 flex items-center gap-1">
+                    <span className="font-mono text-[10px] text-amber-800 font-semibold">
+                      {isCurrent ? '● Active' : 'Select'}
+                    </span>
+                    <span className="text-amber-600 text-xs">→</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Domino Breaker Recommendation */}
+          {criticalChain.length >= 2 && (
+            <div className="mt-3 pt-3 border-t border-amber-200/80 flex items-start gap-2 text-xs font-sans text-amber-950">
+              <span className="text-sm shrink-0 mt-0.5">✂️</span>
+              <div>
+                <p className="font-semibold mb-0.5">Domino Breaker Opportunity</p>
+                <p className="text-[11px] text-amber-900 leading-relaxed">
+                  Pinning or upgrading the link between <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">{criticalChain[0].split('@')[0]}</code> and <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">{criticalChain[1].split('@')[0]}</code> breaks this entire cascade before it reaches production leaves.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 5. Shadow Dependency Revealer (Chokepoint Analyzer) */}
       <div className="rounded-2xl bg-surface2 border border-border p-4">
         <div className="flex items-center justify-between mb-2 select-none">
           <div className="flex items-center gap-1.5">

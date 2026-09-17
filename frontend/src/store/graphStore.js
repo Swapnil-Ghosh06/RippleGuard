@@ -25,6 +25,12 @@ export const useGraphStore = create((set) => ({
   activeTab: 'blast', // 'blast' | 'mitigation' | 'compare'
   setActiveTab: (tab) => set({ activeTab: tab }),
 
+  activeDominoIndex: null,
+  setActiveDominoIndex: (idx) => set({ activeDominoIndex: idx }),
+
+  isDominoPlaying: false,
+  setIsDominoPlaying: (b) => set({ isDominoPlaying: b }),
+
   reset: () => set({
     view: 'idle',
     graphData: null,
@@ -34,5 +40,7 @@ export const useGraphStore = create((set) => ({
     error: null,
     compareData: null,
     activeTab: 'blast',
+    activeDominoIndex: null,
+    isDominoPlaying: false,
   }),
 }));
