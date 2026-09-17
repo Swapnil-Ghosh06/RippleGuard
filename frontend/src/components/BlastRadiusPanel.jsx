@@ -225,14 +225,17 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
 
     let totalPct = 0;
     sandboxPatches.forEach(pkgId => {
-      const cleanId = (typeof pkgId === 'string' ? pkgId : pkgId?.id || '').split('@')[0];
-      const match = (blastData.mitigations || []).find(m =>
-        m.package === pkgId || m.package.split('@')[0] === cleanId
-      );
+      const cleanId = (typeof pkgId === 'string' ? pkgId : pkgId?.id || '').split('@')[0].toLowerCase();
+      const rawId = (typeof pkgId === 'string' ? pkgId : pkgId?.id || '').toLowerCase();
+      const match = (blastData.mitigations || []).find(m => {
+        const mp = (m.package || '').toLowerCase();
+        const mn = (m.node || '').toLowerCase();
+        return mp === cleanId || mp === rawId || mn === rawId || mn.split('@')[0] === cleanId;
+      });
       if (match) {
         totalPct += (match.blast_reduction || 55);
       } else {
-        totalPct += 45;
+        totalPct += 12;
       }
     });
 

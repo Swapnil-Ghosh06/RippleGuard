@@ -525,7 +525,19 @@ function GraphCanvasInner() {
     return pairs;
   }, [criticalChain]);
 
-  // Real-time Sandbox Contagion Containment BFS Math
+  // Mitigation Chokepoint Map for Virtual Patching guidance
+  const mitigationMap = useMemo(() => {
+    const map = new Map();
+    if (!blastData?.mitigations) return map;
+    blastData.mitigations.forEach(m => {
+      const red = m.blast_reduction || 0;
+      if (m.package) map.set(m.package.toLowerCase(), { reduction: red, description: m.description });
+      if (m.node) map.set(m.node.toLowerCase(), { reduction: red, description: m.description });
+    });
+    return map;
+  }, [blastData]);
+
+  // Real-time Sandbox Contagion Containment Directed Reachability Math
   const { effectiveTaintedSet, protectedSet } = useMemo(() => {
     if (!sandboxPatches || sandboxPatches.length === 0 || blastSet.size === 0) {
       return {
@@ -536,42 +548,87 @@ function GraphCanvasInner() {
 
     const patchedSet = new Set(sandboxPatches);
 
-    const adj = {};
-    rawEdges.forEach(e => {
-      const u = typeof e.source === 'string' ? e.source : e.source?.id;
-      const v = typeof e.target === 'string' ? e.target : e.target?.id;
-      if (u && v) {
-        if (!adj[u]) adj[u] = [];
-        if (!adj[v]) adj[v] = [];
-        adj[v].push(u);
-        adj[u].push(v);
+    // Identify the true attack origin of the simulation (never overwritten by user canvas selection)
+    const origin = blastData?.origin_node || (criticalChain.length > 0 ? criticalChain[0] : null) || (blastData?.propagation_order?.[0]?.node) || rawNodes.find(n => n.is_root)?.id || rawNodes[0]?.id;
+
+    // If the attack origin node itself is patched, the compromise is severed at the source!
+    if (origin && (patchedSet.has(origin) || patchedSet.has(origin.split('@')[0]))) {
+      const protectedNodes = new Set();
+      blastSet.forEach(nodeId => {
+        if (!patchedSet.has(nodeId) && !patchedSet.has(nodeId.split('@')[0])) {
+          protectedNodes.add(nodeId);
+        }
+      });
+      return {
+        effectiveTaintedSet: new Set(),
+        protectedSet: protectedNodes,
+      };
+    }
+
+    // Build directed contagion propagation adjacency
+    // In dependency graphs: child dependency -> parent dependent (e.target -> e.source)
+    const contagionAdj = {};
+    const addContagionEdge = (from, to) => {
+      if (!from || !to || from === to) return;
+      if (!contagionAdj[from]) contagionAdj[from] = new Set();
+      contagionAdj[from].add(to);
+    };
+
+    // 1. From propagation_paths in blastData
+    const propPaths = blastData?.propagation_paths || [];
+    propPaths.forEach(path => {
+      if (Array.isArray(path)) {
+        for (let i = 0; i < path.length - 1; i++) {
+          const from = typeof path[i] === 'string' ? path[i] : path[i]?.id;
+          const to = typeof path[i + 1] === 'string' ? path[i + 1] : path[i + 1]?.id;
+          addContagionEdge(from, to);
+        }
       }
     });
 
-    const origin = selectedNode || rawNodes.find(n => n.is_root)?.id || rawNodes[0]?.id;
+    // 2. From rawEdges between nodes in blastSet
+    rawEdges.forEach(e => {
+      const u = typeof e.source === 'string' ? e.source : e.source?.id;
+      const v = typeof e.target === 'string' ? e.target : e.target?.id;
+      if (u && v && blastSet.has(u) && blastSet.has(v)) {
+        addContagionEdge(v, u); // child -> parent contagion
+      }
+    });
+
+    // Run directed BFS strictly starting from the breach origin
     const reached = new Set();
-    const q = [origin];
+    const q = [];
+
+    if (origin && blastSet.has(origin)) {
+      reached.add(origin);
+      q.push(origin);
+    } else {
+      // Fallback: seed with first tainted node in blastSet
+      const firstTainted = blastSet.values().next().value;
+      if (firstTainted) {
+        reached.add(firstTainted);
+        q.push(firstTainted);
+      }
+    }
 
     while (q.length > 0) {
       const curr = q.shift();
-      if (!curr || reached.has(curr)) continue;
-      if (patchedSet.has(curr)) continue;
-
-      reached.add(curr);
-
-      const neighbors = adj[curr] || [];
-      for (const nxt of neighbors) {
-        if (!reached.has(nxt) && !patchedSet.has(nxt)) {
-          if (blastSet.has(nxt)) {
-            q.push(nxt);
-          }
+      const nextHops = contagionAdj[curr] ? Array.from(contagionAdj[curr]) : [];
+      for (const nxt of nextHops) {
+        if (!blastSet.has(nxt)) continue;
+        // If this node is patched, contagion cannot pass through it!
+        if (patchedSet.has(nxt) || patchedSet.has(nxt.split('@')[0])) continue;
+        if (!reached.has(nxt)) {
+          reached.add(nxt);
+          q.push(nxt);
         }
       }
     }
 
+    // Nodes in blastSet that are no longer reached from the breach origin (and not themselves patched) are protected
     const protectedNodes = new Set();
     blastSet.forEach(nodeId => {
-      if (!reached.has(nodeId) && !patchedSet.has(nodeId)) {
+      if (!reached.has(nodeId) && !patchedSet.has(nodeId) && !patchedSet.has(nodeId.split('@')[0])) {
         protectedNodes.add(nodeId);
       }
     });
@@ -580,7 +637,7 @@ function GraphCanvasInner() {
       effectiveTaintedSet: reached,
       protectedSet: protectedNodes,
     };
-  }, [blastSet, sandboxPatches, rawEdges, selectedNode, rawNodes]);
+  }, [blastSet, sandboxPatches, blastData, criticalChain, rawEdges, rawNodes]);
 
   // Compute set of visible node IDs
   const visibleNodeIds = useMemo(() => {
@@ -681,23 +738,32 @@ function GraphCanvasInner() {
       ? criticalChain[activeDominoIndex]
       : null;
 
-    return visibleNodes.map(n => ({
-      id: n.id,
-      type: 'package',
-      position: positions[n.id] ?? { x: 0, y: 0 },
-      data: {
-        ...n,
-        blasted: effectiveTaintedSet.has(n.id),
-        selected: localSelected === n.id,
-        dominoIndex: dominoIndexMap[n.id] ?? null,
-        isDominoActive: activeDominoNodeId === n.id,
-        isSandboxPatched: sandboxPatches.includes(n.id),
-        isSandboxProtected: protectedSet.has(n.id),
-        childCount: childrenMap[n.id]?.length ?? 0,
-        isExpanded: expandedSet.has(n.id),
-        onToggleExpand: toggleExpand,
-      },
-    }));
+    return visibleNodes.map(n => {
+      const cleanName = (n.name || n.id?.split('@')[0] || '').toLowerCase();
+      const mit = mitigationMap.get(n.id?.toLowerCase()) || mitigationMap.get(cleanName);
+      const mitigationReduction = mit?.reduction || 0;
+      const isRecommendedChokepoint = mitigationReduction >= 10;
+
+      return {
+        id: n.id,
+        type: 'package',
+        position: positions[n.id] ?? { x: 0, y: 0 },
+        data: {
+          ...n,
+          blasted: effectiveTaintedSet.has(n.id),
+          selected: localSelected === n.id,
+          dominoIndex: dominoIndexMap[n.id] ?? null,
+          isDominoActive: activeDominoNodeId === n.id,
+          isSandboxPatched: sandboxPatches.includes(n.id),
+          isSandboxProtected: protectedSet.has(n.id),
+          isRecommendedChokepoint,
+          mitigationReduction,
+          childCount: childrenMap[n.id]?.length ?? 0,
+          isExpanded: expandedSet.has(n.id),
+          onToggleExpand: toggleExpand,
+        },
+      };
+    });
   }, [
     visibleNodes,
     positions,
@@ -711,6 +777,7 @@ function GraphCanvasInner() {
     childrenMap,
     expandedSet,
     toggleExpand,
+    mitigationMap,
   ]);
 
   // React Flow Edges with Organic Flowchart Curves & Strict Left-to-Right Routing
@@ -936,10 +1003,21 @@ function GraphCanvasInner() {
               {sandboxPatches.length > 0 && (
                 <>
                   <span className="text-[#d4c9b0]">·</span>
-                  <span className="text-emerald-700 font-semibold flex items-center gap-1.5 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                  <div className="flex items-center gap-1.5 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-300 text-emerald-800 text-xs font-semibold shadow-2xs">
                     <span>🛡️</span>
                     <span>Sandbox: {sandboxPatches.length} Patched ({protectedSet.size} Shielded)</span>
-                  </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearSandboxPatches();
+                      }}
+                      className="ml-1 text-[10px] text-emerald-700 hover:text-emerald-950 font-bold underline cursor-pointer"
+                      title="Clear all virtual patches"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </>
               )}
             </>
@@ -1063,21 +1141,43 @@ function GraphCanvasInner() {
                 </span>
               )}
 
+              {/* Chokepoint Recommendation Hint */}
+              {(() => {
+                const cleanSelected = (localSelected.split('@')[0] || '').toLowerCase();
+                const selMit = mitigationMap.get(localSelected.toLowerCase()) || mitigationMap.get(cleanSelected);
+                if (selMit?.reduction) {
+                  return (
+                    <span className="font-sans text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-md px-2 py-0.5 flex items-center gap-1">
+                      <span>💡 Chokepoint:</span>
+                      <span>Neutralizes -{selMit.reduction}% contagion</span>
+                    </span>
+                  );
+                }
+                return null;
+              })()}
+
               {/* 🛡️ Virtual Patch Button on Canvas */}
-              {blastData && (
-                <button
-                  type="button"
-                  onClick={() => toggleSandboxPatch(localSelected)}
-                  className={`font-sans font-semibold text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5 cursor-pointer transition-all border shadow-2xs ${
-                    sandboxPatches.includes(localSelected)
-                      ? 'bg-emerald-100 text-emerald-900 border-emerald-400 hover:bg-emerald-200'
-                      : 'bg-[#ede8da] hover:bg-emerald-50 text-emerald-900 border-[#d4c9b0]'
-                  }`}
-                >
-                  <span>🛡️</span>
-                  <span>{sandboxPatches.includes(localSelected) ? 'Remove Virtual Patch' : 'Apply Virtual Patch'}</span>
-                </button>
-              )}
+              {blastData && (() => {
+                const cleanSelected = (localSelected.split('@')[0] || '').toLowerCase();
+                const selMit = mitigationMap.get(localSelected.toLowerCase()) || mitigationMap.get(cleanSelected);
+                const isPatched = sandboxPatches.includes(localSelected);
+                const reductionText = (!isPatched && selMit?.reduction) ? ` (-${selMit.reduction}% Blast)` : '';
+
+                return (
+                  <button
+                    type="button"
+                    onClick={() => toggleSandboxPatch(localSelected)}
+                    className={`font-sans font-semibold text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5 cursor-pointer transition-all border shadow-2xs ${
+                      isPatched
+                        ? 'bg-emerald-100 text-emerald-900 border-emerald-400 hover:bg-emerald-200'
+                        : 'bg-[#ede8da] hover:bg-emerald-50 text-emerald-900 border-[#d4c9b0]'
+                    }`}
+                  >
+                    <span>🛡️</span>
+                    <span>{isPatched ? 'Remove Virtual Patch' : `Apply Virtual Patch${reductionText}`}</span>
+                  </button>
+                );
+              })()}
             </div>
           ) : (
             <p className="text-xs text-[#7a6a55] font-sans">

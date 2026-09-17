@@ -23,6 +23,8 @@ const PackageNode = memo(({ id, data }) => {
     isSandboxPatched,
     isSandboxProtected,
     childCount = 0,
+    isRecommendedChokepoint,
+    mitigationReduction,
   } = data;
 
   const topSev = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].find(s =>
@@ -39,16 +41,16 @@ const PackageNode = memo(({ id, data }) => {
   let iconGlyph = '📦';
 
   if (isSandboxPatched) {
-    cardBorder = 'border-emerald-400';
-    cardBg = 'bg-emerald-50';
-    glowRing = 'ring-2 ring-emerald-300/60 shadow-[0_0_18px_rgba(16,185,129,0.2)] scale-[1.02]';
-    iconBg = 'bg-emerald-500 text-white border-emerald-400';
+    cardBorder = 'border-emerald-500';
+    cardBg = 'bg-emerald-50/90';
+    glowRing = 'ring-2 ring-emerald-400 shadow-[0_0_18px_rgba(16,185,129,0.25)] scale-[1.02]';
+    iconBg = 'bg-emerald-500 text-white border-emerald-600';
     iconGlyph = '🛡️';
   } else if (isSandboxProtected) {
-    cardBorder = 'border-emerald-300';
-    cardBg = 'bg-emerald-50/60';
-    glowRing = 'ring-1 ring-emerald-200 shadow-sm';
-    iconBg = 'bg-emerald-100 text-emerald-600 border-emerald-300';
+    cardBorder = 'border-emerald-200';
+    cardBg = 'bg-white';
+    glowRing = 'shadow-sm';
+    iconBg = 'bg-emerald-50 text-emerald-700 border-emerald-200';
     iconGlyph = '✓';
   } else if (isDominoActive) {
     cardBorder = 'border-amber-400';
@@ -114,6 +116,17 @@ const PackageNode = memo(({ id, data }) => {
           </p>
         </div>
       </div>
+
+      {/* CHOKEPOINT GUIDANCE: Highlight high-impact nodes for Virtual Patching */}
+      {isRecommendedChokepoint && !isSandboxPatched && !isSandboxProtected && (
+        <div className="mb-2 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-900 text-[9.5px] font-sans font-bold flex items-center justify-between shadow-2xs">
+          <span className="flex items-center gap-1">
+            <span>💡</span>
+            <span>Chokepoint</span>
+          </span>
+          <span className="text-emerald-700 font-extrabold">-{mitigationReduction}% Blast</span>
+        </div>
+      )}
 
       {/* MIDDLE SECTION: Dynamic CVE or Cascade Status */}
       <div className="min-h-[22px] mb-2 px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-100 flex items-center justify-between text-[10px]">

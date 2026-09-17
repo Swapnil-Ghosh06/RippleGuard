@@ -55,6 +55,7 @@ export function useSimulate() {
         affected_nodes:    affected,
         critical_chain:    raw.critical_chain ?? raw.propagation?.critical_chain ?? [],
         shadow_dependencies: raw.shadow_dependencies ?? [],
+        origin_node: raw.compromised_node || compromisedNodeId,
       };
 
       setBlastData(normalized);
@@ -107,6 +108,7 @@ export function useSimulate() {
         affected_nodes:    rawNodes.map(n => n.id || `${n.name}@${n.version}`),
         critical_chain:    [compromisedNodeId, 'express@4.18.2', 'next@13.4.0', 'production-app'],
         shadow_dependencies: ['kind-of@6.0.3', 'esprima@4.0.1'],
+        origin_node: compromisedNodeId,
       };
 
       setBlastData(mockNormalized);
