@@ -55,13 +55,13 @@ const PackageNode = memo(({ data }) => {
 
   return (
     <div
-      className={`relative min-w-[195px] max-w-[220px] rounded-xl p-3.5 transition-all duration-200 cursor-pointer select-none ${cardStyle}`}
+      className={`relative w-[215px] min-h-[135px] rounded-xl p-3 flex flex-col justify-between transition-all duration-200 cursor-pointer select-none ${cardStyle}`}
     >
       {/* Left target handle */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-2 !h-2 !rounded-full !bg-zinc-400 !border-2 !border-white !-left-1"
+        className="!w-2.5 !h-2.5 !rounded-full !bg-zinc-400 !border-2 !border-white !-left-1.5"
       />
 
       {/* TOP ROW */}
@@ -176,7 +176,7 @@ const PackageNode = memo(({ data }) => {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-2 !h-2 !rounded-full !bg-zinc-400 !border-2 !border-white !-right-1"
+        className="!w-2.5 !h-2.5 !rounded-full !bg-zinc-400 !border-2 !border-white !-right-1.5"
       />
     </div>
   );

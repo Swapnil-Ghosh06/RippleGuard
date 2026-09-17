@@ -15,7 +15,43 @@ import PackageNode from './PackageNode';
 const NODE_TYPES = { package: PackageNode };
 const EDGE_TYPES = {};
 
-function buildLayout(nodes, edges) {
+function buildIntelligentLayout(nodes, edges) {
+  if (!nodes || nodes.length === 0) return {};
+
+  // 1. Build node lookup and edge adjacency map
+  const nodeMap = new Map();
+  nodes.forEach(n => nodeMap.set(n.id, n));
+
+  const parentsMap = new Map();
+  const childrenMap = new Map();
+
+  nodes.forEach(n => {
+    parentsMap.set(n.id, []);
+    childrenMap.set(n.id, []);
+  });
+
+  (edges || []).forEach(e => {
+    const uId = typeof e.source === 'string' ? e.source : e.source?.id;
+    const vId = typeof e.target === 'string' ? e.target : e.target?.id;
+    const u = nodeMap.get(uId);
+    const v = nodeMap.get(vId);
+    if (!u || !v) return;
+
+    const dU = u.depth ?? 0;
+    const dV = v.depth ?? 0;
+
+    if (dU < dV) {
+      parentsMap.get(vId)?.push(uId);
+      childrenMap.get(uId)?.push(vId);
+    } else if (dV < dU) {
+      parentsMap.get(uId)?.push(vId);
+      childrenMap.get(vId)?.push(uId);
+    } else {
+      childrenMap.get(uId)?.push(vId);
+    }
+  });
+
+  // 2. Group nodes by depth
   const byDepth = {};
   for (const n of nodes) {
     const d = n.depth ?? 0;
@@ -23,19 +59,109 @@ function buildLayout(nodes, edges) {
     byDepth[d].push(n);
   }
 
-  const X_STEP = 280;
-  const Y_STEP = 135;
+  const depths = Object.keys(byDepth).map(Number).sort((a, b) => a - b);
   const positions = {};
 
-  for (const [depth, group] of Object.entries(byDepth)) {
-    const d = Number(depth);
-    const totalH = (group.length - 1) * Y_STEP;
-    group.forEach((n, i) => {
-      positions[n.id] = {
-        x: d * X_STEP + 80,
-        y: i * Y_STEP - totalH / 2 + 280,
-      };
-    });
+  // Geometry tokens:
+  // Card width is 215px -> X_STEP of 320 leaves 105px horizontal conduit for smooth edge routing.
+  // Card height is ~140px -> MIN_Y_GAP of 185 leaves 45px vertical breathing room between stacked cards.
+  const X_STEP = 320;
+  const MIN_Y_GAP = 185;
+  const BASE_Y_CENTER = 360;
+
+  // 3. Layout Root Layer (Depth 0)
+  const rootGroup = byDepth[depths[0]] || [];
+  const rootTotalH = (rootGroup.length - 1) * MIN_Y_GAP;
+  rootGroup.forEach((n, i) => {
+    positions[n.id] = {
+      x: 80,
+      y: Math.round(BASE_Y_CENTER - rootTotalH / 2 + i * MIN_Y_GAP),
+    };
+  });
+
+  // 4. Layout subsequent layers (Depth >= 1)
+  for (let idx = 1; idx < depths.length; idx++) {
+    const d = depths[idx];
+    const group = byDepth[d];
+    const colX = d * X_STEP + 80;
+
+    if (d === 1) {
+      // Level 1: Direct dependencies of root.
+      // Symmetrically center around level 0 center with strict 185px vertical gap.
+      const totalH = (group.length - 1) * MIN_Y_GAP;
+      const startY = BASE_Y_CENTER - totalH / 2;
+      group.forEach((n, i) => {
+        positions[n.id] = {
+          x: colX,
+          y: Math.round(startY + i * MIN_Y_GAP),
+        };
+      });
+    } else {
+      // Levels 2, 3, etc.: Barycentric positioning based on upstream parent Y coordinates.
+      const groupWithIdeal = group.map(n => {
+        const parents = parentsMap.get(n.id) || [];
+        let idealY = BASE_Y_CENTER;
+        const validParents = parents.filter(pId => positions[pId]);
+        if (validParents.length > 0) {
+          idealY = validParents.reduce((sum, pId) => sum + positions[pId].y, 0) / validParents.length;
+        }
+        return { node: n, idealY };
+      });
+
+      // Sort by idealY so nodes naturally align top-to-bottom relative to their parents
+      groupWithIdeal.sort((a, b) => a.idealY - b.idealY);
+
+      // Pass 1: Initial placement
+      const yCoords = groupWithIdeal.map(item => item.idealY);
+
+      // Pass 2: Downward overlap resolution with strict MIN_Y_GAP
+      for (let i = 1; i < yCoords.length; i++) {
+        if (yCoords[i] < yCoords[i - 1] + MIN_Y_GAP) {
+          yCoords[i] = yCoords[i - 1] + MIN_Y_GAP;
+        }
+      }
+
+      // Pass 3: Center cluster around the average ideal Y of its parents
+      const currentAvg = yCoords.reduce((a, b) => a + b, 0) / yCoords.length;
+      const idealAvg = groupWithIdeal.reduce((a, b) => a + b.idealY, 0) / groupWithIdeal.length;
+      const shift = idealAvg - currentAvg;
+
+      for (let i = 0; i < yCoords.length; i++) {
+        yCoords[i] += shift;
+      }
+
+      // Pass 4: Final verification pass ensuring no overlap
+      for (let i = 1; i < yCoords.length; i++) {
+        if (yCoords[i] < yCoords[i - 1] + MIN_Y_GAP) {
+          yCoords[i] = yCoords[i - 1] + MIN_Y_GAP;
+        }
+      }
+
+      groupWithIdeal.forEach((item, i) => {
+        positions[item.node.id] = {
+          x: colX,
+          y: Math.round(yCoords[i]),
+        };
+      });
+    }
+  }
+
+  // 5. Global coordinate normalization (positive margins)
+  let minY = Infinity;
+  let minX = Infinity;
+  for (const pos of Object.values(positions)) {
+    if (pos.y < minY) minY = pos.y;
+    if (pos.x < minX) minX = pos.x;
+  }
+
+  const offsetY = minY < 70 ? 70 - minY : 0;
+  const offsetX = minX < 60 ? 60 - minX : 0;
+
+  if (offsetY !== 0 || offsetX !== 0) {
+    for (const pos of Object.values(positions)) {
+      pos.x += offsetX;
+      pos.y += offsetY;
+    }
   }
 
   return positions;
@@ -228,7 +354,7 @@ export default function GraphCanvas() {
   const rawNodes = graphData?.nodes ?? graphData?.graph?.nodes ?? [];
   const rawEdges = graphData?.edges ?? graphData?.graph?.edges ?? [];
 
-  const positions = useMemo(() => buildLayout(rawNodes, rawEdges), [rawNodes]);
+  const positions = useMemo(() => buildIntelligentLayout(rawNodes, rawEdges), [rawNodes, rawEdges]);
 
   // Compute Butterfly Trace (Critical Domino Path)
   const criticalChain = useMemo(() => {

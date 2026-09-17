@@ -133,14 +133,14 @@ export default function GraphView() {
         {graphData !== null && (
           <motion.aside
             key="side-panel"
-            className="w-[380px] shrink-0 h-full bg-white border-l border-border flex flex-col overflow-hidden shadow-sm z-30"
-            initial={{ x: 380, opacity: 0 }}
+            className="w-[410px] shrink-0 h-full bg-white border-l border-border flex flex-col overflow-hidden shadow-sm z-30"
+            initial={{ x: 410, opacity: 0 }}
             animate={{ x: 0,   opacity: 1 }}
-            exit={{ x: 380,    opacity: 0 }}
+            exit={{ x: 410,    opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
           >
             {/* Dashboard Top Header */}
-            <div className="px-5 pt-4 pb-3 border-b border-border/60 flex items-center justify-between shrink-0 select-none">
+            <div className="px-5 pt-4 pb-3 border-b border-border/60 flex items-center justify-between shrink-0 select-none bg-white">
               <span className="font-mono text-[10px] text-muted tracking-widest uppercase">
                 SECURITY ANALYSIS
               </span>
@@ -150,7 +150,7 @@ export default function GraphView() {
             </div>
 
             {/* Three tabs: "Blast" | "Mitigation" | "Compare" */}
-            <div className="flex border-b border-border/60 px-3 pt-2 pb-0 gap-1 select-none shrink-0">
+            <div className="flex border-b border-border/60 px-4 pt-2 pb-0 gap-1.5 select-none shrink-0 bg-surface/50">
               {[
                 { id: 'blast', label: 'Blast' },
                 { id: 'mitigation', label: 'Mitigation' },
@@ -164,7 +164,7 @@ export default function GraphView() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`font-mono text-[11px] px-4 py-2 rounded-t-lg cursor-pointer transition-all ${
                       isActive
-                        ? 'bg-surface3/80 text-text border-b-2 border-accent font-semibold'
+                        ? 'bg-white text-text border-b-2 border-accent font-semibold shadow-2xs'
                         : 'text-muted hover:text-dim hover:bg-surface2/40'
                     }`}
                   >
@@ -175,7 +175,7 @@ export default function GraphView() {
             </div>
 
             {/* Tab content area */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-y-auto bg-white">
               {activeTab === 'blast' && <BlastRadiusPanel />}
               {activeTab === 'mitigation' && <MitigationPanel />}
               {activeTab === 'compare' && <CompareView />}

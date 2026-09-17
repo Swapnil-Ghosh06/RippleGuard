@@ -731,7 +731,7 @@ export default function BlastRadiusPanel() {
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className={`text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border ${
+                      <span className={`text-[10px] font-sans font-bold px-1.5 py-0.5 rounded border shrink-0 ${
                         isStart
                           ? 'bg-rose-100 text-rose-800 border-rose-200'
                           : isEnd
@@ -744,7 +744,7 @@ export default function BlastRadiusPanel() {
                         {nodeId}
                       </span>
                     </div>
-                    <p className="text-[10px] text-muted font-sans">
+                    <p className="text-[10px] text-muted font-sans truncate">
                       {isStart
                         ? 'Exploit entrypoint package'
                         : isEnd
