@@ -632,11 +632,23 @@ export default function SearchPanel() {
     return [...primaryMatches, ...crossMatches];
   }, [pkg, eco]);
 
-  // Attack replay scenarios for the chips below search bar
-  const activeAttacks = useMemo(() => {
-    const ecoAttacks = PACKAGE_CATALOG.filter(item => item.isAttack && item.ecosystem === eco);
-    if (ecoAttacks.length > 0) return ecoAttacks;
-    return PACKAGE_CATALOG.filter(item => item.isAttack);
+  // Dedicated package for Quick Demo button based on active ecosystem
+  const quickDemoPkg = useMemo(() => {
+    if (eco === 'pypi') {
+      return PACKAGE_CATALOG.find(p => p.id === 'pypi-xz-backdoor') || PACKAGE_CATALOG.find(p => p.ecosystem === 'pypi');
+    }
+    return PACKAGE_CATALOG.find(p => p.id === 'log4js-rce') || PACKAGE_CATALOG.find(p => p.ecosystem === 'npm');
+  }, [eco]);
+
+  // Curated list of popular tools for the active ecosystem
+  const popularTools = useMemo(() => {
+    if (eco === 'npm') {
+      const names = ['express', 'lodash', 'react', 'axios', 'event-stream', 'colors'];
+      return names.map(name => PACKAGE_CATALOG.find(p => p.package === name && p.ecosystem === 'npm')).filter(Boolean);
+    } else {
+      const names = ['requests', 'flask', 'fastapi', 'django', 'urllib3', 'pydantic'];
+      return names.map(name => PACKAGE_CATALOG.find(p => p.package === name && p.ecosystem === 'pypi')).filter(Boolean);
+    }
   }, [eco]);
 
   const handleAnalyze = async (targetPkg, targetEco) => {
@@ -897,35 +909,41 @@ export default function SearchPanel() {
               </AnimatePresence>
             </div>
 
-            {/* Attack Replay Chips */}
-            <div className="mt-5 w-full max-w-2xl flex flex-wrap items-center gap-2 select-none">
-              <div className="flex items-center gap-1.5 text-xs text-stone-500 font-sans font-medium mr-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                <span>{eco.toUpperCase()} Attacks:</span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleSelectPackage(activeAttacks[0])}
-                className="bg-stone-900 hover:bg-black text-white font-sans text-xs px-3.5 py-1.5 rounded-full transition-all cursor-pointer flex items-center gap-1.5 font-medium shadow-2xs hover:shadow-xs active:scale-98"
-              >
-                <span>⚡</span>
-                <span>Quick Demo</span>
-                <span className="text-[10px] text-stone-400 font-mono">({activeAttacks[0]?.package})</span>
-              </button>
-
-              {activeAttacks.map(a => (
+            {/* Quick Actions & Popular Tools */}
+            <div className="mt-5 w-full max-w-2xl flex flex-wrap items-center gap-2.5 sm:gap-3 select-none">
+              {/* Dedicated Standalone Quick Demo Button */}
+              {quickDemoPkg && (
                 <button
-                  key={a.id}
                   type="button"
-                  onClick={() => handleSelectPackage(a)}
-                  className="bg-white hover:bg-stone-50 text-stone-800 hover:text-stone-950 border border-stone-200/80 hover:border-stone-400 text-xs px-3 py-1.5 rounded-full font-sans font-medium transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:shadow-xs group active:scale-98"
-                  title={a.summary}
+                  onClick={() => handleSelectPackage(quickDemoPkg)}
+                  className="bg-stone-950 hover:bg-black text-white font-sans text-xs px-4 py-1.5 rounded-full transition-all duration-200 cursor-pointer flex items-center gap-2 font-medium shadow-xs hover:shadow active:scale-95 shrink-0"
                 >
-                  <span className="font-semibold text-stone-900">{a.package}</span>
-                  <span className="text-[10px] text-stone-400 font-sans">({a.label})</span>
+                  <span className="text-amber-400 font-bold">⚡</span>
+                  <span>Quick Demo</span>
+                  <span className="text-[10px] text-stone-400 font-mono">({quickDemoPkg.package})</span>
                 </button>
-              ))}
+              )}
+
+              {/* Vertical divider on desktop */}
+              <div className="hidden sm:block w-px h-4 bg-stone-200 shrink-0" />
+
+              {/* Popular Tools Pills */}
+              <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+                <span className="text-xs font-sans font-medium text-stone-500 shrink-0 mr-0.5">
+                  Popular Tools:
+                </span>
+                {popularTools.map(tool => (
+                  <button
+                    key={tool.id || tool.package}
+                    type="button"
+                    onClick={() => handleSelectPackage(tool)}
+                    className="bg-white hover:bg-stone-50 text-stone-800 hover:text-stone-950 border border-stone-200 hover:border-stone-400 text-xs px-2.5 py-1 rounded-full font-sans font-medium transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95 flex items-center gap-1"
+                    title={tool.summary || tool.label}
+                  >
+                    <span>{tool.package}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Hand-Drawn Downward Arrow (Exact match to reference image below input) */}
