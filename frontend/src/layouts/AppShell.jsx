@@ -88,29 +88,30 @@ export default function AppShell({ children }) {
         </div>
 
         {/* Center / Right — Navigation & Actions */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 sm:gap-6">
           {view === 'idle' && (
-            <nav className="hidden md:flex items-center gap-6 text-xs font-sans text-stone-500 font-medium select-none">
-              <a href="#how-it-works" className="hover:text-text transition-colors">
-                How It Works
-              </a>
-              <a href="#story" className="hover:text-text transition-colors">
-                Why RippleGuard
-              </a>
-              <a
-                href="#search-input"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const el = document.getElementById('search-input');
-                  if (el) {
-                    el.scrollIntoView({ behavior: 'smooth' });
-                    el.focus();
-                  }
-                }}
-                className="hover:text-text transition-colors"
-              >
-                Attack Scenarios
-              </a>
+            <nav className="hidden md:flex items-center gap-1.5 text-xs font-sans text-stone-500 font-medium select-none bg-stone-100/70 p-1 rounded-full border border-stone-200/60">
+              {[
+                { id: 'how-it-works', label: 'How It Works' },
+                { id: 'why-rippleguard', label: 'Why RippleGuard' },
+                { id: 'attack-scenarios', label: 'Attack Scenarios' },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById(item.id);
+                    if (el) {
+                      const yOffset = -76;
+                      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                      window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-full text-stone-600 hover:text-stone-950 hover:bg-white/80 hover:shadow-2xs transition-all duration-200 cursor-pointer"
+                >
+                  {item.label}
+                </button>
+              ))}
             </nav>
           )}
 
@@ -142,13 +143,16 @@ export default function AppShell({ children }) {
               onClick={() => {
                 const el = document.getElementById('search-input');
                 if (el) {
-                  el.scrollIntoView({ behavior: 'smooth' });
-                  el.focus();
+                  const yOffset = -120;
+                  const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                  window.scrollTo({ top: y, behavior: 'smooth' });
+                  setTimeout(() => el.focus(), 350);
                 }
               }}
-              className="text-xs font-sans font-medium text-white bg-text hover:bg-neutral-800 px-5 py-2 rounded-full transition-all duration-150 cursor-pointer shadow-xs"
+              className="text-xs font-sans font-medium text-white bg-stone-950 hover:bg-black px-5 py-2 rounded-full transition-all duration-200 cursor-pointer shadow-xs hover:shadow active:scale-95 flex items-center gap-1.5"
             >
-              Try it Free
+              <span>Try it Free</span>
+              <span className="opacity-70 text-[10px]">↗</span>
             </button>
           ) : (
             <button

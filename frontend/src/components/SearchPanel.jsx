@@ -957,17 +957,89 @@ export default function SearchPanel() {
         </div>
 
         {/* ======================================================== */}
-        {/* STORY SECTION (Matching Bottom Half of Reference Image)   */}
+        {/* 1. HOW IT WORKS SECTION — 3 CLEAN STEP CARDS             */}
         {/* ======================================================== */}
-        <div id="story" className="mt-20 pt-16 border-t border-border/70 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        <motion.div
+          id="how-it-works"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-20 pt-16 border-t border-stone-200/80"
+        >
+          <div className="text-left mb-8">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-mono uppercase font-semibold text-stone-600 mb-2">
+              <span>01 / ARCHITECTURE</span>
+            </div>
+            <h3 className="font-serif font-normal text-3xl sm:text-4xl text-text tracking-tight">
+              How RippleGuard simulates the explosion
+            </h3>
+          </div>
 
-          {/* Left Column: Sketch Character + Floating Handwritten Clouds + Clock */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+            {/* Step 1 */}
+            <div className="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs hover:border-stone-400 hover:shadow-sm transition-all duration-200 flex flex-col">
+              <span className="font-sans text-xs font-bold text-stone-700 bg-stone-100 border border-stone-200 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
+                01
+              </span>
+              <h4 className="font-serif font-semibold text-base text-text mb-2">
+                Search Any Package
+              </h4>
+              <p className="font-sans text-xs text-muted leading-relaxed">
+                Enter any npm or PyPI package. RippleGuard resolves its complete transitive dependency graph in real time via Google&apos;s deps.dev and queries OSV for known CVEs.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs hover:border-stone-400 hover:shadow-sm transition-all duration-200 flex flex-col">
+              <span className="font-sans text-xs font-bold text-stone-700 bg-stone-100 border border-stone-200 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
+                02
+              </span>
+              <h4 className="font-serif font-semibold text-base text-text mb-2">
+                Select Compromise Entrypoint
+              </h4>
+              <p className="font-sans text-xs text-muted leading-relaxed">
+                Click any node in the dependency graph — whether it is the direct top-level library or a shadow dependency 5 layers deep.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs hover:border-stone-400 hover:shadow-sm transition-all duration-200 flex flex-col">
+              <span className="font-sans text-xs font-bold text-stone-700 bg-stone-100 border border-stone-200 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
+                03
+              </span>
+              <h4 className="font-serif font-semibold text-base text-text mb-2">
+                Simulate Cascading Blast
+              </h4>
+              <p className="font-sans text-xs text-muted leading-relaxed">
+                Hit Inject Compromise. Watch the contagion spread node by node, calculate the Blast Radius Score, and review prioritized upgrade remedies.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ======================================================== */}
+        {/* 2. WHY RIPPLEGUARD / STORY SECTION                        */}
+        {/* ======================================================== */}
+        <motion.div
+          id="why-rippleguard"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-20 pt-16 border-t border-stone-200/80 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center"
+        >
+          {/* Left Column: Sketch Character + Floating Handwritten Clouds */}
           <div className="lg:col-span-6 flex justify-center">
             <SketchStoryIllustration />
           </div>
 
           {/* Right Column: Bold Editorial Narrative */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-mono uppercase font-semibold text-stone-600 mb-3">
+              <span>02 / THE CORE PROBLEM</span>
+            </div>
+
             <h2 className="font-serif font-normal text-3xl sm:text-4xl lg:text-5xl text-text leading-[1.12] tracking-tight">
               As an engineer, you have hundreds of packages you rely on every day, and not enough visibility into what happens when one goes rogue.
             </h2>
@@ -980,18 +1052,20 @@ export default function SearchPanel() {
               RippleGuard is a supply chain compromise simulator. Not an alert fatigue engine — a blast radius engine. You pick any package in the tree, inject an attack, and watch the infection cascade across the dependency graph in real time.
             </p>
 
-            {/* Quick Action Button */}
-            <div className="mt-8 flex items-center gap-4">
+            {/* Quick Action Buttons */}
+            <div className="mt-8 flex items-center gap-4 flex-wrap">
               <button
                 type="button"
                 onClick={() => {
                   const el = document.getElementById('search-input');
                   if (el) {
-                    el.scrollIntoView({ behavior: 'smooth' });
-                    el.focus();
+                    const yOffset = -120;
+                    const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                    setTimeout(() => el.focus(), 350);
                   }
                 }}
-                className="bg-text text-white font-sans font-medium text-xs px-6 py-3 rounded-full hover:bg-neutral-800 transition-all cursor-pointer shadow-xs"
+                className="bg-stone-950 text-white font-sans font-medium text-xs px-6 py-3 rounded-full hover:bg-black transition-all cursor-pointer shadow-xs active:scale-95"
               >
                 Analyze a Package →
               </button>
@@ -999,100 +1073,118 @@ export default function SearchPanel() {
               <button
                 type="button"
                 onClick={() => handleSelectPackage(PACKAGE_CATALOG[0])}
-                className="border border-border hover:border-text text-text font-sans font-medium text-xs px-5 py-3 rounded-full bg-white hover:bg-surface2 transition-all cursor-pointer"
+                className="border border-stone-300 hover:border-stone-950 text-text font-sans font-medium text-xs px-5 py-3 rounded-full bg-white hover:bg-stone-50 transition-all cursor-pointer shadow-2xs active:scale-95"
               >
                 Run Log4Shell Demo
               </button>
             </div>
           </div>
-
-        </div>
+        </motion.div>
 
         {/* ======================================================== */}
-        {/* HOW IT WORKS SECTION — 3 CLEAN STEP CARDS                 */}
+        {/* 3. ATTACK SCENARIOS SHOWCASE GRID                         */}
         {/* ======================================================== */}
-        <div id="how-it-works" className="mt-24 pt-16 border-t border-border/70">
-          <div className="text-left mb-8">
-            <p className="font-sans text-[11px] font-semibold text-muted tracking-wider uppercase mb-2">
-              SYSTEM ARCHITECTURE
+        <motion.div
+          id="attack-scenarios"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-20 pt-16 border-t border-stone-200/80"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 text-left">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[10px] font-mono uppercase font-semibold text-rose-800 mb-2">
+                <span>03 / REPLAY BENCHMARKS</span>
+              </div>
+              <h3 className="font-serif font-normal text-3xl sm:text-4xl text-text tracking-tight">
+                Famous Supply Chain Attack Replays
+              </h3>
+            </div>
+            <p className="text-xs text-muted font-sans max-w-sm">
+              Click any scenario to load its exact vulnerable dependency tree and run the simulation cascade.
             </p>
-            <h3 className="font-serif font-normal text-3xl text-text tracking-tight">
-              How RippleGuard simulates the explosion
-            </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-            {/* Step 1 */}
-            <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-xs hover:border-stone-400 transition-all duration-200 flex flex-col">
-              <span className="font-sans text-xs font-semibold text-muted border border-border/80 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
-                01
-              </span>
-              <h4 className="font-serif font-semibold text-base text-text mb-2">
-                Search Any Package
-              </h4>
-              <p className="font-sans text-xs text-muted leading-relaxed">
-                Enter any npm or PyPI package. RippleGuard resolves its complete transitive dependency graph in real time via Google&apos;s deps.dev and queries OSV for known CVEs.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 text-left">
+            {PACKAGE_CATALOG.filter(item => item.isAttack).map(scenario => (
+              <div
+                key={scenario.id}
+                onClick={() => handleSelectPackage(scenario)}
+                className="group rounded-2xl border border-stone-200/90 bg-white p-5 shadow-xs hover:border-stone-900 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full uppercase bg-stone-100 text-stone-700 border border-stone-200">
+                      {scenario.ecosystem}
+                    </span>
+                    <span className={`text-[10px] font-sans font-bold px-2 py-0.5 rounded-full border ${scenario.tagClass || 'bg-rose-50 text-rose-800 border-rose-200'}`}>
+                      {scenario.tag}
+                    </span>
+                  </div>
 
-            {/* Step 2 */}
-            <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-xs hover:border-stone-400 transition-all duration-200 flex flex-col">
-              <span className="font-sans text-xs font-semibold text-muted border border-border/80 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
-                02
-              </span>
-              <h4 className="font-serif font-semibold text-base text-text mb-2">
-                Select Compromise Entrypoint
-              </h4>
-              <p className="font-sans text-xs text-muted leading-relaxed">
-                Click any node in the dependency graph — whether it is the direct top-level library or a shadow dependency 5 layers deep.
-              </p>
-            </div>
+                  <h4 className="font-sans text-sm font-bold text-stone-950 mb-1 flex items-center justify-between">
+                    <span>{scenario.package}</span>
+                    <span className="text-xs font-mono font-normal text-stone-400">@{scenario.version}</span>
+                  </h4>
 
-            {/* Step 3 */}
-            <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-xs hover:border-stone-400 transition-all duration-200 flex flex-col">
-              <span className="font-sans text-xs font-semibold text-muted border border-border/80 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
-                03
-              </span>
-              <h4 className="font-serif font-semibold text-base text-text mb-2">
-                Simulate Cascading Blast
-              </h4>
-              <p className="font-sans text-xs text-muted leading-relaxed">
-                Hit Inject Compromise. Watch the contagion spread node by node, calculate the Blast Radius Score, and review prioritized upgrade remedies.
-              </p>
-            </div>
+                  <p className="font-sans text-xs font-semibold text-stone-800 mb-2">
+                    {scenario.label}
+                  </p>
+
+                  <p className="font-sans text-xs text-muted leading-relaxed line-clamp-2">
+                    {scenario.summary}
+                  </p>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs font-sans font-medium text-stone-900 group-hover:text-black">
+                  <span className="text-[11px] font-mono text-muted">{scenario.downloads}</span>
+                  <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    <span>Replay Attack</span>
+                    <span>→</span>
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* ======================================================== */}
         {/* LIVE METRICS TICKER BAR                                  */}
         {/* ======================================================== */}
-        <div className="mt-12 w-full bg-surface2/80 border border-border/80 rounded-2xl px-6 py-6 flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.45 }}
+          className="mt-16 w-full bg-stone-50 border border-stone-200/80 rounded-2xl px-6 py-6 flex flex-wrap sm:flex-nowrap items-center justify-between gap-4"
+        >
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
             <span className="font-serif text-3xl font-normal text-text tracking-tight">3.5M+</span>
             <span className="font-sans text-xs text-muted">npm & PyPI indexed</span>
           </div>
 
-          <div className="hidden sm:block w-px h-8 bg-border" />
+          <div className="hidden sm:block w-px h-8 bg-stone-200" />
 
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
             <span className="font-serif text-3xl font-normal text-text tracking-tight">82M/mo</span>
             <span className="font-sans text-xs text-muted">lodash monthly downloads</span>
           </div>
 
-          <div className="hidden sm:block w-px h-8 bg-border" />
+          <div className="hidden sm:block w-px h-8 bg-stone-200" />
 
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
             <span className="font-serif text-3xl font-normal text-text tracking-tight">$4.88M</span>
             <span className="font-sans text-xs text-muted">avg breach cost (IBM 2024)</span>
           </div>
 
-          <div className="hidden sm:block w-px h-8 bg-border" />
+          <div className="hidden sm:block w-px h-8 bg-stone-200" />
 
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
             <span className="font-serif text-3xl font-normal text-text tracking-tight">96%</span>
             <span className="font-sans text-xs text-muted">apps with open source</span>
           </div>
-        </div>
+        </motion.div>
 
       </div>
 
