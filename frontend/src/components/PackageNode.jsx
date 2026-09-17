@@ -104,7 +104,7 @@ const PackageNode = memo(({ id, data }) => {
         {/* Name & Subtitle */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1">
-            <span className="font-mono text-xs font-bold text-stone-900 truncate" title={`${name}${version ? `@${version}` : ''}`}>
+            <span className="font-display text-xs font-bold text-stone-900 truncate" title={`${name}${version ? `@${version}` : ''}`}>
               {name}
             </span>
           </div>
@@ -118,27 +118,27 @@ const PackageNode = memo(({ id, data }) => {
       {/* MIDDLE SECTION: Dynamic CVE or Cascade Status */}
       <div className="min-h-[22px] mb-2 px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-100 flex items-center justify-between text-[10px]">
         {isSandboxPatched ? (
-          <span className="text-emerald-600 font-semibold font-mono flex items-center gap-1">
+          <span className="text-emerald-700 font-bold font-sans flex items-center gap-1">
             <span>🛡️</span>
             <span>Virtual Patch Active</span>
           </span>
         ) : isSandboxProtected ? (
-          <span className="text-emerald-600 font-medium font-mono flex items-center gap-1">
+          <span className="text-emerald-700 font-semibold font-sans flex items-center gap-1">
             <span>✓</span>
             <span>Cascade Severed</span>
           </span>
         ) : dominoIndex ? (
-          <span className="text-amber-600 font-semibold font-mono flex items-center gap-1">
+          <span className="text-amber-800 font-bold font-display flex items-center gap-1">
             <span>🦋</span>
             <span>{dominoIndex === 1 ? 'Contagion Origin' : `Hop #${dominoIndex} in Path`}</span>
           </span>
         ) : blasted ? (
-          <span className="text-rose-500 font-semibold font-mono flex items-center gap-1">
+          <span className="text-rose-600 font-bold font-display flex items-center gap-1">
             <span>⚡</span>
             <span>Tainted Linkage</span>
           </span>
         ) : mainCVE?.id ? (
-          <span className="text-rose-500 font-mono font-medium truncate">
+          <span className="text-rose-600 font-sans font-semibold truncate">
             {mainCVE.id} ({topSev})
           </span>
         ) : (
@@ -148,7 +148,7 @@ const PackageNode = memo(({ id, data }) => {
         )}
 
         {childCount > 0 && (
-          <span className="text-[9px] font-mono text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded ml-1 shrink-0">
+          <span className="text-[9px] font-sans font-semibold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded ml-1 shrink-0">
             +{childCount}
           </span>
         )}
@@ -156,11 +156,11 @@ const PackageNode = memo(({ id, data }) => {
 
       {/* BOTTOM ROW: Downloads + Ecosystem badge */}
       <div className="border-t border-stone-100 pt-2 flex items-center justify-between text-[10px] text-stone-400 font-sans">
-        <span className="font-mono text-[10px] text-stone-400">
+        <span className="font-sans text-[10px] text-stone-500">
           {monthly_downloads ? formatDownloads(monthly_downloads) : '0 dl/mo'}
         </span>
 
-        <span className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-stone-100 text-stone-400 border border-stone-200">
+        <span className="text-[9px] font-sans uppercase font-medium tracking-wider px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 border border-stone-200">
           {ecosystem}
         </span>
       </div>

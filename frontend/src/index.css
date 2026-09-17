@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Sora:wght@100..800&family=JetBrains+Mono:wght@400;500;600;700&family=Caveat:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Sora:wght@100..800&family=Caveat:wght@400;600;700&display=swap');
 @import "tailwindcss";
 
 @theme inline {
@@ -6,7 +6,7 @@
   --font-family-display: 'Sora', system-ui, sans-serif;
   --font-family-heading: 'Montserrat', system-ui, sans-serif;
   --font-family-serif: 'Sora', system-ui, sans-serif;
-  --font-family-mono: 'JetBrains Mono', monospace;
+  --font-family-mono: 'DM Sans', system-ui, -apple-system, sans-serif;
   --font-family-hand: 'Caveat', cursive, sans-serif;
 
   /* ── Minimalist Editorial Palette ─────────── */
@@ -73,7 +73,7 @@
     font-family: 'Sora', system-ui, sans-serif !important;
   }
   .font-mono {
-    font-family: 'JetBrains Mono', monospace !important;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
   }
 
   /* Handwritten Sketch Font */

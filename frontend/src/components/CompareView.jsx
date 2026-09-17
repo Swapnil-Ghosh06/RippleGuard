@@ -128,10 +128,10 @@ export default function CompareView({ isExpanded = false }) {
     <div className="flex flex-col gap-3.5 p-4 sm:p-5 select-none text-[#2c2416]">
       {/* Top Header Label */}
       <div className="flex items-center justify-between pb-2 border-b border-[#d4c9b0]">
-        <span className="font-mono text-[11px] font-bold text-[#7a6a55] tracking-wider uppercase">
+        <span className="font-heading text-xs font-bold text-[#4a3f32] tracking-wider uppercase">
           Scenario Comparison
         </span>
-        <span className="inline-flex items-center gap-1.5 text-xs text-amber-400 font-medium font-mono">
+        <span className="inline-flex items-center gap-1.5 text-xs text-amber-700 font-semibold font-display">
           Differential Model
         </span>
       </div>
@@ -140,7 +140,7 @@ export default function CompareView({ isExpanded = false }) {
       <div className="rounded-2xl bg-[#ede8da] border border-[#d4c9b0] p-4 flex flex-col gap-3 shadow-md">
         <div className="flex items-center justify-between text-xs">
           <span className="font-sans font-medium text-[#4a3f32]">Baseline (Target A):</span>
-          <span className="font-mono text-xs font-bold text-rose-600 bg-rose-100 border border-rose-800 px-2 py-0.5 rounded-full truncate max-w-[180px]">
+          <span className="font-display text-xs font-bold text-rose-700 bg-rose-100 border border-rose-300 px-2.5 py-0.5 rounded-full truncate max-w-[180px]">
             {nodeAId}
           </span>
         </div>
@@ -153,7 +153,7 @@ export default function CompareView({ isExpanded = false }) {
             <select
               value={selectedNodeB}
               onChange={(e) => setSelectedNodeB(e.target.value)}
-              className="flex-1 bg-[#e8e1cc] border border-[#c4b49a] rounded-xl px-3 py-1.5 text-xs font-mono text-[#2c2416] focus:outline-none focus:border-amber-400 cursor-pointer"
+              className="flex-1 bg-[#e8e1cc] border border-[#c4b49a] rounded-xl px-3 py-1.5 text-xs font-sans text-[#2c2416] focus:outline-none focus:border-amber-400 cursor-pointer"
             >
               <option value="">Choose package from graph...</option>
               {candidateNodes.map((id) => (
@@ -167,22 +167,22 @@ export default function CompareView({ isExpanded = false }) {
               type="button"
               onClick={handleCompare}
               disabled={!selectedNodeB || loading}
-              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-sans font-semibold text-[#2c2416] cursor-pointer transition-colors shrink-0 shadow-sm"
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-display font-semibold text-amber-950 cursor-pointer transition-colors shrink-0 shadow-sm"
             >
               {loading ? 'Comparing...' : 'Compare'}
             </button>
           </div>
         </div>
 
-        {error && <p className="text-xs text-rose-400 font-sans">{error}</p>}
+        {error && <p className="text-xs text-rose-600 font-sans">{error}</p>}
       </div>
 
       {/* Hero Comparative Synthesis Banner */}
       {comp && comp.summary && (
-        <div className="rounded-2xl bg-amber-950/25 border border-amber-800/50 p-4 shadow-md">
-          <div className="flex items-center gap-1.5 mb-1.5 text-amber-700 text-xs font-semibold">
+        <div className="rounded-2xl bg-amber-50 border border-amber-300 p-4 shadow-md">
+          <div className="flex items-center gap-1.5 mb-1.5 text-amber-800 text-xs font-semibold">
             <span>⚖️</span>
-            <span className="font-mono uppercase text-[10px] tracking-wider">Comparative Threat Verdict</span>
+            <span className="font-heading uppercase text-[10px] tracking-wider font-bold">Comparative Threat Verdict</span>
           </div>
           <p className="text-sm font-bold text-[#2c2416] leading-snug font-sans">
             &ldquo;{comp.summary}&rdquo;
@@ -197,15 +197,15 @@ export default function CompareView({ isExpanded = false }) {
       {comp && (
         <div className="grid grid-cols-2 gap-2.5 select-none">
           {/* Scenario A Card */}
-          <div className="rounded-2xl bg-[#ede8da] border border-rose-400 p-3.5 flex flex-col justify-between shadow-md">
+          <div className="rounded-2xl bg-[#ede8da] border border-rose-300 p-3.5 flex flex-col justify-between shadow-md">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-rose-100 text-rose-600 font-semibold border border-rose-800">
+                <span className="text-[10px] uppercase font-sans px-2 py-0.5 rounded bg-rose-100 text-rose-700 font-bold border border-rose-300">
                   Target A
                 </span>
                 <span className="text-xs">🎯</span>
               </div>
-              <p className="font-mono text-xs font-bold text-[#2c2416] truncate mb-2" title={nodeAId}>
+              <p className="font-display text-xs font-bold text-[#2c2416] truncate mb-2" title={nodeAId}>
                 {nodeAId}
               </p>
             </div>
@@ -213,14 +213,14 @@ export default function CompareView({ isExpanded = false }) {
             <div className="space-y-2">
               <div className="flex items-baseline justify-between border-t border-[#d4c9b0] pt-2">
                 <span className="text-[11px] text-[#7a6a55] font-sans">Score:</span>
-                <span className="font-serif text-2xl font-bold text-rose-400">
+                <span className="font-display text-2xl font-bold text-rose-600">
                   {nodeAScore}
                 </span>
               </div>
 
               <div className="flex items-baseline justify-between text-xs">
                 <span className="text-[11px] text-[#7a6a55] font-sans">Exposure:</span>
-                <span className="font-mono font-semibold text-[#2c2416]">
+                <span className="font-display font-semibold text-[#2c2416]">
                   {nodeADownloads}
                 </span>
               </div>
@@ -237,12 +237,12 @@ export default function CompareView({ isExpanded = false }) {
           <div className="rounded-2xl bg-[#ede8da] border border-[#d4c9b0] p-3.5 flex flex-col justify-between shadow-md">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-[#e2d9c0] text-[#4a3f32] font-semibold border border-[#c4b49a]">
+                <span className="text-[10px] uppercase font-sans px-2 py-0.5 rounded bg-[#e2d9c0] text-[#4a3f32] font-bold border border-[#c4b49a]">
                   Target B
                 </span>
                 <span className="text-xs">🛡️</span>
               </div>
-              <p className="font-mono text-xs font-bold text-[#2c2416] truncate mb-2" title={selectedNodeB}>
+              <p className="font-display text-xs font-bold text-[#2c2416] truncate mb-2" title={selectedNodeB}>
                 {selectedNodeB || 'Scenario B'}
               </p>
             </div>
@@ -250,14 +250,14 @@ export default function CompareView({ isExpanded = false }) {
             <div className="space-y-2">
               <div className="flex items-baseline justify-between border-t border-[#d4c9b0] pt-2">
                 <span className="text-[11px] text-[#7a6a55] font-sans">Score:</span>
-                <span className="font-serif text-2xl font-bold text-amber-400">
+                <span className="font-display text-2xl font-bold text-amber-600">
                   {nodeBScore}
                 </span>
               </div>
 
               <div className="flex items-baseline justify-between text-xs">
                 <span className="text-[11px] text-[#7a6a55] font-sans">Exposure:</span>
-                <span className="font-mono font-semibold text-[#2c2416]">
+                <span className="font-display font-semibold text-[#2c2416]">
                   {nodeBDownloads}
                 </span>
               </div>

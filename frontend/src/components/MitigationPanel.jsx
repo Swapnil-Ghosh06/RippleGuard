@@ -25,17 +25,17 @@ export default function MitigationPanel({ isExpanded = false }) {
     <div className="flex flex-col gap-3.5 p-4 sm:p-5 select-none text-[#2c2416]">
       {/* Header */}
       <div className="flex items-center justify-between pb-2 border-b border-[#d4c9b0]">
-        <span className="font-mono text-[11px] font-bold text-[#7a6a55] tracking-wider uppercase">
+        <span className="font-heading text-xs font-bold text-[#4a3f32] tracking-wider uppercase">
           Priority Mitigations
         </span>
-        <span className="text-xs text-emerald-400 font-medium">
+        <span className="text-xs text-emerald-700 font-semibold font-sans">
           {blastData.mitigations.length} Recommended
         </span>
       </div>
 
       {/* Sandbox status pill if active */}
       {sandboxPatches.length > 0 && (
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-sans text-emerald-700 flex items-center justify-between shadow-sm">
+        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-sans text-emerald-800 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-1.5">
             <span className="animate-pulse">🛡️</span>
             <span><strong>{sandboxPatches.length}</strong> patch(es) active in Sandbox</span>
@@ -43,7 +43,7 @@ export default function MitigationPanel({ isExpanded = false }) {
           <button
             type="button"
             onClick={clearSandboxPatches}
-            className="text-[10px] font-mono text-emerald-400 hover:text-emerald-200 underline cursor-pointer"
+            className="text-[11px] font-sans font-medium text-emerald-800 hover:text-emerald-950 underline cursor-pointer"
           >
             Reset All
           </button>
@@ -69,15 +69,15 @@ export default function MitigationPanel({ isExpanded = false }) {
               {/* Top Row */}
               <div className="flex items-center justify-between gap-2 select-none">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="w-5 h-5 rounded-full bg-[#e2d9c0] border border-[#c4b49a] text-[11px] font-mono text-[#7a6a55] flex items-center justify-center shrink-0">
+                  <span className="w-5 h-5 rounded-full bg-[#e2d9c0] border border-[#c4b49a] text-[11px] font-display font-bold text-[#7a6a55] flex items-center justify-center shrink-0">
                     {i + 1}
                   </span>
-                  <span className="font-mono text-xs font-bold text-[#2c2416] truncate">
+                  <span className="font-display text-xs font-bold text-[#2c2416] truncate">
                     {item.package}
                   </span>
                 </div>
 
-                <span className="bg-emerald-100 text-emerald-700 border border-emerald-400 text-xs font-mono font-semibold px-2 py-0.5 rounded-full shrink-0">
+                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-display font-bold px-2.5 py-0.5 rounded-full shrink-0">
                   −{pct}% Blast
                 </span>
               </div>
@@ -91,12 +91,12 @@ export default function MitigationPanel({ isExpanded = false }) {
               </div>
 
               {/* Command box with copy button */}
-              <div className="flex items-center justify-between gap-2 bg-[#e8e1cc] border border-[#d4c9b0] rounded-xl px-3 py-1.5 font-mono text-xs text-[#2c2416]">
+              <div className="flex items-center justify-between gap-2 bg-[#e8e1cc] border border-[#d4c9b0] rounded-xl px-3 py-1.5 font-display text-xs text-[#2c2416]">
                 <span className="truncate">{patchCmd}</span>
                 <button
                   type="button"
                   onClick={() => handleCopy(patchCmd, i)}
-                  className="text-xs font-sans font-medium text-emerald-400 hover:text-emerald-700 shrink-0 ml-2 cursor-pointer transition-colors"
+                  className="text-xs font-sans font-bold text-emerald-800 hover:text-emerald-950 shrink-0 ml-2 cursor-pointer transition-colors"
                 >
                   {isCopied ? '✓ Copied' : 'Copy'}
                 </button>
@@ -115,8 +115,8 @@ export default function MitigationPanel({ isExpanded = false }) {
                 onClick={() => toggleSandboxPatch(item.package)}
                 className={`mt-1 py-2 px-3 rounded-xl font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border shadow-sm ${
                   isPatchedInSandbox
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-400 hover:bg-emerald-100'
-                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300'
+                    ? 'bg-emerald-100 text-emerald-900 border-emerald-400 hover:bg-emerald-200'
+                    : 'bg-[#ede8da] hover:bg-emerald-50 text-emerald-900 border-[#d4c9b0]'
                 }`}
               >
                 <span>🛡️</span>

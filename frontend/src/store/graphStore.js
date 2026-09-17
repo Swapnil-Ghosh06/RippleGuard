@@ -26,7 +26,9 @@ export const useGraphStore = create((set) => ({
   setActiveTab: (tab) => set({ activeTab: tab }),
 
   activeDominoIndex: null,
-  setActiveDominoIndex: (idx) => set({ activeDominoIndex: idx }),
+  setActiveDominoIndex: (idx) => set((state) => ({
+    activeDominoIndex: typeof idx === 'function' ? idx(state.activeDominoIndex) : idx,
+  })),
 
   isDominoPlaying: false,
   setIsDominoPlaying: (b) => set({ isDominoPlaying: b }),

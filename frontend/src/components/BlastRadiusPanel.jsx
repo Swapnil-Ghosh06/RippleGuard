@@ -351,7 +351,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
             <span className="text-xs font-semibold text-[#7a6a55] uppercase tracking-wider font-heading">
               Analyzed Target
             </span>
-            <span className="text-[10px] font-mono border border-[#c4b49a] bg-[#e2d9c0] px-2 py-0.5 rounded-full text-[#4a3f32]">
+            <span className="text-[10px] font-sans font-medium border border-[#c4b49a] bg-[#e2d9c0] px-2 py-0.5 rounded-full text-[#4a3f32]">
               {rootNode?.ecosystem || 'npm'}
             </span>
           </div>
@@ -416,7 +416,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
           <div className="rounded-xl bg-[#ede8da] border border-[#d4c9b0] p-3.5 shadow-md">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-semibold text-[#2c2416] font-heading">Canvas Selected Node</span>
-              <span className="text-[10px] font-mono text-[#7a6a55]">depth {activeTargetNode?.depth ?? 0}</span>
+              <span className="text-[10px] font-sans text-[#7a6a55]">depth {activeTargetNode?.depth ?? 0}</span>
             </div>
             <p className="font-heading text-xs font-bold text-[#2c2416] mb-2">{selectedNode}</p>
             <button
@@ -500,7 +500,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                   <ScoreCounter value={score} />
                   <span className="text-sm font-sans text-[#7a6a55]">/ 100</span>
                   {sandboxStats.isEffective && (
-                    <span className="text-[11px] font-bold font-mono text-emerald-700 bg-emerald-100 border border-emerald-400 rounded-full px-2 py-0.5 ml-1 animate-pulse">
+                    <span className="text-[11px] font-bold font-display text-emerald-700 bg-emerald-100 border border-emerald-400 rounded-full px-2.5 py-0.5 ml-1 animate-pulse">
                       −{sandboxStats.scoreDelta} pts ({sandboxStats.pctReduction}% cut)
                     </span>
                   )}
@@ -770,11 +770,11 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm">🕵️</span>
-                <span className="text-xs font-mono font-bold text-[#4a3f32] uppercase tracking-wider">
+                <span className="text-xs font-heading font-bold text-[#4a3f32] uppercase tracking-wider">
                   Shadow Dependencies
                 </span>
               </div>
-              <span className="text-[10px] font-mono bg-[#e2d9c0] border border-[#c4b49a] px-2 py-0.5 rounded-full text-[#4a3f32]">
+              <span className="text-[10px] font-sans font-medium bg-[#e2d9c0] border border-[#c4b49a] px-2 py-0.5 rounded-full text-[#4a3f32]">
                 Silent Chokepoints
               </span>
             </div>
@@ -791,10 +791,10 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="font-mono text-xs font-bold text-[#2c2416] truncate">
+                      <span className="font-display text-xs font-bold text-[#2c2416] truncate">
                         {sd.package || sd.node}
                       </span>
-                      <span className="text-[10px] font-mono text-[#7a6a55]">d:{sd.depth}</span>
+                      <span className="text-[10px] font-sans text-[#7a6a55]">d:{sd.depth}</span>
                     </div>
                     <p className="text-[10px] text-[#7a6a55] font-sans">
                       {sd.in_degree} dependents route here · {formatDownloads(sd.monthly_downloads)} dl/mo
@@ -804,7 +804,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                   <button
                     type="button"
                     onClick={() => setSelectedNode(sd.node)}
-                    className="px-2 py-1 rounded-lg bg-[#e2d9c0] hover:bg-[#d8cdb0] border border-[#c4b49a] font-mono text-[10px] font-medium text-[#2c2416] cursor-pointer transition-colors"
+                    className="px-2.5 py-1 rounded-lg bg-[#e2d9c0] hover:bg-[#d8cdb0] border border-[#c4b49a] font-sans text-[11px] font-semibold text-[#2c2416] cursor-pointer transition-colors"
                   >
                     Inspect 🔍
                   </button>
@@ -816,36 +816,36 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
           {/* 2. Target Technical Profile & Exploit Vector */}
           <div className="rounded-2xl bg-[#ede8da] border border-[#d4c9b0] p-4 shadow-md">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono font-bold text-[#4a3f32] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-xs font-heading font-bold text-[#4a3f32] uppercase tracking-wider flex items-center gap-1.5">
                 <span>🎯</span>
                 <span>Target Exploit Profile</span>
               </span>
-              <span className="text-[10px] font-mono border border-[#c4b49a] bg-[#e2d9c0] px-2 py-0.5 rounded-full text-[#4a3f32]">
+              <span className="text-[10px] font-sans font-medium border border-[#c4b49a] bg-[#e2d9c0] px-2 py-0.5 rounded-full text-[#4a3f32]">
                 depth {activeTargetNode?.depth ?? 0}
               </span>
             </div>
 
             <div className="flex items-center gap-2 mb-2">
-              <p className="font-mono text-xs font-bold text-[#2c2416] truncate">
+              <p className="font-display text-xs font-bold text-[#2c2416] truncate">
                 {activeTargetNode?.id}
               </p>
               {activeTargetNode?.vulnerabilities?.[0]?.id && (
-                <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#e2d9c0] border border-[#c4b49a] text-[#4a3f32]">
+                <span className="font-sans font-semibold text-[10px] px-1.5 py-0.5 rounded bg-[#e2d9c0] border border-[#c4b49a] text-[#4a3f32]">
                   {activeTargetNode.vulnerabilities[0].id}
                 </span>
               )}
             </div>
 
             <div className="mb-2">
-              <span className={`inline-block font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border ${targetExploit.severityBadge}`}>
+              <span className={`inline-block font-sans text-[11px] font-bold px-2 py-0.5 rounded-md border ${targetExploit.severityBadge}`}>
                 {targetExploit.type}
               </span>
             </div>
 
             <div className="bg-[#e8e1cc] rounded-xl p-2.5 border border-[#d4c9b0] flex flex-col gap-1.5 text-xs font-sans">
-              <div className="flex items-center justify-between text-[10px] text-[#7a6a55] font-mono">
+              <div className="flex items-center justify-between text-[10px] text-[#7a6a55] font-heading font-bold">
                 <span>ATTACK VECTOR</span>
-                <span className="text-rose-600 font-bold">{targetExploit.vector}</span>
+                <span className="text-rose-600">{targetExploit.vector}</span>
               </div>
               <p className="text-[11px] text-[#4a3f32] leading-relaxed">
                 {targetExploit.consequence}
@@ -858,8 +858,8 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                 onClick={() => toggleSandboxPatch(activeTargetNode.id)}
                 className={`mt-2.5 w-full py-2 px-3 rounded-xl font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border shadow-sm ${
                   sandboxPatches.includes(activeTargetNode.id)
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-400 hover:bg-emerald-100'
-                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300'
+                    ? 'bg-emerald-100 text-emerald-900 border-emerald-400 hover:bg-emerald-200'
+                    : 'bg-[#ede8da] hover:bg-emerald-50 text-emerald-900 border-[#d4c9b0]'
                 }`}
               >
                 <span>🛡️</span>
@@ -876,21 +876,21 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
           {topMitigation && (
             <div className="rounded-2xl bg-emerald-50 border border-emerald-300 p-4 shadow-md">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-emerald-800 font-sans flex items-center gap-1.5">
+                <span className="text-xs font-heading font-bold text-emerald-800 flex items-center gap-1.5">
                   <span>🛡️</span>
                   <span>High-Leverage Remediation</span>
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-300">
+                <span className="text-[10px] font-display font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
                   -{topMitigation.blast_reduction}% BLAST
                 </span>
               </div>
 
               <p className="text-xs text-emerald-900 font-medium font-sans mb-2 leading-relaxed">
-                Upgrading <code className="font-mono font-bold text-xs bg-emerald-100 px-1 py-0.5 rounded text-emerald-950">{topMitigation.package}</code> neutralizes {topMitigation.blast_reduction}% of downstream contagion.
+                Upgrading <code className="font-display font-bold text-xs bg-emerald-100 px-1 py-0.5 rounded text-emerald-950">{topMitigation.package}</code> neutralizes {topMitigation.blast_reduction}% of downstream contagion.
               </p>
 
               {topMitigation.command && (
-                <div className="flex items-center justify-between bg-[#ede8da] border border-emerald-300 rounded-xl px-3 py-2 text-xs font-mono text-[#2c2416] shadow-sm mb-2">
+                <div className="flex items-center justify-between bg-[#ede8da] border border-emerald-300 rounded-xl px-3 py-2 text-xs font-display font-medium text-[#2c2416] shadow-sm mb-2">
                   <span className="truncate mr-2 select-all">{topMitigation.command}</span>
                   <button
                     type="button"
@@ -916,7 +916,7 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
           {timeline.length > 0 && (
             <div className="rounded-2xl bg-[#ede8da] border border-[#d4c9b0] p-4 shadow-md">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-mono font-bold text-[#4a3f32] uppercase tracking-wider">
+                <span className="text-xs font-heading font-bold text-[#4a3f32] uppercase tracking-wider">
                   Contagion Sequence
                 </span>
                 <span className="text-xs text-[#7a6a55] font-sans">
@@ -936,18 +936,18 @@ export default function BlastRadiusPanel({ isExpanded = false }) {
                       key={idx}
                       className={`p-2 rounded-xl border flex items-center justify-between gap-2 text-xs ${
                         isFirst
-                          ? 'bg-rose-950/40 border-rose-800/60 text-rose-200'
+                          ? 'bg-rose-100 border-rose-300 text-rose-800'
                           : 'bg-[#e8e1cc] border-[#d4c9b0] text-[#4a3f32]'
                       }`}
                     >
-                      <span className="font-mono text-xs font-medium truncate flex-1">
+                      <span className="font-display text-xs font-semibold truncate flex-1">
                         {nodeName}
                       </span>
                       <div className="flex items-center gap-1.5 shrink-0 text-[11px] font-sans">
-                        <span className={`font-semibold ${isFirst ? 'text-rose-600' : 'text-amber-400'}`}>
+                        <span className={`font-semibold ${isFirst ? 'text-rose-700' : 'text-amber-700'}`}>
                           {eventLabel}
                         </span>
-                        <span className="text-[#9a8a75]">+{delay}ms</span>
+                        <span className="text-[#7a6a55]">+{delay}ms</span>
                       </div>
                     </div>
                   );

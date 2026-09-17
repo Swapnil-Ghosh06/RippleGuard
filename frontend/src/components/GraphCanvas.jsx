@@ -326,103 +326,99 @@ function ButterflyStepperHUD({
   onClose,
 }) {
   if (!criticalChain || criticalChain.length <= 1) return null;
-  const currentStep = activeStep ?? 0;
-  const currentNode = criticalChain[currentStep];
-  const isOrigin = currentStep === 0;
-  const isFrontier = currentStep === criticalChain.length - 1;
+  const safeStep = typeof activeStep === 'number'
+    ? Math.max(0, Math.min(criticalChain.length - 1, activeStep))
+    : 0;
+  const currentNode = criticalChain[safeStep] || 'Unknown';
+  const isOrigin = safeStep === 0;
+  const isFrontier = safeStep === criticalChain.length - 1;
 
   return (
-    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 max-w-[95vw] sm:max-w-xl w-full px-4 select-none">
-      <div className="bg-[#ede8da]/95 backdrop-blur-md border border-[#c4b49a] shadow-[0_8px_32px_rgba(44,36,22,0.15)] rounded-2xl p-3.5 flex flex-col gap-2 text-[#2c2416]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-base animate-pulse">🦋</span>
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-mono text-xs font-bold text-amber-800 uppercase tracking-wider">
-                Butterfly Domino Trace
-              </span>
-              <span className="text-[10px] font-mono text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300">
-                Hop {currentStep + 1} of {criticalChain.length}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${
-              isOrigin
-                ? 'bg-rose-100 text-rose-700 border-rose-300 font-semibold'
-                : isFrontier
-                ? 'bg-purple-100 text-purple-700 border-purple-300 font-semibold'
-                : 'bg-amber-100 text-amber-800 border-amber-300'
-            }`}>
-              {isOrigin ? '⚡ Compromise Origin' : isFrontier ? '🏁 Exposure Frontier' : 'Cascading Link'}
-            </span>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-5 h-5 rounded-full hover:bg-black/5 flex items-center justify-center text-[#7a6a55] hover:text-[#2c2416] text-xs cursor-pointer ml-1"
-              title="Close Stepper"
-            >
-              ✕
-            </button>
-          </div>
+    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 max-w-[95vw] select-none">
+      <div className="bg-[#ede8da]/95 backdrop-blur-md border border-[#c4b49a] shadow-[0_8px_24px_rgba(44,36,22,0.15)] rounded-full px-4 py-2 flex items-center gap-3 text-[#2c2416]">
+        {/* Left: Title + Hop counter */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-sm">🦋</span>
+          <span className="font-display text-xs font-bold text-amber-900 tracking-wide uppercase">
+            Domino
+          </span>
+          <span className="text-[11px] font-display font-semibold text-amber-900 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full whitespace-nowrap">
+            Hop {safeStep + 1} of {criticalChain.length}
+          </span>
         </div>
 
-        {/* Current Node Display & Stepper Controls */}
-        <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#d4c9b0]">
-          <div className="min-w-0 flex-1">
-            <p className="font-mono text-xs font-bold text-[#2c2416] truncate">
-              {currentNode}
-            </p>
-            <p className="text-[10px] text-[#7a6a55] font-sans truncate">
-              {isOrigin
-                ? 'Attacker entrypoint exploiting package vulnerability'
-                : `Infected via upstream parent dependency linkage`}
-            </p>
-          </div>
+        <span className="text-[#c4b49a] hidden sm:inline">·</span>
 
-          {/* Stepper Buttons */}
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={() => onStepChange(0)}
-              disabled={currentStep === 0}
-              className="px-2 py-1 rounded-lg bg-[#e2d9c0] hover:bg-[#d4c9b0] disabled:opacity-40 text-[#2c2416] border border-[#c4b49a] font-mono text-[10px] cursor-pointer"
-              title="Reset to Origin"
-            >
-              ⏮
-            </button>
-            <button
-              type="button"
-              onClick={() => onStepChange(Math.max(0, currentStep - 1))}
-              disabled={currentStep === 0}
-              className="px-2.5 py-1 rounded-lg bg-[#e2d9c0] hover:bg-[#d4c9b0] disabled:opacity-40 text-[#2c2416] border border-[#c4b49a] font-sans text-xs font-semibold cursor-pointer"
-              title="Previous Hop"
-            >
-              ◀
-            </button>
-            <button
-              type="button"
-              onClick={onTogglePlay}
-              className={`px-3 py-1 rounded-lg font-sans text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-sm ${
-                isPlaying
-                  ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
-                  : 'bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold'
-              }`}
-            >
-              <span>{isPlaying ? '⏸' : '▶'}</span>
-              <span>{isPlaying ? 'Pause' : 'Cascade'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onStepChange(Math.min(criticalChain.length - 1, currentStep + 1))}
-              disabled={currentStep === criticalChain.length - 1}
-              className="px-2.5 py-1 rounded-lg bg-[#e2d9c0] hover:bg-[#d4c9b0] disabled:opacity-40 text-[#2c2416] border border-[#c4b49a] font-sans text-xs font-semibold cursor-pointer"
-              title="Next Hop"
-            >
-              ▶
-            </button>
-          </div>
+        {/* Center: Current Node */}
+        <div className="flex items-center gap-1.5 min-w-0 max-w-[180px] sm:max-w-[240px]">
+          <span className={`w-2 h-2 rounded-full shrink-0 ${
+            isOrigin ? 'bg-rose-500' : isFrontier ? 'bg-purple-500' : 'bg-amber-500'
+          }`} />
+          <span className="font-display text-xs font-bold text-[#2c2416] truncate" title={currentNode}>
+            {currentNode}
+          </span>
+          <span className={`text-[10px] font-sans font-medium px-2 py-0.5 rounded-full border shrink-0 ${
+            isOrigin
+              ? 'bg-rose-100 text-rose-700 border-rose-300'
+              : isFrontier
+              ? 'bg-purple-100 text-purple-700 border-purple-300'
+              : 'bg-amber-100 text-amber-800 border-amber-300'
+          }`}>
+            {isOrigin ? 'Origin' : isFrontier ? 'Frontier' : 'Link'}
+          </span>
+        </div>
+
+        <span className="text-[#c4b49a]">·</span>
+
+        {/* Right: Transport Controls */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={() => onStepChange(0)}
+            disabled={safeStep === 0}
+            className="w-7 h-7 rounded-full bg-[#e2d9c0] hover:bg-[#d4c9b0] disabled:opacity-30 text-[#2c2416] border border-[#c4b49a] text-xs flex items-center justify-center cursor-pointer transition-colors"
+            title="Reset to Origin"
+          >
+            ⏮
+          </button>
+          <button
+            type="button"
+            onClick={() => onStepChange(Math.max(0, safeStep - 1))}
+            disabled={safeStep === 0}
+            className="w-7 h-7 rounded-full bg-[#e2d9c0] hover:bg-[#d4c9b0] disabled:opacity-30 text-[#2c2416] border border-[#c4b49a] text-xs flex items-center justify-center cursor-pointer transition-colors"
+            title="Previous Hop"
+          >
+            ◀
+          </button>
+          <button
+            type="button"
+            onClick={onTogglePlay}
+            className={`px-3 py-1 rounded-full font-display text-xs font-bold flex items-center gap-1 cursor-pointer transition-all shadow-xs ${
+              isPlaying
+                ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
+                : 'bg-amber-500 hover:bg-amber-600 text-amber-950'
+            }`}
+          >
+            <span>{isPlaying ? '⏸' : '▶'}</span>
+            <span>{isPlaying ? 'Pause' : 'Play'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onStepChange(Math.min(criticalChain.length - 1, safeStep + 1))}
+            disabled={safeStep === criticalChain.length - 1}
+            className="w-7 h-7 rounded-full bg-[#e2d9c0] hover:bg-[#d4c9b0] disabled:opacity-30 text-[#2c2416] border border-[#c4b49a] text-xs flex items-center justify-center cursor-pointer transition-colors"
+            title="Next Hop"
+          >
+            ▶
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-6 h-6 rounded-full hover:bg-black/5 text-[#7a6a55] hover:text-[#2c2416] flex items-center justify-center text-xs ml-1 cursor-pointer transition-colors"
+            title="Close Stepper"
+          >
+            ✕
+          </button>
         </div>
       </div>
     </div>
@@ -1058,7 +1054,7 @@ function GraphCanvasInner() {
           {localSelected ? (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-[#7a6a55] font-sans">Target:</span>
-              <span className="font-mono text-xs font-semibold text-[#2c2416] bg-[#ede8da] border border-[#d4c9b0] rounded-md px-2 py-0.5">
+              <span className="font-display text-xs font-semibold text-[#2c2416] bg-[#ede8da] border border-[#d4c9b0] rounded-md px-2 py-0.5">
                 {localSelected}
               </span>
               {dominoIndexMap[localSelected] && (

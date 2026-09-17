@@ -82,37 +82,37 @@ export default function GraphView() {
           <>
             {/* Graph info header bar above the canvas */}
             {graphData !== null && (
-              <div className="w-full px-4 py-2.5 bg-white border-b border-stone-200 flex items-center justify-between shrink-0 z-20 select-none">
+              <div className="w-full px-4 py-2.5 bg-[#ede8da] border-b border-[#d4c9b0] flex items-center justify-between shrink-0 z-20 select-none">
                 {/* Left: Package Name + Version + Ecosystem */}
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="font-mono text-sm font-bold text-stone-900 truncate">
+                  <span className="font-display text-sm font-bold text-[#2c2416] truncate">
                     {packageName}
                   </span>
                   {packageVersion && (
-                    <span className="font-mono text-xs text-stone-400">
+                    <span className="font-sans text-xs text-[#7a6a55]">
                       @{packageVersion}
                     </span>
                   )}
-                  <span className="font-mono text-[9px] px-2 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-stone-500 ml-2 shrink-0 uppercase tracking-wider">
+                  <span className="font-sans font-medium text-[10px] px-2 py-0.5 rounded-full bg-[#e2d9c0] border border-[#c4b49a] text-[#4a3f32] ml-2 shrink-0 uppercase tracking-wider">
                     {ecosystem}
                   </span>
                 </div>
 
                 {/* Right: Total nodes, Vulnerability count, Blast status */}
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="font-mono text-xs text-stone-400">
+                  <span className="font-sans text-xs text-[#7a6a55]">
                     {totalNodes} nodes
                   </span>
                   <span
-                    className={`font-mono text-xs ${
-                      vulnerableNodes > 0 ? 'text-amber-600 font-medium' : 'text-emerald-600'
+                    className={`font-sans text-xs font-semibold ${
+                      vulnerableNodes > 0 ? 'text-amber-700' : 'text-emerald-700'
                     }`}
                   >
                     {vulnerableNodes > 0 ? `${vulnerableNodes} vulnerable` : '0 CVEs'}
                   </span>
                   {blastData && (
-                    <span className="font-mono text-xs text-rose-500 font-semibold">
+                    <span className="font-sans text-xs text-rose-600 font-bold">
                       {blastData.blast_score}/100 blast
                     </span>
                   )}
@@ -131,12 +131,12 @@ export default function GraphView() {
                   animate={{ opacity: 1, x: 0 }}
                   type="button"
                   onClick={() => setPanelWidthMode('standard')}
-                  className="absolute top-4 right-4 z-30 px-3 py-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-mono text-xs font-semibold shadow-lg backdrop-blur-md flex items-center gap-2 cursor-pointer transition-all"
+                  className="absolute top-4 right-4 z-30 px-3.5 py-2 rounded-full bg-[#ede8da] hover:bg-[#e2d9c0] border border-[#c4b49a] text-[#2c2416] font-display text-xs font-semibold shadow-lg backdrop-blur-md flex items-center gap-2 cursor-pointer transition-all"
                   title="Open Security Analysis (F7)"
                 >
                   <span className="text-emerald-600">🛡️</span>
                   <span>Security Analysis</span>
-                  <span className="text-[10px] text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">F7</span>
+                  <span className="text-[10px] text-[#7a6a55] bg-[#e2d9c0] border border-[#c4b49a] px-1.5 py-0.5 rounded-full">F7</span>
                 </motion.button>
               )}
             </div>
@@ -149,19 +149,19 @@ export default function GraphView() {
         {graphData !== null && panelWidthMode !== 'collapsed' && (
           <motion.aside
             key="side-panel"
-            className={`${panelWidthClass} shrink-0 h-full bg-white text-stone-800 border-l border-stone-200 flex flex-col overflow-hidden shadow-xl z-30 transition-all duration-300 ease-out`}
+            className={`${panelWidthClass} shrink-0 h-full bg-[#ede8da] text-[#2c2416] border-l border-[#d4c9b0] flex flex-col overflow-hidden shadow-xl z-30 transition-all duration-300 ease-out`}
             initial={{ x: 420, opacity: 0 }}
             animate={{ x: 0,   opacity: 1 }}
             exit={{ x: 420,    opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
           >
             {/* Dashboard Top Header */}
-            <div className="px-4 py-3 border-b border-stone-200 flex items-center justify-between shrink-0 select-none bg-white">
+            <div className="px-4 py-3 border-b border-[#d4c9b0] flex items-center justify-between shrink-0 select-none bg-[#ede8da]">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[11px] font-bold text-stone-700 tracking-widest uppercase">
+                <span className="font-heading text-xs font-bold text-[#2c2416] tracking-widest uppercase">
                   SECURITY ANALYSIS
                 </span>
-                <span className="font-mono text-[10px] text-stone-400 tabular-nums">
+                <span className="font-sans text-[11px] text-[#7a6a55] tabular-nums">
                   {time}
                 </span>
               </div>
@@ -171,7 +171,7 @@ export default function GraphView() {
                 <button
                   type="button"
                   onClick={() => setPanelWidthMode(prev => prev === 'expanded' ? 'standard' : 'expanded')}
-                  className="px-2 py-1 rounded text-[11px] font-mono text-stone-500 hover:text-stone-900 hover:bg-stone-100 border border-stone-200 transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1 rounded-full text-[11px] font-sans font-medium text-[#4a3f32] hover:text-[#2c2416] hover:bg-[#e2d9c0] border border-[#c4b49a] transition-all flex items-center gap-1 cursor-pointer"
                   title={panelWidthMode === 'expanded' ? 'Restore standard width' : 'Expand panel width for spacious view'}
                 >
                   <span>{panelWidthMode === 'expanded' ? '⤡' : '⤢'}</span>
@@ -182,7 +182,7 @@ export default function GraphView() {
                 <button
                   type="button"
                   onClick={() => setPanelWidthMode('collapsed')}
-                  className="w-6 h-6 rounded flex items-center justify-center text-stone-400 hover:text-stone-800 hover:bg-stone-100 transition-colors text-xs cursor-pointer ml-1"
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[#7a6a55] hover:text-[#2c2416] hover:bg-black/5 transition-colors text-xs cursor-pointer ml-1"
                   title="Hide panel (F7)"
                 >
                   ✕
@@ -191,7 +191,7 @@ export default function GraphView() {
             </div>
 
             {/* Three tabs: "Blast" | "Mitigation" | "Compare" */}
-            <div className="flex border-b border-stone-200 px-3 pt-2 pb-0 gap-1.5 select-none shrink-0 bg-stone-50">
+            <div className="flex border-b border-[#d4c9b0] px-3 pt-2 pb-0 gap-1.5 select-none shrink-0 bg-[#e2d9c0]">
               {[
                 { id: 'blast', label: 'Blast', icon: '⚡' },
                 { id: 'mitigation', label: 'Mitigation', icon: '🛡️' },
@@ -203,13 +203,13 @@ export default function GraphView() {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`font-mono text-[11px] px-3.5 py-1.5 rounded-t-lg cursor-pointer transition-all flex items-center gap-1.5 ${
+                    className={`font-display text-xs px-4 py-2 rounded-t-xl cursor-pointer transition-all flex items-center gap-1.5 ${
                       isActive
-                        ? 'bg-white text-stone-900 border-b-2 border-stone-900 font-semibold'
-                        : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+                        ? 'bg-[#ede8da] text-[#2c2416] border-t border-x border-[#d4c9b0] font-bold shadow-xs'
+                        : 'text-[#7a6a55] hover:text-[#2c2416] hover:bg-[#ede8da]/60 font-medium'
                     }`}
                   >
-                    <span className="text-[10px]">{tab.icon}</span>
+                    <span className="text-xs">{tab.icon}</span>
                     <span>{tab.label}</span>
                   </button>
                 );
@@ -217,7 +217,7 @@ export default function GraphView() {
             </div>
 
             {/* Tab content area */}
-            <div className="flex-1 min-h-0 overflow-y-auto bg-white text-stone-800">
+            <div className="flex-1 min-h-0 overflow-y-auto bg-[#f5f0e6] text-[#2c2416]">
               {activeTab === 'blast' && <BlastRadiusPanel isExpanded={panelWidthMode === 'expanded'} />}
               {activeTab === 'mitigation' && <MitigationPanel isExpanded={panelWidthMode === 'expanded'} />}
               {activeTab === 'compare' && <CompareView isExpanded={panelWidthMode === 'expanded'} />}
