@@ -20,6 +20,7 @@ class Vulnerability(BaseModel):
     summary: str = Field(default="", description="Summary description of vulnerability")
     affected_versions: List[str] = Field(default_factory=list, description="Affected version specifiers")
     fixed_version: Optional[str] = Field(default=None, description="Patched version if available")
+    impact_summary: str = Field(default="", description="Plain-language explanation of what the CVE actually does")
 
 
 VulnerabilityModel = Vulnerability
@@ -129,6 +130,7 @@ class BlastRadius(BaseModel):
     total_monthly_downloads_affected: int = Field(..., description="Sum of monthly downloads across affected packages")
     estimated_apps_affected: int = Field(default=0, description="Heuristic estimate of downstream apps impacted")
     blast_score: float = Field(..., description="Normalized composite blast score (0-100)")
+    blast_summary: Optional[str] = Field(default=None, description="Qualitative summary of impact")
     severity_breakdown: Optional[SeverityBreakdown] = Field(default=None, description="Breakdown of affected nodes by severity tier")
 
 
@@ -150,6 +152,7 @@ class MitigationAction(BaseModel):
     affected_packages_resolved: int = Field(default=0, description="Number of affected packages saved")
     fixed_version: Optional[str] = Field(default=None, description="Patched version string")
     effort: str = Field(default="LOW", description="Effort level (LOW, MEDIUM, HIGH)")
+    why_this_matters: str = Field(default="", description="Plain-language explanation of why this mitigation matters")
 
 
 class MitigationData(BaseModel):
@@ -176,6 +179,7 @@ class SimulateResponse(BaseModel):
     compromised_node: str = Field(..., description="The injected compromise origin node")
     propagation: PropagationData = Field(..., description="Propagation simulation results")
     blast_radius: BlastRadius = Field(..., description="Blast radius assessment")
+    blast_summary: str = Field(default="", description="Qualitative plain-language summary of what breaks across applications")
     mitigation: MitigationData = Field(..., description="Recommended mitigation steps")
     critical_chain: List[str] = Field(default_factory=list, description="Butterfly Trace critical chain")
     shadow_dependencies: List[ShadowDependency] = Field(default_factory=list, description="Shadow Dependency Revealer top chokepoints")

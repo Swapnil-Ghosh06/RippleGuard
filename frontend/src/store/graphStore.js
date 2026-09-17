@@ -25,6 +25,24 @@ export const useGraphStore = create((set) => ({
   activeTab: 'blast', // 'blast' | 'mitigation' | 'compare'
   setActiveTab: (tab) => set({ activeTab: tab }),
 
+  activeDominoIndex: null,
+  setActiveDominoIndex: (idx) => set({ activeDominoIndex: idx }),
+
+  isDominoPlaying: false,
+  setIsDominoPlaying: (b) => set({ isDominoPlaying: b }),
+
+  sandboxPatches: [],
+  toggleSandboxPatch: (nodeId) => set((state) => {
+    const exists = state.sandboxPatches.includes(nodeId);
+    return {
+      sandboxPatches: exists
+        ? state.sandboxPatches.filter((id) => id !== nodeId)
+        : [...state.sandboxPatches, nodeId],
+    };
+  }),
+  applyOptimalPatchSet: (nodeIds) => set({ sandboxPatches: Array.from(new Set(nodeIds)) }),
+  clearSandboxPatches: () => set({ sandboxPatches: [] }),
+
   reset: () => set({
     view: 'idle',
     graphData: null,
@@ -34,5 +52,8 @@ export const useGraphStore = create((set) => ({
     error: null,
     compareData: null,
     activeTab: 'blast',
+    activeDominoIndex: null,
+    isDominoPlaying: false,
+    sandboxPatches: [],
   }),
 }));

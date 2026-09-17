@@ -1,70 +1,581 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGraphStore } from '../store/graphStore';
 import { useAnalyze } from '../hooks/useAnalyze';
 import SketchHeroIllustration from './SketchHeroIllustration';
 import SketchStoryIllustration from './SketchStoryIllustration';
 
-const ATTACK_SCENARIOS = [
+// Comprehensive Package Catalog across npm and PyPI ecosystems
+const PACKAGE_CATALOG = [
+  // ==================== NPM PACKAGES ====================
+  // 1. Famous Attack Replays (npm)
   {
-    id: 'lodash',
+    id: 'log4js-rce',
+    package: 'log4js',
+    version: '6.4.0',
+    ecosystem: 'npm',
+    cve: 'CVE-2021-44228',
+    category: 'Attack Replay',
+    label: 'Log4Shell RCE',
+    downloads: '15M/mo',
+    summary: 'Critical JNDI remote code execution substitute attack simulation in log4js.',
+    tag: 'CRIT 10.0',
+    tagClass: 'bg-red-50 text-red-800 border-red-200/80',
+    pillClass: 'bg-red-50 text-red-900 border-red-200/70 hover:bg-red-100/70',
+    isAttack: true,
+  },
+  {
+    id: 'event-stream-wallet',
+    package: 'event-stream',
+    version: '3.3.6',
+    ecosystem: 'npm',
+    cve: 'GHSA-mh6f-8j2x-4483',
+    category: 'Attack Replay',
+    label: 'Wallet Theft Trojan',
+    downloads: '2.1M/mo',
+    summary: 'Flatmap-stream injected by rogue maintainer to steal Copay Bitcoin wallet keys.',
+    tag: 'CRIT 9.8',
+    tagClass: 'bg-rose-50 text-rose-800 border-rose-200/80',
+    pillClass: 'bg-rose-50 text-rose-900 border-rose-200/70 hover:bg-rose-100/70',
+    isAttack: true,
+  },
+  {
+    id: 'colors-sabotage',
+    package: 'colors',
+    version: '1.4.1',
+    ecosystem: 'npm',
+    cve: 'GHSA-5rqg-jm4f-cqx7',
+    category: 'Attack Replay',
+    label: 'Maintainer Sabotage',
+    downloads: '20M/mo',
+    summary: 'Maintainer published infinite-loop code printing zalgo text in protest.',
+    tag: 'HIGH 7.5',
+    tagClass: 'bg-orange-50 text-orange-800 border-orange-200/80',
+    pillClass: 'bg-orange-50 text-orange-900 border-orange-200/70 hover:bg-orange-100/70',
+    isAttack: true,
+  },
+  {
+    id: 'lodash-prototype',
     package: 'lodash',
     version: '4.17.20',
     ecosystem: 'npm',
     cve: 'CVE-2021-23337',
+    category: 'Attack Replay',
     label: 'Prototype Pollution',
     downloads: '82M/mo',
-    summary: 'Command injection via template engine in lodash. Cascades across downstream dependencies.',
+    summary: 'Command injection via template engine in lodash. Cascades downstream.',
     tag: 'HIGH 7.2',
+    tagClass: 'bg-amber-50 text-amber-800 border-amber-200/80',
     pillClass: 'bg-amber-50 text-amber-900 border-amber-200/70 hover:bg-amber-100/70',
+    isAttack: true,
   },
+
+  // 2. Large Frameworks & UI (npm)
   {
-    id: 'event-stream',
-    package: 'event-stream',
-    version: '3.3.6',
+    id: 'npm-express',
+    package: 'express',
+    version: 'latest',
     ecosystem: 'npm',
-    cve: 'CVE-2018-3721',
-    label: 'Wallet Theft Trojan',
-    downloads: '2.1M/mo',
-    summary: 'Flatmap-stream injected by rogue maintainer to steal Copay Bitcoin wallet private keys.',
-    tag: 'CRIT 9.8',
-    pillClass: 'bg-rose-50 text-rose-900 border-rose-200/70 hover:bg-rose-100/70',
+    category: 'Web Framework',
+    label: 'Fast Node.js Web API Framework',
+    downloads: '35M/mo',
+    summary: 'Fast, unopinionated, minimalist web framework and middleware pipeline for Node.js.',
+    tag: 'POPULAR',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
   },
   {
-    id: 'colors',
-    package: 'colors',
-    version: '1.4.1',
+    id: 'npm-react',
+    package: 'react',
+    version: 'latest',
     ecosystem: 'npm',
-    cve: 'CVE-2022-23305',
-    label: 'Maintainer Sabotage',
-    downloads: '20M/mo',
-    summary: 'Maintainer published infinite-loop code printing zalgo text in protest, breaking builds.',
-    tag: 'HIGH 7.5',
-    pillClass: 'bg-orange-50 text-orange-900 border-orange-200/70 hover:bg-orange-100/70',
+    category: 'Frontend UI',
+    label: 'UI Component Tree Engine',
+    downloads: '25M/mo',
+    summary: 'The library for web and native user interfaces and virtual DOM diffing.',
+    tag: 'POPULAR',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
   },
   {
-    id: 'log4j-core',
-    package: 'log4j-core',
-    version: '2.14.1',
-    ecosystem: 'pypi',
-    cve: 'CVE-2021-44228',
-    label: 'Log4Shell RCE',
-    downloads: '15M/mo',
-    summary: 'JNDI lookup parser triggers remote shell payload execution across backend infrastructure.',
-    tag: 'CRIT 10.0',
-    pillClass: 'bg-red-50 text-red-900 border-red-200/70 hover:bg-red-100/70',
+    id: 'npm-vue',
+    package: 'vue',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Frontend UI',
+    label: 'Progressive Web Framework',
+    downloads: '5.2M/mo',
+    summary: 'Approachable, performant, and versatile reactive single-page frontend framework.',
+    tag: 'POPULAR',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
   },
   {
-    id: 'xz',
+    id: 'npm-angular',
+    package: 'angular',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Enterprise UI',
+    label: 'Enterprise Single-Page Platform',
+    downloads: '3.8M/mo',
+    summary: 'Enterprise web application platform and client-side dependency injection framework.',
+    tag: 'FRAMEWORK',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-next',
+    package: 'next',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Full-Stack Framework',
+    label: 'Hybrid SSR/SSG Web Framework',
+    downloads: '8.4M/mo',
+    summary: 'The React framework for the web with server-side rendering and static export.',
+    tag: 'FULLSTACK',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-svelte',
+    package: 'svelte',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Frontend UI',
+    label: 'Compiled Reactive UI Framework',
+    downloads: '1.2M/mo',
+    summary: 'Cybernetically enhanced web apps with compile-time reactivity.',
+    tag: 'FRAMEWORK',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+
+  // 3. Build Tooling & Linters (npm)
+  {
+    id: 'npm-webpack',
+    package: 'webpack',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Build Tooling',
+    label: 'Module Bundler & Compiler',
+    downloads: '30M/mo',
+    summary: 'Packs JavaScript and asset trees for deployment in browsers.',
+    tag: 'BUILD TOOL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-vite',
+    package: 'vite',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Build Tooling',
+    label: 'Next-Gen Frontend Tooling',
+    downloads: '16M/mo',
+    summary: 'Native ESM-powered dev server and rollup production bundler.',
+    tag: 'BUILD TOOL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-typescript',
+    package: 'typescript',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Compiler',
+    label: 'Typed JavaScript Transpiler',
+    downloads: '45M/mo',
+    summary: 'Static type-checking compiler and language tools for JavaScript.',
+    tag: 'COMPILER',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-eslint',
+    package: 'eslint',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Linter',
+    label: 'Static Code Analysis & Linting',
+    downloads: '38M/mo',
+    summary: 'Find and fix problems in your JavaScript code and enforce style rules.',
+    tag: 'LINTER',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-babel-core',
+    package: 'babel-core',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Compiler',
+    label: 'Babel JavaScript Compiler',
+    downloads: '12M/mo',
+    summary: 'ECMAScript syntax transpilation and polyfill injection engine.',
+    tag: 'COMPILER',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+
+  // 4. Scoped Packages (npm)
+  {
+    id: 'npm-types-node',
+    package: '@types/node',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Type Stub',
+    label: 'TypeScript Definitions for Node.js',
+    downloads: '70M/mo',
+    summary: 'Compile-time type declarations for the Node.js runtime API.',
+    tag: 'SCOPED',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-types-react',
+    package: '@types/react',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Type Stub',
+    label: 'TypeScript Definitions for React',
+    downloads: '40M/mo',
+    summary: 'Compile-time type declarations for React virtual DOM components.',
+    tag: 'SCOPED',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-babel-scoped-core',
+    package: '@babel/core',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Compiler',
+    label: 'Babel Core Compiler Suite',
+    downloads: '55M/mo',
+    summary: 'Core compiler architecture for modern JavaScript transformation.',
+    tag: 'SCOPED',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-vue-cli',
+    package: '@vue/cli',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'CLI Tooling',
+    label: 'Vue.js CLI & Project Generator',
+    downloads: '1.5M/mo',
+    summary: 'Standard development suite for rapid Vue.js application scaffolding.',
+    tag: 'SCOPED',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-angular-core',
+    package: '@angular/core',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Enterprise UI',
+    label: 'Angular Core Framework Module',
+    downloads: '4.2M/mo',
+    summary: 'Core Angular dependency injection, signals, and lifecycle engine.',
+    tag: 'SCOPED',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+
+  // 5. Single-Purpose Utilities & HTTP Clients (npm)
+  {
+    id: 'npm-axios',
+    package: 'axios',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'HTTP Client',
+    label: 'Promise-based HTTP Client',
+    downloads: '60M/mo',
+    summary: 'Universal HTTP client for browser and Node.js with interceptors.',
+    tag: 'NETWORKING',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-chalk',
+    package: 'chalk',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Utility',
+    label: 'Terminal String Styling',
+    downloads: '120M/mo',
+    summary: 'Expressive, clean terminal string color and ANSI styling.',
+    tag: 'UTIL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-ms',
+    package: 'ms',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Utility',
+    label: 'Millisecond Conversion Helper',
+    downloads: '150M/mo',
+    summary: 'Tiny utility to convert various time formats to milliseconds.',
+    tag: 'UTIL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-is-even',
+    package: 'is-even',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Utility',
+    label: 'Is Even Number Checker',
+    downloads: '250K/mo',
+    summary: 'Return true if the given number is even, delegating to is-odd.',
+    tag: 'UTIL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-left-pad',
+    package: 'left-pad',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Utility',
+    label: 'String Left Padding Utility',
+    downloads: '2M/mo',
+    summary: 'Infamous 11-line string padding library that broke the internet in 2016.',
+    tag: 'UTIL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'npm-tiny-emitter',
+    package: 'tiny-emitter',
+    version: 'latest',
+    ecosystem: 'npm',
+    category: 'Utility',
+    label: 'Minimal Event Emitter',
+    downloads: '1.1M/mo',
+    summary: 'A tiny (less than 1k) event emitter library with zero dependencies.',
+    tag: 'UTIL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+
+  // ==================== PYPI PACKAGES ====================
+  // 1. Famous Attack Replays (PyPI)
+  {
+    id: 'pypi-xz-backdoor',
     package: 'xz',
     version: '5.6.0',
     ecosystem: 'pypi',
     cve: 'CVE-2024-3094',
-    label: 'SSH Backdoor',
+    category: 'Attack Replay',
+    label: 'SSH Binary Backdoor',
     downloads: '50M/mo',
-    summary: 'Multi-year targeted supply chain campaign injecting unauthorized OpenSSH auth bypass.',
+    summary: 'Multi-year targeted supply chain campaign injecting OpenSSH auth bypass.',
     tag: 'CRIT 10.0',
+    tagClass: 'bg-rose-50 text-rose-800 border-rose-200/80',
     pillClass: 'bg-rose-50 text-rose-900 border-rose-200/70 hover:bg-rose-100/70',
+    isAttack: true,
+  },
+  {
+    id: 'pypi-urllib3-cve',
+    package: 'urllib3',
+    version: '1.26.4',
+    ecosystem: 'pypi',
+    cve: 'CVE-2021-33503',
+    category: 'Attack Replay',
+    label: 'Catastrophic ReDoS & CRLF',
+    downloads: '180M/mo',
+    summary: 'Catastrophic regex backtracking & CRLF injection in authority parsing.',
+    tag: 'HIGH 7.5',
+    tagClass: 'bg-orange-50 text-orange-800 border-orange-200/80',
+    pillClass: 'bg-orange-50 text-orange-900 border-orange-200/70 hover:bg-orange-100/70',
+    isAttack: true,
+  },
+  {
+    id: 'pypi-django-cve',
+    package: 'django',
+    version: '3.2.4',
+    ecosystem: 'pypi',
+    cve: 'CVE-2021-35042',
+    category: 'Attack Replay',
+    label: 'SQL Injection in QuerySet',
+    downloads: '38M/mo',
+    summary: 'Unfiltered order_by query parameter injection allowing unauthorized SQL reads.',
+    tag: 'HIGH 7.5',
+    tagClass: 'bg-amber-50 text-amber-800 border-amber-200/80',
+    pillClass: 'bg-amber-50 text-amber-900 border-amber-200/70 hover:bg-amber-100/70',
+    isAttack: true,
+  },
+
+  // 2. Web Frameworks (PyPI)
+  {
+    id: 'pypi-django',
+    package: 'django',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'Web Framework',
+    label: 'High-Level Python Web Framework',
+    downloads: '38M/mo',
+    summary: 'Monolithic Python web platform with ORM, migrations, and built-in admin portal.',
+    tag: 'POPULAR',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-flask',
+    package: 'flask',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'Web Framework',
+    label: 'Lightweight WSGI Microframework',
+    downloads: '45M/mo',
+    summary: 'Lightweight WSGI web application framework and endpoint router.',
+    tag: 'POPULAR',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-fastapi',
+    package: 'fastapi',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'API Framework',
+    label: 'Async High-Performance ASGI API',
+    downloads: '32M/mo',
+    summary: 'Modern, fast (high-performance) web framework for building APIs with Python 3.8+.',
+    tag: 'POPULAR',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-tornado',
+    package: 'tornado',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'Web Framework',
+    label: 'Asynchronous Web & Socket Server',
+    downloads: '14M/mo',
+    summary: 'Python web framework and asynchronous networking library with non-blocking I/O.',
+    tag: 'FRAMEWORK',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-starlette',
+    package: 'starlette',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'API Framework',
+    label: 'Lightweight ASGI Framework Toolkit',
+    downloads: '28M/mo',
+    summary: 'Lightweight ASGI framework/toolkit ideal for building async web services in Python.',
+    tag: 'FRAMEWORK',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+
+  // 3. Data & ORM (PyPI)
+  {
+    id: 'pypi-sqlalchemy',
+    package: 'sqlalchemy',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'Database / ORM',
+    label: 'Enterprise Python SQL Toolkit & ORM',
+    downloads: '65M/mo',
+    summary: 'Database abstraction layer and Object Relational Mapper for transactional backends.',
+    tag: 'DATABASE',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-pydantic',
+    package: 'pydantic',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'Data Validation',
+    label: 'Type-Safe Data Parsing & Schema',
+    downloads: '95M/mo',
+    summary: 'Data validation and settings management using Python type annotations.',
+    tag: 'VALIDATION',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+
+  // 4. Networking & HTTP Clients (PyPI)
+  {
+    id: 'pypi-requests',
+    package: 'requests',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'HTTP Client',
+    label: 'Standard HTTP Library for Humans',
+    downloads: '280M/mo',
+    summary: 'Simple, elegant HTTP library for making outbound API requests and handling sessions.',
+    tag: 'NETWORKING',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-urllib3',
+    package: 'urllib3',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'HTTP Transport',
+    label: 'Low-Level HTTP Connection Pool',
+    downloads: '320M/mo',
+    summary: 'Powerful HTTP client with thread-safe connection pooling, client-side SSL/TLS, and retries.',
+    tag: 'NETWORKING',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-httpx',
+    package: 'httpx',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'HTTP Client',
+    label: 'Async Next-Generation HTTP Client',
+    downloads: '42M/mo',
+    summary: 'Fully featured HTTP client for Python 3 with sync and async APIs, HTTP/2 support.',
+    tag: 'NETWORKING',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+
+  // 5. Build, Packaging & Single-Purpose Utils (PyPI)
+  {
+    id: 'pypi-setuptools',
+    package: 'setuptools',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'Build Tooling',
+    label: 'Python Packaging & Distribution',
+    downloads: '210M/mo',
+    summary: 'Easily download, build, install, upgrade, and uninstall Python packages.',
+    tag: 'BUILD TOOL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-six',
+    package: 'six',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'Utility',
+    label: 'Python 2 & 3 Compatibility Library',
+    downloads: '140M/mo',
+    summary: 'Python 2 and 3 compatibility utilities to smooth over code differences.',
+    tag: 'UTIL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-attrs',
+    package: 'attrs',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'Utility',
+    label: 'Classes Without Boilerplate',
+    downloads: '85M/mo',
+    summary: 'Attributes without boilerplate: declarative Python class authoring with validation.',
+    tag: 'UTIL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-leftpad',
+    package: 'leftpad',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'Utility',
+    label: 'Left-Pad String Formatter',
+    downloads: '10K/mo',
+    summary: 'Lightweight string left-padding implementation for Python applications.',
+    tag: 'UTIL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
+  },
+  {
+    id: 'pypi-simple-math',
+    package: 'simple-math',
+    version: 'latest',
+    ecosystem: 'pypi',
+    category: 'Utility',
+    label: 'Basic Math Helpers',
+    downloads: '5K/mo',
+    summary: 'Single-purpose arithmetic utility package with zero external dependencies.',
+    tag: 'UTIL',
+    tagClass: 'bg-stone-100 text-stone-700 border-stone-200',
   },
 ];
 
@@ -89,18 +600,63 @@ export default function SearchPanel() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const filteredAttacks = ATTACK_SCENARIOS.filter(a =>
-    !pkg.trim() ||
-    a.package.toLowerCase().includes(pkg.toLowerCase()) ||
-    a.label.toLowerCase().includes(pkg.toLowerCase()) ||
-    a.cve.toLowerCase().includes(pkg.toLowerCase())
-  );
+  // Filter package suggestions by active ecosystem and search query
+  const suggestions = useMemo(() => {
+    const q = pkg.trim().toLowerCase();
+
+    // Separate active eco vs other eco packages
+    const activeEcoPackages = PACKAGE_CATALOG.filter(item => item.ecosystem === eco);
+    const otherEcoPackages = PACKAGE_CATALOG.filter(item => item.ecosystem !== eco);
+
+    if (!q) {
+      // When empty: show all items in active ecosystem (attack replays first, then popular tools)
+      return activeEcoPackages;
+    }
+
+    // Match in active ecosystem first
+    const primaryMatches = activeEcoPackages.filter(item =>
+      item.package.toLowerCase().includes(q) ||
+      (item.label && item.label.toLowerCase().includes(q)) ||
+      (item.category && item.category.toLowerCase().includes(q)) ||
+      (item.cve && item.cve.toLowerCase().includes(q)) ||
+      (item.summary && item.summary.toLowerCase().includes(q))
+    );
+
+    // If query matches packages from the other ecosystem, append them as cross-eco suggestions
+    const crossMatches = otherEcoPackages.filter(item =>
+      item.package.toLowerCase().includes(q) ||
+      (item.label && item.label.toLowerCase().includes(q)) ||
+      (item.cve && item.cve.toLowerCase().includes(q))
+    );
+
+    return [...primaryMatches, ...crossMatches];
+  }, [pkg, eco]);
+
+  // Dedicated package for Quick Demo button based on active ecosystem
+  const quickDemoPkg = useMemo(() => {
+    if (eco === 'pypi') {
+      return PACKAGE_CATALOG.find(p => p.id === 'pypi-xz-backdoor') || PACKAGE_CATALOG.find(p => p.ecosystem === 'pypi');
+    }
+    return PACKAGE_CATALOG.find(p => p.id === 'log4js-rce') || PACKAGE_CATALOG.find(p => p.ecosystem === 'npm');
+  }, [eco]);
+
+  // Curated list of popular tools for the active ecosystem
+  const popularTools = useMemo(() => {
+    if (eco === 'npm') {
+      const names = ['express', 'lodash', 'react', 'axios', 'event-stream', 'colors'];
+      return names.map(name => PACKAGE_CATALOG.find(p => p.package === name && p.ecosystem === 'npm')).filter(Boolean);
+    } else {
+      const names = ['requests', 'flask', 'fastapi', 'django', 'urllib3', 'pydantic'];
+      return names.map(name => PACKAGE_CATALOG.find(p => p.package === name && p.ecosystem === 'pypi')).filter(Boolean);
+    }
+  }, [eco]);
 
   const handleAnalyze = async (targetPkg, targetEco) => {
     const query = (targetPkg ?? pkg).trim();
     const ecosystem = targetEco ?? eco;
     if (!query) return;
 
+    setShowDropdown(false);
     setBlastData(null);
     try {
       await analyze({ packageName: query, ecosystem, depth: 3 });
@@ -109,29 +665,29 @@ export default function SearchPanel() {
     }
   };
 
-  const handleSelectScenario = (scenario) => {
-    setPkg(scenario.package);
-    setEco(scenario.ecosystem);
+  const handleSelectPackage = (item) => {
+    setPkg(item.package);
+    setEco(item.ecosystem);
     setShowDropdown(false);
-    handleAnalyze(scenario.package, scenario.ecosystem);
+    handleAnalyze(item.package, item.ecosystem);
   };
 
   const handleKeyDown = (e) => {
-    if (!showDropdown) {
+    if (!showDropdown || suggestions.length === 0) {
       if (e.key === 'Enter') handleAnalyze();
       return;
     }
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev + 1) % filteredAttacks.length);
+      setSelectedIndex(prev => (prev + 1) % suggestions.length);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev - 1 + filteredAttacks.length) % filteredAttacks.length);
+      setSelectedIndex(prev => (prev - 1 + suggestions.length) % suggestions.length);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (filteredAttacks[selectedIndex]) {
-        handleSelectScenario(filteredAttacks[selectedIndex]);
+      if (suggestions[selectedIndex]) {
+        handleSelectPackage(suggestions[selectedIndex]);
       } else {
         handleAnalyze();
       }
@@ -179,20 +735,20 @@ export default function SearchPanel() {
               </div>
             )}
 
-            {/* Capsule Pill Search Bar (Matching Reference Input Shape) */}
+            {/* Capsule Pill Search Bar */}
             <div
               ref={searchContainerRef}
-              className="mt-8 w-full max-w-lg relative"
+              className="mt-8 w-full max-w-2xl relative"
             >
               <div
-                className={`w-full rounded-full bg-white border p-1.5 flex items-center gap-2 transition-all duration-200 shadow-sm ${
+                className={`w-full rounded-full bg-white border p-1.5 pl-4 pr-1.5 flex items-center gap-2.5 transition-all duration-200 shadow-sm ${
                   isFocused
-                    ? 'border-text ring-2 ring-black/5 shadow-md'
+                    ? 'border-stone-950 ring-4 ring-black/5 shadow-md'
                     : 'border-stone-300 hover:border-stone-400'
                 }`}
               >
                 {/* Search icon & input */}
-                <div className="pl-4 flex items-center gap-2.5 flex-1 min-w-0">
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
                   <svg
                     className="w-4 h-4 text-stone-400 shrink-0"
                     fill="none"
@@ -210,6 +766,7 @@ export default function SearchPanel() {
                     onChange={e => {
                       setPkg(e.target.value);
                       setShowDropdown(true);
+                      setSelectedIndex(0);
                     }}
                     onFocus={() => {
                       setIsFocused(true);
@@ -217,44 +774,54 @@ export default function SearchPanel() {
                     }}
                     onBlur={() => setIsFocused(false)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Enter package (e.g. lodash, express)..."
-                    className="w-full bg-transparent font-sans text-sm sm:text-base text-text placeholder:text-stone-400 outline-none font-normal"
+                    placeholder={
+                      eco === 'npm'
+                        ? 'Search npm package (e.g. express, lodash, react)...'
+                        : 'Search PyPI package (e.g. django, flask, fastapi)...'
+                    }
+                    className="w-full bg-transparent font-sans text-sm sm:text-base text-stone-900 placeholder:text-stone-400 outline-none font-normal"
                     spellCheck={false}
                     autoComplete="off"
                   />
                 </div>
 
                 {/* Ecosystem pill switch */}
-                <div className="flex items-center bg-surface2 border border-border rounded-full p-0.5 shrink-0 select-none">
+                <div className="flex items-center bg-stone-100/90 border border-stone-200/70 rounded-full p-0.5 shrink-0 select-none">
                   {['npm', 'pypi'].map(e => (
                     <button
                       key={e}
                       type="button"
-                      onClick={() => setEco(e)}
-                      className={`px-3 py-1 rounded-full text-xs font-sans font-medium transition-all cursor-pointer ${
+                      onMouseDown={(evt) => {
+                        evt.preventDefault();
+                        setEco(e);
+                        setShowDropdown(true);
+                        setSelectedIndex(0);
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-sans font-semibold tracking-wider transition-all cursor-pointer ${
                         eco === e
-                          ? 'bg-white text-text font-semibold shadow-xs'
-                          : 'text-muted hover:text-text'
+                          ? 'bg-white text-stone-950 shadow-xs'
+                          : 'text-stone-400 hover:text-stone-800'
                       }`}
                     >
-                      {e}
+                      {e.toUpperCase()}
                     </button>
                   ))}
                 </div>
 
-                {/* Solid Black Capsule CTA Button (Matching Reference "Start Trial") */}
+                {/* Solid Black Capsule CTA Button */}
                 <button
                   type="button"
                   onClick={() => handleAnalyze()}
-                  className="bg-text hover:bg-neutral-800 text-white font-sans font-medium text-xs px-6 py-2.5 rounded-full cursor-pointer transition-all shrink-0 select-none shadow-sm"
+                  className="bg-stone-950 hover:bg-black text-white font-sans font-medium text-xs px-5 sm:px-6 py-2.5 rounded-full cursor-pointer transition-all shrink-0 select-none shadow-sm hover:shadow active:scale-98 flex items-center gap-1.5"
                 >
-                  Analyze ↵
+                  <span>Analyze</span>
+                  <span className="font-mono text-xs opacity-60">↵</span>
                 </button>
               </div>
 
               {/* Autocomplete Dropdown Popover */}
               <AnimatePresence>
-                {showDropdown && filteredAttacks.length > 0 && (
+                {showDropdown && suggestions.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 6, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -263,17 +830,26 @@ export default function SearchPanel() {
                     className="absolute left-0 right-0 top-full mt-2 rounded-2xl bg-white border border-border shadow-xl p-2 z-50 overflow-hidden text-left"
                   >
                     <div className="px-3 py-1.5 border-b border-border flex items-center justify-between text-[11px] font-sans text-muted font-medium">
-                      <span>Historical Attack Scenarios</span>
-                      <span>Press enter to run</span>
+                      <span>
+                        {pkg.trim()
+                          ? `Matching Packages (${eco.toUpperCase()})`
+                          : `Curated ${eco.toUpperCase()} Packages & Attacks`}
+                      </span>
+                      <span>Press enter to select</span>
                     </div>
 
-                    <div className="flex flex-col gap-1 max-h-60 overflow-y-auto mt-1 p-1">
-                      {filteredAttacks.map((scenario, i) => {
+                    <div className="flex flex-col gap-1 max-h-72 overflow-y-auto mt-1 p-1">
+                      {suggestions.map((item, i) => {
                         const isSelected = i === selectedIndex;
+                        const isOtherEco = item.ecosystem !== eco;
+
                         return (
                           <div
-                            key={scenario.id}
-                            onClick={() => handleSelectScenario(scenario)}
+                            key={item.id}
+                            onMouseDown={(evt) => {
+                              evt.preventDefault();
+                              handleSelectPackage(item);
+                            }}
                             onMouseEnter={() => setSelectedIndex(i)}
                             className={`rounded-xl p-2.5 flex items-center justify-between cursor-pointer transition-all ${
                               isSelected
@@ -282,26 +858,46 @@ export default function SearchPanel() {
                             }`}
                           >
                             <div className="min-w-0 flex-1 pr-3">
-                              <div className="flex items-center gap-2 mb-0.5">
+                              <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                                 <span className="font-sans text-xs font-semibold text-text truncate">
-                                  {scenario.package}@{scenario.version}
+                                  {item.package}
+                                  {item.version && item.version !== 'latest' ? `@${item.version}` : ''}
                                 </span>
-                                <span className="text-[10px] font-sans font-medium text-muted border border-border px-1.5 py-0.5 rounded uppercase">
-                                  {scenario.ecosystem}
+
+                                <span
+                                  className={`text-[10px] font-sans font-semibold px-1.5 py-0.2 rounded uppercase border ${
+                                    isOtherEco
+                                      ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                      : 'bg-surface3 text-muted border-border'
+                                  }`}
+                                >
+                                  {item.ecosystem}
                                 </span>
-                                <span className="text-[11px] font-sans text-muted">
-                                  {scenario.cve}
-                                </span>
+
+                                {item.category && (
+                                  <span className="text-[10px] font-sans text-muted bg-stone-100 px-1.5 py-0.2 rounded border border-stone-200">
+                                    {item.category}
+                                  </span>
+                                )}
+
+                                {item.cve && (
+                                  <span className="text-[10px] font-mono text-danger font-medium">
+                                    {item.cve}
+                                  </span>
+                                )}
                               </div>
+
                               <p className="text-xs text-muted truncate font-sans">
-                                {scenario.summary}
+                                {item.summary || item.label}
                               </p>
                             </div>
 
                             <div className="shrink-0 flex items-center gap-2">
-                              <span className="font-sans text-[11px] px-2 py-0.5 rounded-full font-medium bg-rose-50 text-rose-800 border border-rose-200/60">
-                                {scenario.tag}
-                              </span>
+                              {item.tag && (
+                                <span className={`font-sans text-[11px] px-2 py-0.5 rounded-full font-medium border ${item.tagClass || 'bg-surface3 text-muted border-border'}`}>
+                                  {item.tag}
+                                </span>
+                              )}
                               <span className="text-muted font-sans text-xs">→</span>
                             </div>
                           </div>
@@ -313,32 +909,41 @@ export default function SearchPanel() {
               </AnimatePresence>
             </div>
 
-            {/* Attack Replay Chips */}
-            <div className="mt-5 flex flex-wrap items-center gap-2 select-none">
-              <span className="text-xs text-muted font-sans mr-1">
-                Replay Attack:
-              </span>
-
-              <button
-                type="button"
-                onClick={() => handleSelectScenario(ATTACK_SCENARIOS[0])}
-                className="bg-danger/10 hover:bg-danger/20 border border-danger/30 text-danger font-sans text-xs px-3.5 py-1.5 rounded-full transition-all cursor-pointer flex items-center mr-1 font-medium"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-danger animate-ping inline-block mr-1.5" />
-                <span>Quick Demo ↗</span>
-              </button>
-
-              {ATTACK_SCENARIOS.map(a => (
+            {/* Quick Actions & Popular Tools */}
+            <div className="mt-5 w-full max-w-2xl flex flex-wrap items-center gap-2.5 sm:gap-3 select-none">
+              {/* Dedicated Standalone Quick Demo Button */}
+              {quickDemoPkg && (
                 <button
-                  key={a.id}
                   type="button"
-                  onClick={() => handleSelectScenario(a)}
-                  className={`border text-xs px-3 py-1 rounded-full font-sans font-medium transition-all cursor-pointer flex items-center gap-1.5 ${a.pillClass}`}
+                  onClick={() => handleSelectPackage(quickDemoPkg)}
+                  className="bg-stone-950 hover:bg-black text-white font-sans text-xs px-4 py-1.5 rounded-full transition-all duration-200 cursor-pointer flex items-center gap-2 font-medium shadow-xs hover:shadow active:scale-95 shrink-0"
                 >
-                  <span className="font-semibold">{a.package}</span>
-                  <span className="opacity-70 text-[10px]">({a.label})</span>
+                  <span className="text-amber-400 font-bold">⚡</span>
+                  <span>Quick Demo</span>
+                  <span className="text-[10px] text-stone-400 font-mono">({quickDemoPkg.package})</span>
                 </button>
-              ))}
+              )}
+
+              {/* Vertical divider on desktop */}
+              <div className="hidden sm:block w-px h-4 bg-stone-200 shrink-0" />
+
+              {/* Popular Tools Pills */}
+              <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+                <span className="text-xs font-sans font-medium text-stone-500 shrink-0 mr-0.5">
+                  Popular Tools:
+                </span>
+                {popularTools.map(tool => (
+                  <button
+                    key={tool.id || tool.package}
+                    type="button"
+                    onClick={() => handleSelectPackage(tool)}
+                    className="bg-white hover:bg-stone-50 text-stone-800 hover:text-stone-950 border border-stone-200 hover:border-stone-400 text-xs px-2.5 py-1 rounded-full font-sans font-medium transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95 flex items-center gap-1"
+                    title={tool.summary || tool.label}
+                  >
+                    <span>{tool.package}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Hand-Drawn Downward Arrow (Exact match to reference image below input) */}
@@ -370,17 +975,89 @@ export default function SearchPanel() {
         </div>
 
         {/* ======================================================== */}
-        {/* STORY SECTION (Matching Bottom Half of Reference Image)   */}
+        {/* 1. HOW IT WORKS SECTION — 3 CLEAN STEP CARDS             */}
         {/* ======================================================== */}
-        <div id="story" className="mt-20 pt-16 border-t border-border/70 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        <motion.div
+          id="how-it-works"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-20 pt-16 border-t border-stone-200/80"
+        >
+          <div className="text-left mb-8">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-mono uppercase font-semibold text-stone-600 mb-2">
+              <span>01 / ARCHITECTURE</span>
+            </div>
+            <h3 className="font-serif font-normal text-3xl sm:text-4xl text-text tracking-tight">
+              How RippleGuard simulates the explosion
+            </h3>
+          </div>
 
-          {/* Left Column: Sketch Character + Floating Handwritten Clouds + Clock */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+            {/* Step 1 */}
+            <div className="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs hover:border-stone-400 hover:shadow-sm transition-all duration-200 flex flex-col">
+              <span className="font-sans text-xs font-bold text-stone-700 bg-stone-100 border border-stone-200 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
+                01
+              </span>
+              <h4 className="font-serif font-semibold text-base text-text mb-2">
+                Search Any Package
+              </h4>
+              <p className="font-sans text-xs text-muted leading-relaxed">
+                Enter any npm or PyPI package. RippleGuard resolves its complete transitive dependency graph in real time via Google&apos;s deps.dev and queries OSV for known CVEs.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs hover:border-stone-400 hover:shadow-sm transition-all duration-200 flex flex-col">
+              <span className="font-sans text-xs font-bold text-stone-700 bg-stone-100 border border-stone-200 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
+                02
+              </span>
+              <h4 className="font-serif font-semibold text-base text-text mb-2">
+                Select Compromise Entrypoint
+              </h4>
+              <p className="font-sans text-xs text-muted leading-relaxed">
+                Click any node in the dependency graph — whether it is the direct top-level library or a shadow dependency 5 layers deep.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs hover:border-stone-400 hover:shadow-sm transition-all duration-200 flex flex-col">
+              <span className="font-sans text-xs font-bold text-stone-700 bg-stone-100 border border-stone-200 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
+                03
+              </span>
+              <h4 className="font-serif font-semibold text-base text-text mb-2">
+                Simulate Cascading Blast
+              </h4>
+              <p className="font-sans text-xs text-muted leading-relaxed">
+                Hit Inject Compromise. Watch the contagion spread node by node, calculate the Blast Radius Score, and review prioritized upgrade remedies.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ======================================================== */}
+        {/* 2. WHY RIPPLEGUARD / STORY SECTION                        */}
+        {/* ======================================================== */}
+        <motion.div
+          id="why-rippleguard"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-20 pt-16 border-t border-stone-200/80 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center"
+        >
+          {/* Left Column: Sketch Character + Floating Handwritten Clouds */}
           <div className="lg:col-span-6 flex justify-center">
             <SketchStoryIllustration />
           </div>
 
           {/* Right Column: Bold Editorial Narrative */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-mono uppercase font-semibold text-stone-600 mb-3">
+              <span>02 / THE CORE PROBLEM</span>
+            </div>
+
             <h2 className="font-serif font-normal text-3xl sm:text-4xl lg:text-5xl text-text leading-[1.12] tracking-tight">
               As an engineer, you have hundreds of packages you rely on every day, and not enough visibility into what happens when one goes rogue.
             </h2>
@@ -393,119 +1070,139 @@ export default function SearchPanel() {
               RippleGuard is a supply chain compromise simulator. Not an alert fatigue engine — a blast radius engine. You pick any package in the tree, inject an attack, and watch the infection cascade across the dependency graph in real time.
             </p>
 
-            {/* Quick Action Button */}
-            <div className="mt-8 flex items-center gap-4">
+            {/* Quick Action Buttons */}
+            <div className="mt-8 flex items-center gap-4 flex-wrap">
               <button
                 type="button"
                 onClick={() => {
                   const el = document.getElementById('search-input');
                   if (el) {
-                    el.scrollIntoView({ behavior: 'smooth' });
-                    el.focus();
+                    const yOffset = -120;
+                    const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                    setTimeout(() => el.focus(), 350);
                   }
                 }}
-                className="bg-text text-white font-sans font-medium text-xs px-6 py-3 rounded-full hover:bg-neutral-800 transition-all cursor-pointer shadow-xs"
+                className="bg-stone-950 text-white font-sans font-medium text-xs px-6 py-3 rounded-full hover:bg-black transition-all cursor-pointer shadow-xs active:scale-95"
               >
                 Analyze a Package →
               </button>
 
               <button
                 type="button"
-                onClick={() => handleSelectScenario(ATTACK_SCENARIOS[0])}
-                className="border border-border hover:border-text text-text font-sans font-medium text-xs px-5 py-3 rounded-full bg-white hover:bg-surface2 transition-all cursor-pointer"
+                onClick={() => handleSelectPackage(PACKAGE_CATALOG[0])}
+                className="border border-stone-300 hover:border-stone-950 text-text font-sans font-medium text-xs px-5 py-3 rounded-full bg-white hover:bg-stone-50 transition-all cursor-pointer shadow-2xs active:scale-95"
               >
                 Run Log4Shell Demo
               </button>
             </div>
           </div>
-
-        </div>
+        </motion.div>
 
         {/* ======================================================== */}
-        {/* HOW IT WORKS SECTION — 3 CLEAN STEP CARDS                 */}
+        {/* 3. ATTACK SCENARIOS SHOWCASE GRID                         */}
         {/* ======================================================== */}
-        <div id="how-it-works" className="mt-24 pt-16 border-t border-border/70">
-          <div className="text-left mb-8">
-            <p className="font-sans text-[11px] font-semibold text-muted tracking-wider uppercase mb-2">
-              SYSTEM ARCHITECTURE
+        <motion.div
+          id="attack-scenarios"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-20 pt-16 border-t border-stone-200/80"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 text-left">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[10px] font-mono uppercase font-semibold text-rose-800 mb-2">
+                <span>03 / REPLAY BENCHMARKS</span>
+              </div>
+              <h3 className="font-serif font-normal text-3xl sm:text-4xl text-text tracking-tight">
+                Famous Supply Chain Attack Replays
+              </h3>
+            </div>
+            <p className="text-xs text-muted font-sans max-w-sm">
+              Click any scenario to load its exact vulnerable dependency tree and run the simulation cascade.
             </p>
-            <h3 className="font-serif font-normal text-3xl text-text tracking-tight">
-              How RippleGuard simulates the explosion
-            </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-            {/* Step 1 */}
-            <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-xs hover:border-stone-400 transition-all duration-200 flex flex-col">
-              <span className="font-sans text-xs font-semibold text-muted border border-border/80 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
-                01
-              </span>
-              <h4 className="font-serif font-semibold text-base text-text mb-2">
-                Search Any Package
-              </h4>
-              <p className="font-sans text-xs text-muted leading-relaxed">
-                Enter any npm or PyPI package. RippleGuard resolves its complete transitive dependency graph in real time via Google&apos;s deps.dev and queries OSV for known CVEs.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 text-left">
+            {PACKAGE_CATALOG.filter(item => item.isAttack).map(scenario => (
+              <div
+                key={scenario.id}
+                onClick={() => handleSelectPackage(scenario)}
+                className="group rounded-2xl border border-stone-200/90 bg-white p-5 shadow-xs hover:border-stone-900 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full uppercase bg-stone-100 text-stone-700 border border-stone-200">
+                      {scenario.ecosystem}
+                    </span>
+                    <span className={`text-[10px] font-sans font-bold px-2 py-0.5 rounded-full border ${scenario.tagClass || 'bg-rose-50 text-rose-800 border-rose-200'}`}>
+                      {scenario.tag}
+                    </span>
+                  </div>
 
-            {/* Step 2 */}
-            <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-xs hover:border-stone-400 transition-all duration-200 flex flex-col">
-              <span className="font-sans text-xs font-semibold text-muted border border-border/80 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
-                02
-              </span>
-              <h4 className="font-serif font-semibold text-base text-text mb-2">
-                Select Compromise Entrypoint
-              </h4>
-              <p className="font-sans text-xs text-muted leading-relaxed">
-                Click any node in the dependency graph — whether it is the direct top-level library or a shadow dependency 5 layers deep.
-              </p>
-            </div>
+                  <h4 className="font-sans text-sm font-bold text-stone-950 mb-1 flex items-center justify-between">
+                    <span>{scenario.package}</span>
+                    <span className="text-xs font-mono font-normal text-stone-400">@{scenario.version}</span>
+                  </h4>
 
-            {/* Step 3 */}
-            <div className="rounded-2xl border border-border/70 bg-white p-6 shadow-xs hover:border-stone-400 transition-all duration-200 flex flex-col">
-              <span className="font-sans text-xs font-semibold text-muted border border-border/80 px-2.5 py-0.5 rounded-md mb-4 inline-block w-fit">
-                03
-              </span>
-              <h4 className="font-serif font-semibold text-base text-text mb-2">
-                Simulate Cascading Blast
-              </h4>
-              <p className="font-sans text-xs text-muted leading-relaxed">
-                Hit Inject Compromise. Watch the contagion spread node by node, calculate the Blast Radius Score, and review prioritized upgrade remedies.
-              </p>
-            </div>
+                  <p className="font-sans text-xs font-semibold text-stone-800 mb-2">
+                    {scenario.label}
+                  </p>
+
+                  <p className="font-sans text-xs text-muted leading-relaxed line-clamp-2">
+                    {scenario.summary}
+                  </p>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs font-sans font-medium text-stone-900 group-hover:text-black">
+                  <span className="text-[11px] font-mono text-muted">{scenario.downloads}</span>
+                  <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    <span>Replay Attack</span>
+                    <span>→</span>
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* ======================================================== */}
         {/* LIVE METRICS TICKER BAR                                  */}
         {/* ======================================================== */}
-        <div className="mt-12 w-full bg-surface2/80 border border-border/80 rounded-2xl px-6 py-6 flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.45 }}
+          className="mt-16 w-full bg-stone-50 border border-stone-200/80 rounded-2xl px-6 py-6 flex flex-wrap sm:flex-nowrap items-center justify-between gap-4"
+        >
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
             <span className="font-serif text-3xl font-normal text-text tracking-tight">3.5M+</span>
             <span className="font-sans text-xs text-muted">npm & PyPI indexed</span>
           </div>
 
-          <div className="hidden sm:block w-px h-8 bg-border" />
+          <div className="hidden sm:block w-px h-8 bg-stone-200" />
 
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
             <span className="font-serif text-3xl font-normal text-text tracking-tight">82M/mo</span>
             <span className="font-sans text-xs text-muted">lodash monthly downloads</span>
           </div>
 
-          <div className="hidden sm:block w-px h-8 bg-border" />
+          <div className="hidden sm:block w-px h-8 bg-stone-200" />
 
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
             <span className="font-serif text-3xl font-normal text-text tracking-tight">$4.88M</span>
             <span className="font-sans text-xs text-muted">avg breach cost (IBM 2024)</span>
           </div>
 
-          <div className="hidden sm:block w-px h-8 bg-border" />
+          <div className="hidden sm:block w-px h-8 bg-stone-200" />
 
           <div className="flex flex-col items-center sm:items-start gap-1 flex-1 min-w-[140px]">
             <span className="font-serif text-3xl font-normal text-text tracking-tight">96%</span>
             <span className="font-sans text-xs text-muted">apps with open source</span>
           </div>
-        </div>
+        </motion.div>
 
       </div>
 

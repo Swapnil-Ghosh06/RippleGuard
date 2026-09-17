@@ -4,6 +4,8 @@ import { useGraphStore } from '../store/graphStore';
 import GraphCanvas from '../components/GraphCanvas';
 import BlastRadiusPanel from '../components/BlastRadiusPanel';
 import MitigationPanel from '../components/MitigationPanel';
+import CompareView from '../components/CompareView';
+
 
 export default function GraphView() {
   const graphData    = useGraphStore((s) => s.graphData);
@@ -40,20 +42,37 @@ export default function GraphView() {
     (n) => (n.vulnerabilities || []).length > 0
   ).length;
 
+  const [panelWidthMode, setPanelWidthMode] = useState('standard'); // 'standard' | 'expanded' | 'collapsed'
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'F7' || (e.ctrlKey && e.key.toLowerCase() === 'b')) {
+        e.preventDefault();
+        setPanelWidthMode(prev => prev === 'collapsed' ? 'standard' : 'collapsed');
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const panelWidthClass = panelWidthMode === 'expanded'
+    ? 'w-[640px] xl:w-[700px]'
+    : 'w-[420px]';
+
   return (
     <div
-      className="w-full flex flex-row overflow-hidden bg-white"
+      className="w-full flex flex-row overflow-hidden bg-[#0e121a]"
       style={{ height: 'calc(100vh - 64px)' }}
     >
       {/* Left — Graph canvas wrapper */}
       <div className="flex-1 min-w-0 h-full overflow-hidden relative flex flex-col">
         {error !== null ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-6">
-            <div className="rounded-2xl border border-border bg-white p-6 max-w-sm text-center shadow-sm">
-              <p className="font-sans text-danger text-sm mb-4">{error}</p>
+            <div className="rounded-2xl border border-[#2c3448] bg-[#181c28] p-6 max-w-sm text-center shadow-lg">
+              <p className="font-sans text-rose-400 text-sm mb-4">{error}</p>
               <button
                 onClick={handleStartOver}
-                className="text-xs font-sans font-medium text-text bg-surface2 hover:bg-surface3 border border-border px-4 py-2 rounded-full transition-colors"
+                className="text-xs font-sans font-medium text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-full transition-colors"
               >
                 ← Back to Search
               </button>
@@ -63,36 +82,37 @@ export default function GraphView() {
           <>
             {/* Graph info header bar above the canvas */}
             {graphData !== null && (
-              <div className="w-full px-4 py-2 bg-surface/80 backdrop-blur-md border-b border-border/40 flex items-center justify-between shrink-0 z-20 select-none">
+              <div className="w-full px-4 py-2.5 bg-[#0e121a] border-b border-[#1e2436] flex items-center justify-between shrink-0 z-20 select-none text-white">
                 {/* Left: Package Name + Version + Ecosystem */}
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="font-mono text-sm font-bold text-text truncate">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="font-mono text-sm font-bold text-white truncate">
                     {packageName}
                   </span>
                   {packageVersion && (
-                    <span className="font-mono text-xs text-muted">
+                    <span className="font-mono text-xs text-zinc-400">
                       @{packageVersion}
                     </span>
                   )}
-                  <span className="font-mono text-[9px] px-2 py-0.5 rounded-full bg-surface3 border border-border text-muted ml-2 shrink-0 uppercase">
+                  <span className="font-mono text-[9px] px-2 py-0.5 rounded-full bg-[#181c28] border border-[#2c3448] text-zinc-400 ml-2 shrink-0 uppercase tracking-wider">
                     {ecosystem}
                   </span>
                 </div>
 
                 {/* Right: Total nodes, Vulnerability count, Blast status */}
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="font-mono text-xs text-muted">
+                  <span className="font-mono text-xs text-zinc-400">
                     {totalNodes} nodes
                   </span>
                   <span
                     className={`font-mono text-xs ${
-                      vulnerableNodes > 0 ? 'text-warn font-medium' : 'text-safe'
+                      vulnerableNodes > 0 ? 'text-amber-400 font-medium' : 'text-emerald-400'
                     }`}
                   >
                     {vulnerableNodes > 0 ? `${vulnerableNodes} vulnerable` : '0 CVEs'}
                   </span>
                   {blastData && (
-                    <span className="font-mono text-xs text-danger font-semibold">
+                    <span className="font-mono text-xs text-rose-400 font-semibold">
                       {blastData.blast_score}/100 blast
                     </span>
                   )}
@@ -104,55 +124,78 @@ export default function GraphView() {
             <div className="flex-1 min-h-0 w-full relative">
               <GraphCanvas />
 
-              {/* First-time use hint overlay */}
-              <AnimatePresence>
-                {graphData !== null && blastData === null && !selectedNode && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.25 }}
-                    className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-pulse"
-                  >
-                    <div className="rounded-full bg-surface2/90 border border-border/60 backdrop-blur-xl px-5 py-2.5 flex items-center gap-2.5 shadow-xl font-mono text-xs text-dim">
-                      <span>👆</span>
-                      <span>Click any node in the graph to select it as your attack target</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Floating Reopen Button if Side Panel is Collapsed */}
+              {panelWidthMode === 'collapsed' && graphData !== null && (
+                <motion.button
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  type="button"
+                  onClick={() => setPanelWidthMode('standard')}
+                  className="absolute top-4 right-4 z-30 px-3 py-2 rounded-xl bg-[#181c28]/95 hover:bg-[#202536] border border-[#2c3448] text-zinc-100 font-mono text-xs font-semibold shadow-2xl backdrop-blur-md flex items-center gap-2 cursor-pointer transition-all"
+                  title="Open Security Analysis (F7)"
+                >
+                  <span className="text-emerald-400">🛡️</span>
+                  <span>Security Analysis</span>
+                  <span className="text-[10px] text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded">F7</span>
+                </motion.button>
+              )}
             </div>
           </>
         )}
       </div>
 
-      {/* Right — Slide-in Minimalist Security Dashboard Side Panel */}
+      {/* Right — Expandable / Responsive Cyber Command Center Side Panel */}
       <AnimatePresence>
-        {graphData !== null && (
+        {graphData !== null && panelWidthMode !== 'collapsed' && (
           <motion.aside
             key="side-panel"
-            className="w-[380px] shrink-0 h-full bg-white border-l border-border flex flex-col overflow-hidden shadow-sm z-30"
-            initial={{ x: 380, opacity: 0 }}
+            className={`${panelWidthClass} shrink-0 h-full bg-[#121622] text-zinc-100 border-l border-[#20273a] flex flex-col overflow-hidden shadow-2xl z-30 transition-all duration-300 ease-out`}
+            initial={{ x: 420, opacity: 0 }}
             animate={{ x: 0,   opacity: 1 }}
-            exit={{ x: 380,    opacity: 0 }}
+            exit={{ x: 420,    opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
           >
             {/* Dashboard Top Header */}
-            <div className="px-5 pt-4 pb-3 border-b border-border/60 flex items-center justify-between shrink-0 select-none">
-              <span className="font-mono text-[10px] text-muted tracking-widest uppercase">
-                SECURITY ANALYSIS
-              </span>
-              <span className="font-mono text-[10px] text-muted/60 tabular-nums">
-                {time}
-              </span>
+            <div className="px-4 py-3 border-b border-[#20273a] flex items-center justify-between shrink-0 select-none bg-[#121622]">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[11px] font-bold text-zinc-200 tracking-widest uppercase">
+                  SECURITY ANALYSIS
+                </span>
+                <span className="font-mono text-[10px] text-zinc-500 tabular-nums">
+                  {time}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                {/* Expand / Shrink toggle button */}
+                <button
+                  type="button"
+                  onClick={() => setPanelWidthMode(prev => prev === 'expanded' ? 'standard' : 'expanded')}
+                  className="px-2 py-1 rounded text-[11px] font-mono text-zinc-300 hover:text-white hover:bg-zinc-800 border border-zinc-700/80 transition-all flex items-center gap-1 cursor-pointer"
+                  title={panelWidthMode === 'expanded' ? 'Restore standard width' : 'Expand panel width for spacious view'}
+                >
+                  <span>{panelWidthMode === 'expanded' ? '⤡' : '⤢'}</span>
+                  <span>{panelWidthMode === 'expanded' ? 'Standard' : 'Expand'}</span>
+                </button>
+
+                {/* Hide button */}
+                <button
+                  type="button"
+                  onClick={() => setPanelWidthMode('collapsed')}
+                  className="w-6 h-6 rounded flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-xs cursor-pointer ml-1"
+                  title="Hide panel (F7)"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Three tabs: "Blast" | "Mitigation" | "Compare" */}
-            <div className="flex border-b border-border/60 px-3 pt-2 pb-0 gap-1 select-none shrink-0">
+            <div className="flex border-b border-[#20273a] px-3 pt-2 pb-0 gap-1.5 select-none shrink-0 bg-[#0e121a]">
               {[
-                { id: 'blast', label: 'Blast' },
-                { id: 'mitigation', label: 'Mitigation' },
-                { id: 'compare', label: 'Compare' },
+                { id: 'blast', label: 'Blast', icon: '⚡' },
+                { id: 'mitigation', label: 'Mitigation', icon: '🛡️' },
+                { id: 'compare', label: 'Compare', icon: '⚖️' },
               ].map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -160,41 +203,24 @@ export default function GraphView() {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`font-mono text-[11px] px-4 py-2 rounded-t-lg cursor-pointer transition-all ${
+                    className={`font-mono text-[11px] px-3.5 py-1.5 rounded-t-lg cursor-pointer transition-all flex items-center gap-1.5 ${
                       isActive
-                        ? 'bg-surface3/80 text-text border-b-2 border-accent font-semibold'
-                        : 'text-muted hover:text-dim hover:bg-surface2/40'
+                        ? 'bg-[#121622] text-white border-b-2 border-emerald-400 font-semibold shadow-xs'
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#181c28]/40'
                     }`}
                   >
-                    {tab.label}
+                    <span className="text-[10px]">{tab.icon}</span>
+                    <span>{tab.label}</span>
                   </button>
                 );
               })}
             </div>
 
             {/* Tab content area */}
-            <div className="flex-1 overflow-y-auto">
-              {activeTab === 'blast' && <BlastRadiusPanel />}
-              {activeTab === 'mitigation' && <MitigationPanel />}
-              {activeTab === 'compare' && (
-                <div className="mt-8 flex flex-col items-center gap-4 px-6 text-center">
-                  <svg className="w-10 h-10 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <circle cx="9" cy="12" r="6" />
-                    <circle cx="15" cy="12" r="6" />
-                  </svg>
-                  <h4 className="font-mono text-xs font-bold text-text">
-                    Scenario Comparison
-                  </h4>
-                  <p className="font-sans text-xs text-muted leading-relaxed max-w-xs">
-                    Run a simulation first, then inject a second compromise to compare blast radii side by side.
-                  </p>
-                  {blastData && (
-                    <p className="text-accent font-mono text-xs bg-surface2 px-3 py-2 rounded-lg border border-border/60">
-                      Scenario A locked in. Select a different node and inject to compare.
-                    </p>
-                  )}
-                </div>
-              )}
+            <div className="flex-1 min-h-0 overflow-y-auto bg-[#121622] text-zinc-100">
+              {activeTab === 'blast' && <BlastRadiusPanel isExpanded={panelWidthMode === 'expanded'} />}
+              {activeTab === 'mitigation' && <MitigationPanel isExpanded={panelWidthMode === 'expanded'} />}
+              {activeTab === 'compare' && <CompareView isExpanded={panelWidthMode === 'expanded'} />}
             </div>
           </motion.aside>
         )}

@@ -17,7 +17,8 @@ from api.models.response_models import (
 from api.services.graph_service import (
     simulate_compromise,
     build_dependency_graph,
-    _graph_storage
+    _graph_storage,
+    _pkg_name
 )
 from api.services import npm_service, pypi_service, osv_service
 
@@ -52,11 +53,14 @@ def build_simulate_response(sim_result: dict, comp_node: str) -> SimulateRespons
         medium_impact_nodes=blast_raw["severity_breakdown"]["medium_impact_nodes"]
     )
 
+    blast_summary = sim_result.get("blast_summary", "")
+
     blast_radius_obj = BlastRadius(
         affected_package_count=blast_raw["affected_package_count"],
         total_monthly_downloads_affected=blast_raw["total_monthly_downloads_affected"],
         estimated_apps_affected=blast_raw["estimated_apps_affected"],
         blast_score=blast_raw["blast_score"],
+        blast_summary=blast_summary,
         severity_breakdown=sev_breakdown
     )
 
@@ -65,7 +69,9 @@ def build_simulate_response(sim_result: dict, comp_node: str) -> SimulateRespons
             action=act["action"],
             eliminates_blast_percent=act["eliminates_blast_percent"],
             affected_packages_resolved=act["affected_packages_resolved"],
-            effort=act["effort"]
+            fixed_version=act.get("fixed_version"),
+            effort=act["effort"],
+            why_this_matters=act.get("why_this_matters", "")
         )
         for act in mit_raw.get("priority_actions", [])
     ]
@@ -91,10 +97,12 @@ def build_simulate_response(sim_result: dict, comp_node: str) -> SimulateRespons
         compromised_node=comp_node,
         propagation=propagation_obj,
         blast_radius=blast_radius_obj,
+        blast_summary=blast_summary,
         mitigation=mitigation_obj,
         critical_chain=sim_result.get("critical_chain", []),
         shadow_dependencies=shadow_deps
     )
+
 
 
 @router.post(
@@ -131,7 +139,7 @@ async def simulate_compromise_route(request: SimulateRequest):
     elif comp_node in _graph_storage:
         graph_entry = _graph_storage[comp_node]
     else:
-        pkg_name = comp_node.split("@")[0]
+        pkg_name = _pkg_name(comp_node)
         if pkg_name in _graph_storage:
             graph_entry = _graph_storage[pkg_name]
 
@@ -234,14 +242,16 @@ async def simulate_compromise_route(request: SimulateRequest):
 
     # Ensure compromised node exists in graph
     if comp_node not in G.nodes:
-        matching = [n for n in G.nodes if n.startswith(comp_node.split("@")[0])]
+        comp_pkg = _pkg_name(comp_node)
+        matching = [n for n in G.nodes if n == comp_pkg or n.startswith(f"{comp_pkg}@")]
         if matching:
             comp_node = matching[0]
         else:
+            ver = comp_node.rsplit("@", 1)[1] if "@" in comp_node and comp_node.rfind("@") > 0 else "latest"
             G.add_node(
                 comp_node,
-                name=comp_node.split("@")[0],
-                version=comp_node.split("@")[1] if "@" in comp_node else "latest",
+                name=comp_pkg,
+                version=ver,
                 ecosystem="npm",
                 depth=0,
                 is_root=True

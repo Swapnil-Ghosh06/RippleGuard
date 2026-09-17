@@ -17,9 +17,9 @@ Builds the dependency graph + vulnerability overlay for a package (F1, F2, F3).
 **Response — `data` object**
 | Field | Type | Notes |
 |---|---|---|
-| `graph.nodes[]` | array | see DATA_MODEL.md → Package entity |
+| `graph.nodes[]` | array | see DATA_MODEL.md → Package entity (includes `vulnerabilities[].impact_summary`) |
 | `graph.edges[]` | array | `{ from, to }` — "depends on" |
-| `vulnerabilities` | array | per-node CVE list, severity-tagged |
+| `vulnerabilities` | array | per-node CVE list, severity-tagged (each item includes `impact_summary` plain-language translation) |
 | `stats.node_count` | int | total packages in graph |
 | `stats.total_downloads` | int | sum of monthly downloads across graph |
 
@@ -38,12 +38,14 @@ Injects a compromise at a node and runs propagation (F4, F5, F6).
 | Field | Type | Notes |
 |---|---|---|
 | `blast_score` | float | 0–100, see DATA_MODEL.md → BlastResult |
+| `blast_summary` | string | short qualitative paragraph describing WHAT actually breaks in real applications in the blast path |
 | `affected_nodes[]` | array | every package hit, with distance from source |
 | `propagation_order[]` | array | `{ node, delay_ms }` — drives Shubham's animation |
 | `critical_chain[]` | array | the Butterfly Trace path (Idea 2) |
 | `blast_downloads` | int | total monthly downloads in the blast zone |
 | `human_comparison` | string | computed frontend-side by Nitya's `getHumanComparison()` — NOT part of the backend response |
-| `mitigation.priority_actions[]` | array | ranked fixes, see DATA_MODEL.md → MitigationAction |
+| `mitigation.priority_actions[]` | array | ranked fixes with `why_this_matters` one-liner reasoning, see DATA_MODEL.md → MitigationAction |
+
 
 ---
 

@@ -186,6 +186,14 @@ async def query_vulnerabilities_batch(packages: List[dict]) -> Dict[str, list]:
                     v_detail = _VULN_CACHE.get(vid, v_stub)
                     
                     summary = v_detail.get("summary") or v_stub.get("summary") or f"Security advisory {vid}"
+                    details = v_detail.get("details") or v_stub.get("details") or ""
+                    db_spec = v_detail.get("database_specific")
+                    cwe_ids = []
+                    if isinstance(db_spec, dict):
+                        raw_cwes = db_spec.get("cwe_ids", [])
+                        if isinstance(raw_cwes, list):
+                            cwe_ids = [str(c) for c in raw_cwes]
+
                     severity = _extract_severity(v_detail)
                     cvss = _extract_cvss(v_detail, severity)
                     fix_ver = _extract_fix(v_detail, pkg["name"])
@@ -193,6 +201,8 @@ async def query_vulnerabilities_batch(packages: List[dict]) -> Dict[str, list]:
                     parsed_list.append({
                         "id": vid,
                         "summary": summary,
+                        "details": details,
+                        "cwe_ids": cwe_ids,
                         "severity": severity,
                         "cvss_score": cvss,
                         "fixed_version": fix_ver

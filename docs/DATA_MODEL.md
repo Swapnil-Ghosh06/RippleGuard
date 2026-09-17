@@ -45,6 +45,7 @@ A single CVE/advisory attached to a Package.
 | `description` | string | from OSV.dev |
 | `fix_version` | string | nullable — may not exist yet |
 | `affected_versions` | string | version range |
+| `impact_summary` | string | one-sentence plain-language explanation of what the CVE actually does |
 
 ### Graph
 The full resolved dependency tree for one `/analyze` call.
@@ -61,6 +62,7 @@ The output of injecting a compromise at one node (`/simulate`).
 |---|---|---|
 | `compromised_node` | string | which package was injected |
 | `blast_score` | float | 0–100, see Idea 1 formula in CREATIVE_IDEAS.md |
+| `blast_summary` | string | qualitative paragraph describing WHAT actually breaks across application types in the blast path |
 | `affected_nodes` | AffectedNode[] | every downstream package hit, with `distance` |
 | `propagation_order` | PropagationStep[] | `{ node, delay_ms }` — drives the animation |
 | `critical_chain` | string[] | the Butterfly Trace path (Idea 2) |
@@ -75,6 +77,8 @@ One ranked fix recommendation, part of a BlastResult.
 | `blast_elimination_pct` | float | 0–100 — how much of the blast radius this fix removes |
 | `priority_rank` | int | 1 = do this first |
 | `affects_nodes` | string[] | which packages this fix resolves |
+| `why_this_matters` | string | plain-language one-liner explaining why this mitigation matters strategically |
+
 
 ### ComparisonResult
 Wraps two BlastResults for side-by-side display (`/compare`, F7). No new fields beyond `{ result_a: BlastResult, result_b: BlastResult }`.

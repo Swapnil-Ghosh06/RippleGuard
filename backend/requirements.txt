@@ -4,3 +4,4 @@ networkx
 httpx
 pydantic
 python-dotenv
+packaging
