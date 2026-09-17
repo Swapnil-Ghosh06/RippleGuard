@@ -60,17 +60,16 @@ export default function AppShell({ children }) {
         <div className="flex items-center gap-3">
           <div
             onClick={handleNewAnalysis}
-            className="flex items-center gap-2.5 cursor-pointer group select-none"
+            className="flex items-center gap-2 cursor-pointer group select-none"
           >
-            {/* Water drop logo icon */}
-            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 shadow-sm">
-              <img
-                src="/logo.png"
-                alt="RippleGuard Logo"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            {/* Wordmark — clean DM Sans + subtle weight contrast */}
+            {/* Water drop logo — invert + multiply makes the black bg transparent on white navbar */}
+            <img
+              src="/logo.png"
+              alt="RippleGuard Logo"
+              className="w-9 h-9 object-contain shrink-0"
+              style={{ filter: 'invert(1)', mixBlendMode: 'multiply' }}
+            />
+            {/* Wordmark */}
             <span
               className="text-[17px] font-bold tracking-tight text-stone-900 select-none"
               style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.01em' }}

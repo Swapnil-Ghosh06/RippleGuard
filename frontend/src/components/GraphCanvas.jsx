@@ -1012,24 +1012,24 @@ function GraphCanvasInner() {
           fitViewOptions={{ padding: 0.25 }}
           minZoom={0.2}
           maxZoom={2}
-          style={{ background: '#0e121a' }}
+          style={{ background: '#f8f8f7' }}
           proOptions={{ hideAttribution: true }}
         >
           <Background
             variant={BackgroundVariant.Dots}
             gap={24}
-            size={1.5}
-            color="#22283a"
+            size={1.2}
+            color="#d1d5db"
           />
 
           <Controls
-            className="!bg-[#181c28] !border !border-[#2c3448] !text-white !rounded-xl !shadow-2xl"
+            className="!bg-white !border !border-stone-200 !text-stone-700 !rounded-xl !shadow-md"
           />
 
           <MiniMap
-            className="!bg-[#181c28] !border !border-[#2c3448] !rounded-xl !shadow-2xl"
-            nodeColor={n => n.data?.isSandboxPatched ? '#10b981' : n.data?.dominoIndex ? '#f59e0b' : n.data?.blasted ? '#f43f5e' : n.data?.vulnerabilities?.length ? '#d97706' : '#334155'}
-            maskColor="rgba(14, 18, 26, 0.75)"
+            className="!bg-white !border !border-stone-200 !rounded-xl !shadow-md"
+            nodeColor={n => n.data?.isSandboxPatched ? '#10b981' : n.data?.dominoIndex ? '#f59e0b' : n.data?.blasted ? '#f43f5e' : n.data?.vulnerabilities?.length ? '#d97706' : '#94a3b8'}
+            maskColor="rgba(248, 248, 247, 0.75)"
           />
 
           <ViewportAutoFitter triggerKey={`${visibleNodes.map(n => n.id).join(',')}-${blastData ? 'blast' : 'idle'}`} />
