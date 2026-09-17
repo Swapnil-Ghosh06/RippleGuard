@@ -7,6 +7,8 @@ import ReactFlow, {
   useEdgesState,
   MarkerType,
   BackgroundVariant,
+  ReactFlowProvider,
+  useReactFlow,
 } from 'reactflow';
 import { useGraphStore } from '../store/graphStore';
 import { useSimulate } from '../hooks/useSimulate';
@@ -15,16 +17,20 @@ import PackageNode from './PackageNode';
 const NODE_TYPES = { package: PackageNode };
 const EDGE_TYPES = {};
 
-function buildLayout(nodes, edges) {
+/**
+ * Clean hierarchical layout positioning for currently visible nodes.
+ * Centers each depth column vertically around y = 300 to ensure compact, readable graphs.
+ */
+function buildLayout(visibleNodes) {
   const byDepth = {};
-  for (const n of nodes) {
+  for (const n of visibleNodes) {
     const d = n.depth ?? 0;
     if (!byDepth[d]) byDepth[d] = [];
     byDepth[d].push(n);
   }
 
-  const X_STEP = 280;
-  const Y_STEP = 135;
+  const X_STEP = 320;
+  const Y_STEP = 140;
   const positions = {};
 
   for (const [depth, group] of Object.entries(byDepth)) {
@@ -33,7 +39,7 @@ function buildLayout(nodes, edges) {
     group.forEach((n, i) => {
       positions[n.id] = {
         x: d * X_STEP + 80,
-        y: i * Y_STEP - totalH / 2 + 280,
+        y: i * Y_STEP - totalH / 2 + 300,
       };
     });
   }
@@ -41,6 +47,9 @@ function buildLayout(nodes, edges) {
   return positions;
 }
 
+/**
+ * Extracts or derives the Critical Domino Chain for the Butterfly Trace Stepper HUD.
+ */
 function extractCriticalChain(blastData, rawNodes, rawEdges, selectedNode) {
   if (blastData?.critical_chain && Array.isArray(blastData.critical_chain) && blastData.critical_chain.length >= 2) {
     return blastData.critical_chain;
@@ -92,6 +101,9 @@ function extractCriticalChain(blastData, rawNodes, rawEdges, selectedNode) {
   return longest;
 }
 
+/**
+ * Floating Butterfly Domino Stepper HUD
+ */
 function ButterflyStepperHUD({
   criticalChain,
   activeStep,
@@ -204,7 +216,10 @@ function ButterflyStepperHUD({
   );
 }
 
-export default function GraphCanvas() {
+/**
+ * Main Graph Canvas with Progressive Disclosure and Smooth Auto-Zoom
+ */
+function GraphCanvasInner() {
   const {
     graphData, blastData,
     setBlastData, selectedNode, setSelectedNode,
@@ -216,8 +231,11 @@ export default function GraphCanvas() {
   } = useGraphStore();
 
   const { simulate } = useSimulate();
+  const { fitView } = useReactFlow();
+
   const [blastSet, setBlastSet] = useState(new Set());
   const [localSelected, setLocalSelected] = useState(selectedNode);
+  const [expandedSet, setExpandedSet] = useState(new Set());
 
   useEffect(() => {
     if (selectedNode !== undefined && selectedNode !== localSelected) {
@@ -225,10 +243,47 @@ export default function GraphCanvas() {
     }
   }, [selectedNode]);
 
-  const rawNodes = graphData?.nodes ?? graphData?.graph?.nodes ?? [];
-  const rawEdges = graphData?.edges ?? graphData?.graph?.edges ?? [];
+  const rawNodes = useMemo(() => graphData?.nodes ?? graphData?.graph?.nodes ?? [], [graphData]);
+  const rawEdges = useMemo(() => graphData?.edges ?? graphData?.graph?.edges ?? [], [graphData]);
 
-  const positions = useMemo(() => buildLayout(rawNodes, rawEdges), [rawNodes]);
+  // Build mapping of parent -> direct dependencies
+  const childrenMap = useMemo(() => {
+    const map = {};
+    rawNodes.forEach(n => {
+      map[n.id] = [];
+    });
+    rawEdges.forEach(e => {
+      const u = typeof e.source === 'string' ? e.source : e.source?.id;
+      const v = typeof e.target === 'string' ? e.target : e.target?.id;
+      if (u && v && map[u]) {
+        if (!map[u].includes(v)) {
+          map[u].push(v);
+        }
+      }
+    });
+    return map;
+  }, [rawNodes, rawEdges]);
+
+  // Initialize expanded set: small graphs (<=8) expand everything; larger graphs expand root (showing root + direct deps)
+  useEffect(() => {
+    if (!rawNodes.length) {
+      setExpandedSet(new Set());
+      return;
+    }
+
+    const rootNodes = rawNodes.filter(n => n.is_root || n.depth === 0);
+    const rootIds = rootNodes.length > 0 ? rootNodes.map(n => n.id) : [rawNodes[0].id];
+
+    if (rawNodes.length <= 8) {
+      const allWithChildren = new Set();
+      Object.entries(childrenMap).forEach(([id, children]) => {
+        if (children.length > 0) allWithChildren.add(id);
+      });
+      setExpandedSet(allWithChildren);
+    } else {
+      setExpandedSet(new Set(rootIds));
+    }
+  }, [rawNodes, childrenMap]);
 
   // Compute Butterfly Trace (Critical Domino Path)
   const criticalChain = useMemo(() => {
@@ -253,26 +308,6 @@ export default function GraphCanvas() {
     }
     return pairs;
   }, [criticalChain]);
-
-  // Autoplay timer for Domino Stepper
-  useEffect(() => {
-    if (!isDominoPlaying || criticalChain.length <= 1) return;
-
-    const timer = setInterval(() => {
-      setActiveDominoIndex((prev) => {
-        const next = prev === null ? 0 : prev + 1;
-        if (next >= criticalChain.length) {
-          setIsDominoPlaying(false);
-          return prev;
-        }
-        const nextNodeId = criticalChain[next];
-        if (nextNodeId) setSelectedNode(nextNodeId);
-        return next;
-      });
-    }, 950);
-
-    return () => clearInterval(timer);
-  }, [isDominoPlaying, criticalChain, setActiveDominoIndex, setIsDominoPlaying, setSelectedNode]);
 
   // Real-time Sandbox Contagion Containment BFS Math
   const { effectiveTaintedSet, protectedSet } = useMemo(() => {
@@ -331,12 +366,108 @@ export default function GraphCanvas() {
     };
   }, [blastSet, sandboxPatches, rawEdges, selectedNode, rawNodes]);
 
+  // Compute set of visible node IDs based on root expansion and force-visible nodes
+  const visibleNodeIds = useMemo(() => {
+    if (!rawNodes.length) return new Set();
+
+    const rootNodes = rawNodes.filter(n => n.is_root || n.depth === 0);
+    const startNodes = rootNodes.length > 0 ? rootNodes.map(n => n.id) : [rawNodes[0].id];
+
+    const visible = new Set(startNodes);
+    const queue = [...startNodes];
+
+    while (queue.length > 0) {
+      const curr = queue.shift();
+      if (expandedSet.has(curr)) {
+        const children = childrenMap[curr] || [];
+        for (const childId of children) {
+          if (!visible.has(childId)) {
+            visible.add(childId);
+            queue.push(childId);
+          }
+        }
+      }
+    }
+
+    // Always ensure simulation, domino path, virtual patches, and selected nodes remain visible
+    const forced = [
+      ...criticalChain,
+      ...effectiveTaintedSet,
+      ...sandboxPatches,
+      localSelected,
+    ];
+    forced.forEach(id => {
+      if (id && rawNodes.some(n => n.id === id)) {
+        visible.add(id);
+      }
+    });
+
+    return visible;
+  }, [rawNodes, childrenMap, expandedSet, criticalChain, effectiveTaintedSet, sandboxPatches, localSelected]);
+
+  // Filter raw nodes and edges down to visible elements
+  const visibleNodes = useMemo(() => {
+    return rawNodes.filter(n => visibleNodeIds.has(n.id));
+  }, [rawNodes, visibleNodeIds]);
+
+  const visibleEdges = useMemo(() => {
+    return rawEdges.filter(e => {
+      const u = typeof e.source === 'string' ? e.source : e.source?.id;
+      const v = typeof e.target === 'string' ? e.target : e.target?.id;
+      return visibleNodeIds.has(u) && visibleNodeIds.has(v);
+    });
+  }, [rawEdges, visibleNodeIds]);
+
+  // Dynamic layout for visible nodes
+  const positions = useMemo(() => buildLayout(visibleNodes), [visibleNodes]);
+
+  // Progressive Disclosure Expand / Collapse toggles
+  const toggleExpand = useCallback((nodeId) => {
+    setExpandedSet(prev => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) {
+        next.delete(nodeId);
+      } else {
+        next.add(nodeId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleExpandAll = useCallback(() => {
+    const allWithChildren = new Set();
+    Object.entries(childrenMap).forEach(([id, children]) => {
+      if (children.length > 0) allWithChildren.add(id);
+    });
+    setExpandedSet(allWithChildren);
+  }, [childrenMap]);
+
+  const handleFocusDirect = useCallback(() => {
+    const rootNodes = rawNodes.filter(n => n.is_root || n.depth === 0);
+    const rootIds = rootNodes.length > 0 ? rootNodes.map(n => n.id) : [rawNodes[0]?.id].filter(Boolean);
+    setExpandedSet(new Set(rootIds));
+  }, [rawNodes]);
+
+  const handleFitView = useCallback(() => {
+    fitView({ duration: 500, padding: 0.25 });
+  }, [fitView]);
+
+  // Smooth Auto-Zoom whenever visible nodes change or graph is loaded
+  useEffect(() => {
+    if (!visibleNodes.length) return;
+    const timer = setTimeout(() => {
+      fitView({ duration: 500, padding: 0.25 });
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [visibleNodes.length, fitView]);
+
+  // React Flow Nodes
   const rfNodes = useMemo(() => {
     const activeDominoNodeId = (activeDominoIndex !== null && activeDominoIndex !== undefined)
       ? criticalChain[activeDominoIndex]
       : null;
 
-    return rawNodes.map(n => ({
+    return visibleNodes.map(n => ({
       id: n.id,
       type: 'package',
       position: positions[n.id] ?? { x: 0, y: 0 },
@@ -348,12 +479,29 @@ export default function GraphCanvas() {
         isDominoActive: activeDominoNodeId === n.id,
         isSandboxPatched: sandboxPatches.includes(n.id),
         isSandboxProtected: protectedSet.has(n.id),
+        childCount: childrenMap[n.id]?.length ?? 0,
+        isExpanded: expandedSet.has(n.id),
+        onToggleExpand: toggleExpand,
       },
     }));
-  }, [rawNodes, positions, effectiveTaintedSet, localSelected, dominoIndexMap, activeDominoIndex, criticalChain, sandboxPatches, protectedSet]);
+  }, [
+    visibleNodes,
+    positions,
+    effectiveTaintedSet,
+    localSelected,
+    dominoIndexMap,
+    activeDominoIndex,
+    criticalChain,
+    sandboxPatches,
+    protectedSet,
+    childrenMap,
+    expandedSet,
+    toggleExpand,
+  ]);
 
+  // React Flow Edges
   const rfEdges = useMemo(() => {
-    return rawEdges.map((e, i) => {
+    return visibleEdges.map((e, i) => {
       const u = typeof e.source === 'string' ? e.source : e.source?.id;
       const v = typeof e.target === 'string' ? e.target : e.target?.id;
       const isCriticalPath = criticalEdgePairs.has(`${u}->${v}`);
@@ -367,7 +515,7 @@ export default function GraphCanvas() {
         );
 
       return {
-        id: `e-${i}`,
+        id: `e-${u}-${v}-${i}`,
         source: u,
         target: v,
         type: 'smoothstep',
@@ -393,21 +541,42 @@ export default function GraphCanvas() {
         },
       };
     });
-  }, [rawEdges, effectiveTaintedSet, criticalEdgePairs, activeDominoIndex, criticalChain, sandboxPatches]);
+  }, [visibleEdges, effectiveTaintedSet, criticalEdgePairs, activeDominoIndex, criticalChain, sandboxPatches]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
 
-  useEffect(() => { setNodes(rfNodes); }, [rfNodes]);
-  useEffect(() => { setEdges(rfEdges); }, [rfEdges]);
+  useEffect(() => { setNodes(rfNodes); }, [rfNodes, setNodes]);
+  useEffect(() => { setEdges(rfEdges); }, [rfEdges, setEdges]);
 
+  // Autoplay timer for Domino Stepper
+  useEffect(() => {
+    if (!isDominoPlaying || criticalChain.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setActiveDominoIndex((prev) => {
+        const next = prev === null ? 0 : prev + 1;
+        if (next >= criticalChain.length) {
+          setIsDominoPlaying(false);
+          return prev;
+        }
+        const nextNodeId = criticalChain[next];
+        if (nextNodeId) setSelectedNode(nextNodeId);
+        return next;
+      });
+    }, 950);
+
+    return () => clearInterval(timer);
+  }, [isDominoPlaying, criticalChain, setActiveDominoIndex, setIsDominoPlaying, setSelectedNode]);
+
+  // Reset states on new graphData
   useEffect(() => {
     setBlastSet(new Set());
     setLocalSelected(null);
     setActiveDominoIndex(null);
     setIsDominoPlaying(false);
     clearSandboxPatches();
-  }, [graphData]);
+  }, [graphData, setBlastData, clearSandboxPatches, setActiveDominoIndex, setIsDominoPlaying]);
 
   const MOCK_BLAST = {
     blast_score: 91,
@@ -503,6 +672,12 @@ export default function GraphCanvas() {
     setSelectedNode(next);
   }, [localSelected, setSelectedNode]);
 
+  const onNodeDoubleClick = useCallback((_, node) => {
+    if (childrenMap[node.id]?.length > 0) {
+      toggleExpand(node.id);
+    }
+  }, [childrenMap, toggleExpand]);
+
   const handleDominoStepChange = useCallback((step) => {
     setActiveDominoIndex(step);
     const targetNodeId = criticalChain[step];
@@ -530,19 +705,26 @@ export default function GraphCanvas() {
     );
   }
 
+  const isFullView = visibleNodes.length === rawNodes.length;
+
   return (
     <div className="w-full h-full flex flex-col bg-white relative overflow-hidden">
-      {/* Top Floating Pill */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 select-none flex-wrap">
+      {/* Top Floating Controls & Indicators */}
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 select-none flex-wrap max-w-[calc(100%-2rem)]">
+        {/* Main Stats Pill */}
         <div className="bg-white/95 backdrop-blur-md border border-border px-3.5 py-1.5 rounded-full flex items-center gap-2.5 text-xs font-sans shadow-sm">
           <div className="flex items-center gap-1.5 font-medium text-text">
             <span className="w-2 h-2 rounded-full bg-black" />
             <span>Dependency Canvas</span>
           </div>
           <span className="text-border">·</span>
-          <span className="text-muted">{rawNodes.length} packages</span>
+          <span className="text-muted font-medium">
+            {visibleNodes.length === rawNodes.length
+              ? `${rawNodes.length} packages`
+              : `${visibleNodes.length} of ${rawNodes.length} packages`}
+          </span>
           <span className="text-border">·</span>
-          <span className="text-muted">{rawEdges.length} links</span>
+          <span className="text-muted">{visibleEdges.length} links</span>
 
           {blastData && (
             <>
@@ -584,6 +766,45 @@ export default function GraphCanvas() {
           )}
         </div>
 
+        {/* View Layout Controls (Focus Direct / Expand All / Zoom Fit) */}
+        {rawNodes.length > 1 && (
+          <div className="bg-white/95 backdrop-blur-md border border-border px-1.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+            <button
+              type="button"
+              onClick={handleFocusDirect}
+              className={`px-2.5 py-0.5 text-[11px] font-sans font-medium rounded-full cursor-pointer transition-colors ${
+                !isFullView
+                  ? 'bg-surface2 text-text font-semibold'
+                  : 'text-muted hover:text-text hover:bg-surface'
+              }`}
+              title="Focus on Root & Direct dependencies"
+            >
+              Focus View
+            </button>
+            <button
+              type="button"
+              onClick={handleExpandAll}
+              className={`px-2.5 py-0.5 text-[11px] font-sans font-medium rounded-full cursor-pointer transition-colors ${
+                isFullView
+                  ? 'bg-surface2 text-text font-semibold'
+                  : 'text-muted hover:text-text hover:bg-surface'
+              }`}
+              title="Expand all downstream dependency branches"
+            >
+              Expand All
+            </button>
+            <span className="text-border text-xs">|</span>
+            <button
+              type="button"
+              onClick={handleFitView}
+              className="px-2 py-0.5 text-[11px] font-sans text-muted hover:text-text hover:bg-surface rounded-full cursor-pointer transition-colors"
+              title="Auto Zoom to Fit Graph"
+            >
+              Fit View ⤢
+            </button>
+          </div>
+        )}
+
         {rawNodes.length === 1 && (
           <div className="bg-amber-50/95 border border-amber-200/80 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-sans text-amber-900 shadow-xs">
             <span>ℹ️</span>
@@ -600,11 +821,12 @@ export default function GraphCanvas() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
+          onNodeDoubleClick={onNodeDoubleClick}
           nodeTypes={NODE_TYPES}
           edgeTypes={EDGE_TYPES}
           fitView
           fitViewOptions={{ padding: 0.25 }}
-          minZoom={0.25}
+          minZoom={0.2}
           maxZoom={2}
           style={{ background: '#ffffff' }}
           proOptions={{ hideAttribution: true }}
@@ -708,5 +930,13 @@ export default function GraphCanvas() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function GraphCanvas() {
+  return (
+    <ReactFlowProvider>
+      <GraphCanvasInner />
+    </ReactFlowProvider>
   );
 }

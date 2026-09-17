@@ -8,7 +8,7 @@ function formatDownloads(n) {
   return n + ' dl/mo';
 }
 
-const PackageNode = memo(({ data }) => {
+const PackageNode = memo(({ id, data }) => {
   const {
     name,
     version,
@@ -22,7 +22,12 @@ const PackageNode = memo(({ data }) => {
     isDominoActive,
     isSandboxPatched,
     isSandboxProtected,
+    childCount = 0,
+    isExpanded = false,
+    onToggleExpand,
   } = data;
+
+  const nodeId = data?.id || id || (version ? `${name}@${version}` : name);
 
   const topSev = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].find(s =>
     vulnerabilities.some(v => v.severity === s)
@@ -55,13 +60,13 @@ const PackageNode = memo(({ data }) => {
 
   return (
     <div
-      className={`relative min-w-[195px] max-w-[220px] rounded-xl p-3.5 transition-all duration-200 cursor-pointer select-none ${cardStyle}`}
+      className={`relative min-w-[210px] max-w-[235px] rounded-xl p-3.5 transition-all duration-200 cursor-pointer select-none ${cardStyle}`}
     >
       {/* Left target handle */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-2 !h-2 !rounded-full !bg-zinc-400 !border-2 !border-white !-left-1"
+        className="!w-2.5 !h-2.5 !rounded-full !bg-zinc-400 !border-2 !border-white !-left-1.5"
       />
 
       {/* TOP ROW */}
@@ -160,15 +165,37 @@ const PackageNode = memo(({ data }) => {
         )}
       </div>
 
-      {/* BOTTOM ROW */}
-      <div className="border-t border-border/60 mt-1.5 pt-1.5 flex items-center justify-between text-[10px] text-muted font-sans">
-        <span>Package</span>
-        {monthly_downloads ? (
-          <span className="font-mono text-[10px] text-dim">
-            {formatDownloads(monthly_downloads)}
-          </span>
+      {/* BOTTOM ROW: Downloads on Left, Expand/Collapse Toggle on Right */}
+      <div className="border-t border-border/60 mt-1.5 pt-1.5 flex items-center justify-between text-[10px] text-muted font-sans gap-1">
+        <div>
+          {monthly_downloads ? (
+            <span className="font-mono text-[10px] text-dim">
+              {formatDownloads(monthly_downloads)}
+            </span>
+          ) : (
+            <span className="text-[10px] text-muted">0 dl/mo</span>
+          )}
+        </div>
+
+        {childCount > 0 ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onToggleExpand) onToggleExpand(nodeId);
+            }}
+            className={`text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full border transition-all cursor-pointer shadow-2xs flex items-center gap-1 ${
+              isExpanded
+                ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-300'
+                : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 animate-pulse'
+            }`}
+            title={isExpanded ? 'Collapse sub-dependencies' : `Reveal ${childCount} downstream dependencies`}
+          >
+            <span>{isExpanded ? '−' : '+'}</span>
+            <span>{isExpanded ? 'collapse' : `${childCount} deps`}</span>
+          </button>
         ) : (
-          <span className="opacity-0">-</span>
+          <span className="text-[9px] text-muted/60 uppercase font-sans">Leaf</span>
         )}
       </div>
 
@@ -176,7 +203,7 @@ const PackageNode = memo(({ data }) => {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-2 !h-2 !rounded-full !bg-zinc-400 !border-2 !border-white !-right-1"
+        className="!w-2.5 !h-2.5 !rounded-full !bg-zinc-400 !border-2 !border-white !-right-1.5"
       />
     </div>
   );
