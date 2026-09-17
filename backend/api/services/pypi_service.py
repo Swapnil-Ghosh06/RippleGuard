@@ -21,8 +21,56 @@ Note: Internal ecosystem identifiers are strictly lowercase "pypi".
 """
 
 import asyncio
+import logging
 import re
+from typing import Optional
+
 import httpx
+
+import json
+from pathlib import Path
+
+logger = logging.getLogger("rippleguard.pypi")
+
+_CACHE_DIR = Path(__file__).resolve().parent.parent.parent / ".cache"
+_CACHE_FILE = _CACHE_DIR / "pypistats_cache.json"
+
+_pypi_downloads_cache: dict[str, Optional[int]] = {}
+
+
+def _init_downloads_cache():
+    if _CACHE_FILE.exists():
+        try:
+            with open(_CACHE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    for k, v in data.items():
+                        if isinstance(v, int):
+                            _pypi_downloads_cache[k.lower()] = v
+        except Exception as e:
+            logger.warning("Failed to load pypistats cache file: %s", e)
+
+
+def _persist_cache_item(package: str, downloads: int):
+    _pypi_downloads_cache[package.lower()] = downloads
+    try:
+        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        cached_data = {}
+        if _CACHE_FILE.exists():
+            try:
+                with open(_CACHE_FILE, "r", encoding="utf-8") as f:
+                    cached_data = json.load(f)
+            except Exception:
+                cached_data = {}
+        cached_data[package.lower()] = downloads
+        with open(_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(cached_data, f, indent=2)
+    except Exception as e:
+        logger.debug("Failed to write to pypistats cache file: %s", e)
+
+
+_init_downloads_cache()
+
 
 
 async def get_pypi_metadata(package: str, version: str = None) -> dict:
@@ -84,37 +132,177 @@ def parse_pypi_deps(requires_dist: list[str]) -> list[dict]:
     return deps
 
 
-DEFAULT_PYPI_DOWNLOAD_FALLBACKS = {
-    "requests": 150_000_000,
-    "urllib3": 200_000_000,
-    "certifi": 180_000_000,
-    "idna": 160_000_000,
-    "charset-normalizer": 140_000_000,
-    "flask": 80_000_000,
-    "werkzeug": 90_000_000,
-    "jinja2": 110_000_000,
-    "click": 130_000_000,
-    "itsdangerous": 70_000_000,
-    "markupsafe": 100_000_000,
-    "blinker": 60_000_000,
-    "pip": 120_000_000,
-    "numpy": 120_000_000,
-    "cryptography": 100_000_000,
-}
-
-
-async def get_monthly_downloads(package: str) -> int:
+async def get_monthly_downloads(package: str) -> Optional[int]:
     """
-    Return estimated monthly downloads for PyPI packages.
-    PyPI does not offer a free public downloads endpoint (BigQuery requires billing).
-    Uses curated realistic estimates for popular Python packages, defaulting to 1,000,000 for standard packages.
+    Fetch monthly download counts for a PyPI package from pypistats.org.
+
+    Integrates against the public pypistats.org REST API (GET https://pypistats.org/api/packages/<package>/recent).
+    If the package is not found (404), rate-limited (429), or the upstream service fails/times out,
+    returns None and logs a clear warning without fabricating numbers.
     """
-    return DEFAULT_PYPI_DOWNLOAD_FALLBACKS.get(package.lower(), 1_000_000)
+    if not package:
+        return None
+
+    clean_pkg = package.strip().lower()
+
+    if clean_pkg in _pypi_downloads_cache:
+        return _pypi_downloads_cache[clean_pkg]
+
+    url = f"https://pypistats.org/api/packages/{clean_pkg}/recent"
+    headers = {
+        "User-Agent": "RippleGuard/1.0 (https://github.com/syedzahidsaleem/rippleguard)"
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            response = await client.get(url, headers=headers)
+            if response.status_code == 429:
+                # Brief wait and single retry on rate limit
+                await asyncio.sleep(1.2)
+                response = await client.get(url, headers=headers)
+
+            if response.status_code == 200:
+                data = response.json().get("data", {})
+                downloads = data.get("last_month")
+                if downloads is not None:
+                    dl_int = int(downloads)
+                    _persist_cache_item(clean_pkg, dl_int)
+                    return dl_int
+                _pypi_downloads_cache[clean_pkg] = None
+                return None
+
+            if response.status_code == 404:
+                logger.warning(
+                    "Package '%s' not found on pypistats.org (404). Download statistics unavailable.",
+                    package,
+                )
+                _pypi_downloads_cache[clean_pkg] = None
+                return None
+
+            if response.status_code == 429:
+                logger.warning(
+                    "pypistats.org rate limit exceeded (429) for package '%s'. Download statistics temporarily unavailable.",
+                    package,
+                )
+                return None
+
+            logger.warning(
+                "pypistats.org returned HTTP %d for package '%s'. Download statistics unavailable.",
+                response.status_code,
+                package,
+            )
+            return None
+
+    except httpx.TimeoutException as te:
+        logger.warning(
+            "pypistats.org request timed out for package '%s': %s. Download statistics unavailable.",
+            package,
+            te,
+        )
+        return None
+    except Exception as exc:
+        logger.warning(
+            "Error querying pypistats.org for package '%s': %s. Download statistics unavailable.",
+            package,
+            exc,
+        )
+        return None
 
 
-async def get_downloads_batch(packages: list[str]) -> dict[str, int]:
-    """Fetch monthly download counts concurrently for a list of PyPI packages."""
-    return {pkg: await get_monthly_downloads(pkg) for pkg in packages}
+async def _fetch_pypi_download_throttled(
+    client: httpx.AsyncClient,
+    package: str,
+    sem: asyncio.Semaphore
+) -> tuple[str, Optional[int]]:
+    clean_pkg = package.strip().lower()
+    if clean_pkg in _pypi_downloads_cache:
+        return package, _pypi_downloads_cache[clean_pkg]
+
+    async with sem:
+        # Pacing: sleep 0.25s between calls to strictly respect pypistats 5 req/sec limit
+        await asyncio.sleep(0.25)
+        if clean_pkg in _pypi_downloads_cache:
+            return package, _pypi_downloads_cache[clean_pkg]
+
+        url = f"https://pypistats.org/api/packages/{clean_pkg}/recent"
+        headers = {
+            "User-Agent": "RippleGuard/1.0 (https://github.com/syedzahidsaleem/rippleguard)"
+        }
+        try:
+            response = await client.get(url, headers=headers)
+            if response.status_code == 429:
+                await asyncio.sleep(1.2)
+                response = await client.get(url, headers=headers)
+
+            if response.status_code == 200:
+                data = response.json().get("data", {})
+                downloads = data.get("last_month")
+                if downloads is not None:
+                    dl_int = int(downloads)
+                    _persist_cache_item(clean_pkg, dl_int)
+                    return package, dl_int
+                _pypi_downloads_cache[clean_pkg] = None
+                return package, None
+
+            if response.status_code == 404:
+                logger.warning(
+                    "Package '%s' not found on pypistats.org (404). Download statistics unavailable.",
+                    package,
+                )
+                _pypi_downloads_cache[clean_pkg] = None
+                return package, None
+
+            if response.status_code == 429:
+                logger.warning(
+                    "pypistats.org rate limit exceeded (429) for package '%s'. Download statistics temporarily unavailable.",
+                    package,
+                )
+                return package, None
+
+            logger.warning(
+                "pypistats.org returned HTTP %d for package '%s'. Download statistics unavailable.",
+                response.status_code,
+                package,
+            )
+            return package, None
+
+        except httpx.TimeoutException as te:
+            logger.warning(
+                "pypistats.org request timed out for package '%s': %s. Download statistics unavailable.",
+                package,
+                te,
+            )
+            return package, None
+        except Exception as exc:
+            logger.warning(
+                "Error querying pypistats.org for package '%s': %s. Download statistics unavailable.",
+                package,
+                exc,
+            )
+            return package, None
+
+
+async def get_downloads_batch(packages: list[str]) -> dict[str, Optional[int]]:
+    """
+    Fetch monthly download counts concurrently for a list of PyPI packages using pooled connections.
+    Uses gentle concurrency (Semaphore(1)) and pacing to strictly respect pypistats.org rate limits.
+    """
+    if not packages:
+        return {}
+
+    unique_pkgs = list({p.strip(): p for p in packages if p.strip()}.values())
+    sem = asyncio.Semaphore(1)
+
+    async with httpx.AsyncClient(
+        limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
+        timeout=8.0
+    ) as client:
+        tasks = [_fetch_pypi_download_throttled(client, pkg, sem) for pkg in unique_pkgs]
+        results = await asyncio.gather(*tasks)
+
+    res_dict = dict(results)
+    return {pkg: res_dict.get(pkg, res_dict.get(pkg.strip().lower())) for pkg in packages}
+
 
 
 

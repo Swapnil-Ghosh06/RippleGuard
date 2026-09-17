@@ -35,6 +35,7 @@ class PackageNode(BaseModel):
     version: str = Field(..., description="Package version")
     ecosystem: str = Field(..., description="Ecosystem (npm or pypi)")
     monthly_downloads: int = Field(default=0, description="Monthly download count")
+    downloads_unavailable: bool = Field(default=False, description="Whether download statistics are unavailable from upstream registry")
     depth: int = Field(default=0, description="Distance from root in dependency tree")
     vulnerabilities: List[Vulnerability] = Field(default_factory=list, description="List of vulnerabilities for this package version")
     risk_score: float = Field(default=0.0, description="Calculated composite risk score")
@@ -83,6 +84,7 @@ class PackageRoot(BaseModel):
     version: str = Field(..., description="Root package version")
     ecosystem: str = Field(..., description="Root ecosystem")
     monthly_downloads: int = Field(default=0, description="Root package monthly downloads")
+    downloads_unavailable: bool = Field(default=False, description="Whether download statistics are unavailable from upstream registry")
 
 
 class AnalyzeResponse(BaseModel):
