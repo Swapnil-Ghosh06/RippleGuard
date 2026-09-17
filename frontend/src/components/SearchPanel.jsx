@@ -710,7 +710,7 @@ export default function SearchPanel() {
           <div className="lg:col-span-7 flex flex-col items-start text-left">
             {/* Big Editorial Serif Headline */}
             <h1 className="font-serif font-normal text-5xl sm:text-6xl lg:text-[70px] text-text leading-[1.05] tracking-tight">
-              The blast radius of <br />
+              <span className="whitespace-nowrap">The blast radius of</span>{' '}
               <span className="italic font-normal">a single package</span>
             </h1>
 
