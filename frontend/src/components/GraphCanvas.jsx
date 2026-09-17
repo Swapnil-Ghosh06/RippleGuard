@@ -21,7 +21,55 @@ const NODE_TYPES = {
 
 const EDGE_TYPES = {};
 
-function buildLayout(nodes, edges) {
+const MOCK_BLAST = {
+  blast_score: 91,
+  packages_affected: 9,
+  direct_affected: 3,
+  transitive_affected: 6,
+  monthly_downloads_affected: '438M',
+  human_comparison:
+    'Exposure exceeds 330M endpoints monthly — equivalent to compromising every active internet user in the US.',
+  mitigations: [
+    {
+      package: 'lodash@4.17.20',
+      fix_version: '4.17.21',
+      blast_reduction: 94,
+      command: 'npm update lodash@4.17.21',
+      description:
+        'Patches prototype pollution in zipObjectDeep and template engine injection vectors.',
+    },
+    {
+      package: 'minimatch@3.0.4',
+      fix_version: '3.0.5',
+      blast_reduction: 61,
+      command: 'npm update minimatch@3.0.5',
+      description:
+        'Neutralizes catastrophic ReDoS backtracking in glob pattern evaluation.',
+    },
+    {
+      package: 'semver@7.5.4',
+      fix_version: '7.5.4',
+      blast_reduction: 38,
+      command: 'npm update semver@7.5.4',
+      description:
+        'Resolves regular expression denial of service in range comparison engine.',
+    },
+  ],
+  propagation_order: [
+    { node: 'lodash@4.17.20', delay_ms: 0, event: 'INJECT', msg: 'Compromised token exploited at entrypoint' },
+    { node: 'express@4.18.1', delay_ms: 220, event: 'SPREAD', msg: 'Tainted through require("lodash") linkage' },
+    { node: 'react@18.2.0', delay_ms: 260, event: 'SPREAD', msg: 'Tainted through build tooling dependency chain' },
+    { node: 'webpack@5.88.0', delay_ms: 480, event: 'CASCADE', msg: 'Bundle compilation pipeline infected' },
+    { node: 'next@13.4.0', delay_ms: 600, event: 'CASCADE', msg: 'Full-stack SSR runtime contaminated' },
+    { node: 'axios@1.4.0', delay_ms: 650, event: 'CASCADE', msg: 'HTTP client transport layer tainted' },
+    { node: 'chalk@5.3.0', delay_ms: 820, event: 'CASCADE', msg: 'Terminal logger tainted' },
+    { node: 'semver@7.5.4', delay_ms: 850, event: 'CASCADE', msg: 'Version comparator engine tainted' },
+    { node: 'minimatch@3.0.4', delay_ms: 870, event: 'CASCADE', msg: 'Path matcher engine tainted' },
+    { node: 'ms@2.1.3', delay_ms: 900, event: 'CASCADE', msg: 'Time parser utility tainted' },
+  ],
+};
+
+function buildLayout(nodes) {
   const byDepth = {};
   for (const n of nodes) {
     const d = n.depth ?? 0;
@@ -60,16 +108,30 @@ export default function GraphCanvas() {
   const { simulate } = useSimulate();
   const [blastSet, setBlastSet] = useState(new Set());
   const [localSelected, setLocalSelected] = useState(null);
+  const [prevGraphData, setPrevGraphData] = useState(graphData);
 
-  const rawNodes = graphData?.nodes ?? graphData?.graph?.nodes ?? [];
-  const rawEdges = graphData?.edges ?? graphData?.graph?.edges ?? [];
+  // Reset local state when a new package graphData is analyzed without useEffect cascading render
+  if (graphData !== prevGraphData) {
+    setPrevGraphData(graphData);
+    setBlastSet(new Set());
+    setLocalSelected(null);
+  }
 
-  const positions = useMemo(() => buildLayout(rawNodes, rawEdges), [rawNodes]);
+  const rawNodes = useMemo(
+    () => graphData?.nodes ?? graphData?.graph?.nodes ?? [],
+    [graphData]
+  );
+  const rawEdges = useMemo(
+    () => graphData?.edges ?? graphData?.graph?.edges ?? [],
+    [graphData]
+  );
+
+  const positions = useMemo(() => buildLayout(rawNodes), [rawNodes]);
 
   const rfNodes = useMemo(() => {
     return rawNodes.map((n) => ({
       id: n.id,
-      type: 'package',
+      type: 'packageNode',
       position: positions[n.id] ?? { x: 0, y: 0 },
       data: {
         ...n,
@@ -112,60 +174,6 @@ export default function GraphCanvas() {
   useEffect(() => {
     setEdges(rfEdges);
   }, [rfEdges, setEdges]);
-
-  // Reset local state when a new package is analyzed
-  useEffect(() => {
-    setBlastSet(new Set());
-    setLocalSelected(null);
-  }, [graphData]);
-
-  const MOCK_BLAST = {
-    blast_score: 91,
-    packages_affected: 9,
-    direct_affected: 3,
-    transitive_affected: 6,
-    monthly_downloads_affected: '438M',
-    human_comparison:
-      'Exposure exceeds 330M endpoints monthly — equivalent to compromising every active internet user in the US.',
-    mitigations: [
-      {
-        package: 'lodash@4.17.20',
-        fix_version: '4.17.21',
-        blast_reduction: 94,
-        command: 'npm update lodash@4.17.21',
-        description:
-          'Patches prototype pollution in zipObjectDeep and template engine injection vectors.',
-      },
-      {
-        package: 'minimatch@3.0.4',
-        fix_version: '3.0.5',
-        blast_reduction: 61,
-        command: 'npm update minimatch@3.0.5',
-        description:
-          'Neutralizes catastrophic ReDoS backtracking in glob pattern evaluation.',
-      },
-      {
-        package: 'semver@7.5.4',
-        fix_version: '7.5.4',
-        blast_reduction: 38,
-        command: 'npm update semver@7.5.4',
-        description:
-          'Resolves regular expression denial of service in range comparison engine.',
-      },
-    ],
-    propagation_order: [
-      { node: 'lodash@4.17.20', delay_ms: 0, event: 'INJECT', msg: 'Compromised token exploited at entrypoint' },
-      { node: 'express@4.18.1', delay_ms: 220, event: 'SPREAD', msg: 'Tainted through require("lodash") linkage' },
-      { node: 'react@18.2.0', delay_ms: 260, event: 'SPREAD', msg: 'Tainted through build tooling dependency chain' },
-      { node: 'webpack@5.88.0', delay_ms: 480, event: 'CASCADE', msg: 'Bundle compilation pipeline infected' },
-      { node: 'next@13.4.0', delay_ms: 600, event: 'CASCADE', msg: 'Full-stack SSR runtime contaminated' },
-      { node: 'axios@1.4.0', delay_ms: 650, event: 'CASCADE', msg: 'HTTP client transport layer tainted' },
-      { node: 'chalk@5.3.0', delay_ms: 820, event: 'CASCADE', msg: 'Terminal logger tainted' },
-      { node: 'semver@7.5.4', delay_ms: 850, event: 'CASCADE', msg: 'Version comparator engine tainted' },
-      { node: 'minimatch@3.0.4', delay_ms: 870, event: 'CASCADE', msg: 'Path matcher engine tainted' },
-      { node: 'ms@2.1.3', delay_ms: 900, event: 'CASCADE', msg: 'Time parser utility tainted' },
-    ],
-  };
 
   const handleInject = useCallback(async () => {
     if (!localSelected || isSimulating) return;
