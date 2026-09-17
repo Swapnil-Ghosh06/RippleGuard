@@ -12,6 +12,8 @@ export default function GraphView() {
   const error        = useGraphStore((s) => s.error);
   const reset        = useGraphStore((s) => s.reset);
   const setView      = useGraphStore((s) => s.setView);
+  const activeTab    = useGraphStore((s) => s.activeTab);
+  const setActiveTab = useGraphStore((s) => s.setActiveTab);
 
   const [time, setTime] = useState(() => new Date().toLocaleTimeString());
 
@@ -129,7 +131,7 @@ export default function GraphView() {
         {graphData !== null && (
           <motion.aside
             key="side-panel"
-            className="w-[380px] shrink-0 h-full bg-white border-l border-border flex flex-col overflow-y-auto shadow-sm z-30"
+            className="w-[380px] shrink-0 h-full bg-white border-l border-border flex flex-col overflow-hidden shadow-sm z-30"
             initial={{ x: 380, opacity: 0 }}
             animate={{ x: 0,   opacity: 1 }}
             exit={{ x: 380,    opacity: 0 }}
@@ -145,9 +147,55 @@ export default function GraphView() {
               </span>
             </div>
 
-            <BlastRadiusPanel />
-            <div className="h-px bg-border mx-5 my-1" />
-            <MitigationPanel />
+            {/* Three tabs: "Blast" | "Mitigation" | "Compare" */}
+            <div className="flex border-b border-border/60 px-3 pt-2 pb-0 gap-1 select-none shrink-0">
+              {[
+                { id: 'blast', label: 'Blast' },
+                { id: 'mitigation', label: 'Mitigation' },
+                { id: 'compare', label: 'Compare' },
+              ].map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`font-mono text-[11px] px-4 py-2 rounded-t-lg cursor-pointer transition-all ${
+                      isActive
+                        ? 'bg-surface3/80 text-text border-b-2 border-accent font-semibold'
+                        : 'text-muted hover:text-dim hover:bg-surface2/40'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tab content area */}
+            <div className="flex-1 overflow-y-auto">
+              {activeTab === 'blast' && <BlastRadiusPanel />}
+              {activeTab === 'mitigation' && <MitigationPanel />}
+              {activeTab === 'compare' && (
+                <div className="mt-8 flex flex-col items-center gap-4 px-6 text-center">
+                  <svg className="w-10 h-10 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="9" cy="12" r="6" />
+                    <circle cx="15" cy="12" r="6" />
+                  </svg>
+                  <h4 className="font-mono text-xs font-bold text-text">
+                    Scenario Comparison
+                  </h4>
+                  <p className="font-sans text-xs text-muted leading-relaxed max-w-xs">
+                    Run a simulation first, then inject a second compromise to compare blast radii side by side.
+                  </p>
+                  {blastData && (
+                    <p className="text-accent font-mono text-xs bg-surface2 px-3 py-2 rounded-lg border border-border/60">
+                      Scenario A locked in. Select a different node and inject to compare.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </motion.aside>
         )}
       </AnimatePresence>
