@@ -945,26 +945,6 @@ export default function SearchPanel() {
                 ))}
               </div>
             </div>
-
-            {/* Hand-Drawn Downward Arrow (Exact match to reference image below input) */}
-            <div className="mt-8 pt-2 pl-6 sm:pl-10">
-              <svg
-                className="w-7 h-14 text-stone-800"
-                viewBox="0 0 28 56"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                {/* Wobbly vertical hand-drawn arrow shaft */}
-                <path d="M14 2 C13.5 18, 14.8 36, 14 50" />
-                {/* Arrowhead wings */}
-                <path d="M5 40 C8.5 44, 12 48, 14 51" />
-                <path d="M23 40 C19.5 44, 16 48, 14 51" />
-              </svg>
-            </div>
-
           </div>
 
           {/* Right Column: Hand-Drawn Ink Sketch Artwork */}
