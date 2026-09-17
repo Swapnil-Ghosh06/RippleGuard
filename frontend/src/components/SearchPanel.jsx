@@ -139,10 +139,10 @@ export default function SearchPanel() {
   };
 
   return (
-    <div className="relative w-full h-[calc(100vh-56px)] min-h-[calc(100vh-56px)] flex flex-col justify-between overflow-hidden bg-white">
+    <div className="relative w-full min-h-[calc(100vh-56px)] flex flex-col justify-between overflow-y-auto bg-white">
 
       {/* Center Main Content Container */}
-      <div className="relative z-20 w-full max-w-4xl mx-auto px-6 pt-16 sm:pt-20 flex flex-col items-center text-center">
+      <div className="relative z-20 w-full max-w-4xl mx-auto px-6 pt-12 sm:pt-16 pb-12 flex flex-col items-center text-center">
 
         {/* Delicate Tag */}
         <motion.div
@@ -330,7 +330,7 @@ export default function SearchPanel() {
           </AnimatePresence>
         </motion.div>
 
-        {/* Soft Pastel Attack Scenario Pills */}
+        {/* Soft Pastel Attack Scenario Pills + Quick Demo */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -338,8 +338,19 @@ export default function SearchPanel() {
           className="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-2xl select-none"
         >
           <span className="text-xs text-muted mr-1 font-sans">
-            Replay known compromise:
+            Replay Attack:
           </span>
+
+          {/* Quick Demo Button with blinking ping dot */}
+          <button
+            type="button"
+            onClick={() => handleSelectScenario(ATTACK_SCENARIOS[0])}
+            className="bg-danger/10 hover:bg-danger/20 border border-danger/30 text-danger font-mono text-[10px] px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center mr-1"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-danger animate-ping inline-block mr-1.5" />
+            <span>Quick Demo ↗</span>
+          </button>
+
           {ATTACK_SCENARIOS.map(a => (
             <button
               key={a.id}
@@ -352,6 +363,121 @@ export default function SearchPanel() {
             </button>
           ))}
         </motion.div>
+
+        {/* SECTION 1 — HOW IT WORKS three-step explainer (shown when pkg.trim() === '') */}
+        {pkg.trim() === '' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.5 }}
+            className="mt-12 max-w-3xl w-full mx-auto flex flex-col sm:flex-row items-stretch justify-between gap-3 text-left"
+          >
+            {/* Step 1 */}
+            <div className="flex-1 rounded-2xl border border-border/50 bg-surface/40 backdrop-blur-sm p-5 hover:border-borderGlow hover:bg-surface/60 transition-all duration-300 flex flex-col">
+              <div>
+                <span className="font-mono text-[10px] text-muted border border-border/60 px-2 py-0.5 rounded-md mb-4 inline-block">
+                  01
+                </span>
+              </div>
+              <svg className="w-6 h-6 text-accent mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              <h3 className="font-sans font-semibold text-sm text-text mb-2">
+                Search Any Package
+              </h3>
+              <p className="font-sans text-xs text-muted leading-relaxed">
+                Enter any npm or PyPI package name. RippleGuard resolves its full transitive dependency tree in real time.
+              </p>
+            </div>
+
+            <span className="hidden sm:flex items-center justify-center text-border text-sm font-mono shrink-0 select-none px-0.5">
+              →
+            </span>
+
+            {/* Step 2 */}
+            <div className="flex-1 rounded-2xl border border-border/50 bg-surface/40 backdrop-blur-sm p-5 hover:border-borderGlow hover:bg-surface/60 transition-all duration-300 flex flex-col">
+              <div>
+                <span className="font-mono text-[10px] text-muted border border-border/60 px-2 py-0.5 rounded-md mb-4 inline-block">
+                  02
+                </span>
+              </div>
+              <svg className="w-6 h-6 text-warn mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="22" y1="12" x2="18" y2="12" />
+                <line x1="6" y1="12" x2="2" y2="12" />
+                <line x1="12" y1="6" x2="12" y2="2" />
+                <line x1="12" y1="22" x2="12" y2="18" />
+              </svg>
+              <h3 className="font-sans font-semibold text-sm text-text mb-2">
+                Select Attack Target
+              </h3>
+              <p className="font-sans text-xs text-muted leading-relaxed">
+                Click any node in the dependency graph to select it as the compromised package. Root or transitive — your call.
+              </p>
+            </div>
+
+            <span className="hidden sm:flex items-center justify-center text-border text-sm font-mono shrink-0 select-none px-0.5">
+              →
+            </span>
+
+            {/* Step 3 */}
+            <div className="flex-1 rounded-2xl border border-border/50 bg-surface/40 backdrop-blur-sm p-5 hover:border-borderGlow hover:bg-surface/60 transition-all duration-300 flex flex-col">
+              <div>
+                <span className="font-mono text-[10px] text-muted border border-border/60 px-2 py-0.5 rounded-md mb-4 inline-block">
+                  03
+                </span>
+              </div>
+              <svg className="w-6 h-6 text-danger mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <h3 className="font-sans font-semibold text-sm text-text mb-2">
+                Simulate the Blast
+              </h3>
+              <p className="font-sans text-xs text-muted leading-relaxed">
+                Hit Inject Compromise. Watch the cascade propagate in real time and see exactly how many users are in the blast zone.
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SECTION 2 — Live stats ticker */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="mt-6 max-w-3xl w-full mx-auto bg-surface/30 backdrop-blur-md border border-border/40 rounded-2xl px-6 py-4 flex items-center gap-0"
+        >
+          {/* Stat 1 */}
+          <div className="flex flex-col items-center gap-1 flex-1">
+            <span className="font-mono text-xl font-bold text-text">3.5M+</span>
+            <span className="font-mono text-[10px] text-muted">npm packages indexed</span>
+          </div>
+
+          <div className="w-px h-8 bg-border/60 self-center" />
+
+          {/* Stat 2 */}
+          <div className="flex flex-col items-center gap-1 flex-1">
+            <span className="font-mono text-xl font-bold text-text">82M/mo</span>
+            <span className="font-mono text-[10px] text-muted">lodash monthly downloads</span>
+          </div>
+
+          <div className="w-px h-8 bg-border/60 self-center" />
+
+          {/* Stat 3 */}
+          <div className="flex flex-col items-center gap-1 flex-1">
+            <span className="font-mono text-xl font-bold text-text">$4.88M</span>
+            <span className="font-mono text-[10px] text-muted">avg breach cost (IBM 2024)</span>
+          </div>
+
+          <div className="w-px h-8 bg-border/60 self-center" />
+
+          {/* Stat 4 */}
+          <div className="flex flex-col items-center gap-1 flex-1">
+            <span className="font-mono text-xl font-bold text-text">96%</span>
+            <span className="font-mono text-[10px] text-muted">codebases with open source</span>
+          </div>
+        </motion.div>
+
       </div>
 
       {/* Minimal Editorial Footer */}
