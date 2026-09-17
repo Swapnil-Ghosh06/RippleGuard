@@ -99,6 +99,7 @@ export default function BlastRadiusPanel() {
     setActiveTab,
     activeDominoIndex, setActiveDominoIndex,
     isDominoPlaying, setIsDominoPlaying,
+    sandboxPatches, toggleSandboxPatch, applyOptimalPatchSet, clearSandboxPatches,
   } = useGraphStore();
 
   const { simulate } = useSimulate();
@@ -208,6 +209,44 @@ export default function BlastRadiusPanel() {
     }
     return longest;
   }, [blastData, rawNodes, rawEdges, selectedNode]);
+
+  // Real-time Sandbox What-If Recalculation
+  const sandboxStats = useMemo(() => {
+    if (!blastData) return { score: 0, scoreDelta: 0, pctReduction: 0, isEffective: false };
+    const baseScore = blastData.blast_score ?? 0;
+    if (!sandboxPatches || sandboxPatches.length === 0) {
+      return {
+        score: baseScore,
+        scoreDelta: 0,
+        pctReduction: 0,
+        isEffective: false,
+      };
+    }
+
+    let totalPct = 0;
+    sandboxPatches.forEach(pkgId => {
+      const cleanId = (typeof pkgId === 'string' ? pkgId : pkgId?.id || '').split('@')[0];
+      const match = (blastData.mitigations || []).find(m =>
+        m.package === pkgId || m.package.split('@')[0] === cleanId
+      );
+      if (match) {
+        totalPct += (match.blast_reduction || 55);
+      } else {
+        totalPct += 45;
+      }
+    });
+
+    const cappedPct = Math.min(94, totalPct);
+    const currentScore = Math.max(6, Math.round(baseScore * (1 - cappedPct / 100)));
+    const scoreDelta = baseScore - currentScore;
+
+    return {
+      score: currentScore,
+      scoreDelta,
+      pctReduction: cappedPct,
+      isEffective: true,
+    };
+  }, [blastData, sandboxPatches]);
 
   // Selected node details (defaults to selectedNode or highestRiskNode or rootNode)
   const activeTargetNode = useMemo(() => {
@@ -403,8 +442,9 @@ export default function BlastRadiusPanel() {
   // ==========================================
   // POST-SIMULATION STATE (Threat Active)
   // ==========================================
-  const label = getScoreLabel(blastData.blast_score);
-  const score = blastData.blast_score;
+  const effectiveScore = sandboxStats.isEffective ? sandboxStats.score : blastData.blast_score;
+  const label = getScoreLabel(effectiveScore);
+  const score = effectiveScore;
   const timeline = (blastData.propagation_order || []).slice(0, 8);
   const maxDepth = Math.max(...rawNodes.map(n => n.depth ?? 0), 1);
 
@@ -426,12 +466,17 @@ export default function BlastRadiusPanel() {
       <div className="rounded-2xl bg-surface2 border border-border p-4 relative overflow-hidden">
         <div className="flex items-end justify-between mb-3">
           <div>
-            <div className="flex items-baseline gap-1.5">
+            <div className="flex items-baseline gap-1.5 flex-wrap">
               <ScoreCounter value={score} />
               <span className="text-sm font-sans text-muted">/ 100</span>
+              {sandboxStats.isEffective && (
+                <span className="text-[11px] font-bold font-sans text-emerald-900 bg-emerald-100 border border-emerald-300 rounded-full px-2 py-0.5 ml-1 animate-pulse">
+                  −{sandboxStats.scoreDelta} pts ({sandboxStats.pctReduction}% cut)
+                </span>
+              )}
             </div>
             <p className="text-xs text-muted font-sans mt-0.5">
-              Cumulative Threat Index
+              Cumulative Threat Index {sandboxStats.isEffective ? '(Sandbox Mode)' : ''}
             </p>
           </div>
 
@@ -518,7 +563,101 @@ export default function BlastRadiusPanel() {
         </div>
       </div>
 
-      {/* 3. Real-World Equivalence Card */}
+      {/* 3. Interactive What-If Dependency Sandbox Card */}
+      <div className="rounded-2xl bg-emerald-50/70 border border-emerald-300 p-4 shadow-xs">
+        <div className="flex items-center justify-between mb-2 select-none">
+          <div className="flex items-center gap-2">
+            <span className="text-base animate-pulse">🧪</span>
+            <div>
+              <h4 className="font-sans text-xs font-bold text-emerald-950 uppercase tracking-wider">
+                Interactive "What-If" Sandbox
+              </h4>
+              <p className="text-[10px] text-emerald-800 font-sans">
+                Virtual Patch & Surgical Containment
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {sandboxPatches.length > 0 && (
+              <button
+                type="button"
+                onClick={clearSandboxPatches}
+                className="text-[10px] font-mono text-emerald-800 hover:text-emerald-950 underline cursor-pointer"
+              >
+                Reset
+              </button>
+            )}
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-300">
+              {sandboxPatches.length} Patched
+            </span>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-emerald-950/90 font-sans mb-3 leading-relaxed">
+          Experiment with patches on any dependency to test risk reduction before deployment. Watch the cascade contain live.
+        </p>
+
+        {/* Quick Scenario Buttons */}
+        <div className="flex items-center gap-2 mb-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              const optimal = (blastData.mitigations || []).slice(0, 2).map(m => m.package);
+              if (optimal.length > 0) {
+                applyOptimalPatchSet(optimal);
+              } else if (highestRiskNode) {
+                applyOptimalPatchSet([highestRiskNode.id]);
+              }
+            }}
+            className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition-all"
+          >
+            <span>🛡️</span>
+            <span>Apply Optimal Patch Set</span>
+          </button>
+        </div>
+
+        {/* Active Patches List */}
+        {sandboxPatches.length > 0 ? (
+          <div className="flex flex-col gap-1.5 pt-2 border-t border-emerald-200/80">
+            <span className="text-[10px] font-sans font-bold text-emerald-900 uppercase tracking-wider">
+              Active Virtual Patches:
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {sandboxPatches.map((pkgId) => (
+                <span
+                  key={pkgId}
+                  className="inline-flex items-center gap-1 bg-white border border-emerald-300 text-emerald-900 text-[11px] font-mono font-medium px-2 py-1 rounded-lg shadow-2xs"
+                >
+                  <span>🛡️</span>
+                  <span className="truncate max-w-[170px]">{pkgId}</span>
+                  <button
+                    type="button"
+                    onClick={() => toggleSandboxPatch(pkgId)}
+                    className="text-emerald-700 hover:text-emerald-950 font-bold ml-1 cursor-pointer"
+                    title="Remove patch"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-1 p-2 rounded-xl bg-emerald-100/70 border border-emerald-300 text-xs font-sans text-emerald-950 flex items-center justify-between">
+              <span>Risk Reduction:</span>
+              <span className="font-mono font-bold text-emerald-900">
+                −{sandboxStats.scoreDelta} pts ({sandboxStats.pctReduction}% eliminated)
+              </span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-[10px] text-emerald-800/80 font-sans italic pt-1 border-t border-emerald-200/60">
+            Tip: Click "Apply Virtual Patch" on any node in the canvas or click "Apply Optimal Patch Set" above.
+          </p>
+        )}
+      </div>
+
+      {/* 4. Real-World Equivalence Card */}
       <div className="rounded-2xl bg-amber-50/50 border border-amber-200/70 p-4">
         <div className="flex items-center gap-1.5 mb-1.5 select-none text-amber-900 text-xs font-semibold">
           <span>💡</span>
@@ -731,6 +870,26 @@ export default function BlastRadiusPanel() {
             {targetExploit.consequence}
           </p>
         </div>
+
+        {/* Sandbox Virtual Patch Button on Target */}
+        {activeTargetNode && (
+          <button
+            type="button"
+            onClick={() => toggleSandboxPatch(activeTargetNode.id)}
+            className={`mt-2.5 w-full py-2 px-3 rounded-xl font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border shadow-2xs ${
+              sandboxPatches.includes(activeTargetNode.id)
+                ? 'bg-emerald-100 text-emerald-900 border-emerald-400 hover:bg-emerald-200'
+                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border-emerald-300'
+            }`}
+          >
+            <span>🛡️</span>
+            <span>
+              {sandboxPatches.includes(activeTargetNode.id)
+                ? 'Remove Virtual Patch'
+                : `Apply Virtual Patch to ${activeTargetNode.name || 'Target'}`}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* 6. High-Leverage Remediation & Rapid Patch Action */}

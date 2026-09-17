@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useGraphStore } from '../store/graphStore';
 
 export default function MitigationPanel() {
-  const { blastData } = useGraphStore();
+  const { blastData, sandboxPatches, toggleSandboxPatch, clearSandboxPatches } = useGraphStore();
   const [copiedIndex, setCopiedIndex] = useState(null);
 
   if (!blastData || !blastData.mitigations?.length) {
@@ -33,6 +33,23 @@ export default function MitigationPanel() {
         </span>
       </div>
 
+      {/* Sandbox status pill if active */}
+      {sandboxPatches.length > 0 && (
+        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-sans text-emerald-950 flex items-center justify-between shadow-2xs">
+          <div className="flex items-center gap-1.5">
+            <span className="animate-pulse">🛡️</span>
+            <span><strong>{sandboxPatches.length}</strong> patch(es) active in Sandbox</span>
+          </div>
+          <button
+            type="button"
+            onClick={clearSandboxPatches}
+            className="text-[10px] font-mono text-emerald-800 hover:text-emerald-950 underline cursor-pointer"
+          >
+            Reset All
+          </button>
+        </div>
+      )}
+
       {/* Mitigation Action Cards */}
       <div className="flex flex-col gap-3">
         {blastData.mitigations.map((item, i) => {
@@ -40,11 +57,14 @@ export default function MitigationPanel() {
           const barColor = pct >= 80 ? 'bg-rose-500' : pct >= 50 ? 'bg-amber-500' : 'bg-emerald-500';
           const isCopied = copiedIndex === i;
           const patchCmd = item.command || `npm install ${item.package.split('@')[0]}@${item.fix_version}`;
+          const isPatchedInSandbox = sandboxPatches.includes(item.package) || sandboxPatches.some(p => p.startsWith(item.package.split('@')[0]));
 
           return (
             <div
               key={i}
-              className="rounded-2xl bg-white border border-border p-4 flex flex-col gap-2.5 shadow-xs transition-colors hover:border-zinc-400"
+              className={`rounded-2xl bg-white border p-4 flex flex-col gap-2.5 shadow-xs transition-all ${
+                isPatchedInSandbox ? 'border-emerald-400 ring-2 ring-emerald-400/30' : 'border-border hover:border-zinc-400'
+              }`}
             >
               {/* Top Row */}
               <div className="flex items-center justify-between gap-2 select-none">
@@ -88,6 +108,20 @@ export default function MitigationPanel() {
                   {item.description}
                 </p>
               )}
+
+              {/* Interactive Test in Sandbox CTA */}
+              <button
+                type="button"
+                onClick={() => toggleSandboxPatch(item.package)}
+                className={`mt-1 py-2 px-3 rounded-xl font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border shadow-2xs ${
+                  isPatchedInSandbox
+                    ? 'bg-emerald-100 text-emerald-900 border-emerald-400 hover:bg-emerald-200'
+                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border-emerald-300'
+                }`}
+              >
+                <span>🛡️</span>
+                <span>{isPatchedInSandbox ? '✓ Patched in Sandbox (Active)' : 'Test Virtual Patch in Sandbox'}</span>
+              </button>
             </div>
           );
         })}

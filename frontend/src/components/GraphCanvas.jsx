@@ -212,6 +212,7 @@ export default function GraphCanvas() {
     activeTab, setActiveTab,
     activeDominoIndex, setActiveDominoIndex,
     isDominoPlaying, setIsDominoPlaying,
+    sandboxPatches, toggleSandboxPatch, clearSandboxPatches,
   } = useGraphStore();
 
   const { simulate } = useSimulate();
@@ -273,6 +274,63 @@ export default function GraphCanvas() {
     return () => clearInterval(timer);
   }, [isDominoPlaying, criticalChain, setActiveDominoIndex, setIsDominoPlaying, setSelectedNode]);
 
+  // Real-time Sandbox Contagion Containment BFS Math
+  const { effectiveTaintedSet, protectedSet } = useMemo(() => {
+    if (!sandboxPatches || sandboxPatches.length === 0 || blastSet.size === 0) {
+      return {
+        effectiveTaintedSet: blastSet,
+        protectedSet: new Set(),
+      };
+    }
+
+    const patchedSet = new Set(sandboxPatches);
+
+    const adj = {};
+    rawEdges.forEach(e => {
+      const u = typeof e.source === 'string' ? e.source : e.source?.id;
+      const v = typeof e.target === 'string' ? e.target : e.target?.id;
+      if (u && v) {
+        if (!adj[u]) adj[u] = [];
+        if (!adj[v]) adj[v] = [];
+        adj[v].push(u);
+        adj[u].push(v);
+      }
+    });
+
+    const origin = selectedNode || rawNodes.find(n => n.is_root)?.id || rawNodes[0]?.id;
+    const reached = new Set();
+    const q = [origin];
+
+    while (q.length > 0) {
+      const curr = q.shift();
+      if (!curr || reached.has(curr)) continue;
+      if (patchedSet.has(curr)) continue;
+
+      reached.add(curr);
+
+      const neighbors = adj[curr] || [];
+      for (const nxt of neighbors) {
+        if (!reached.has(nxt) && !patchedSet.has(nxt)) {
+          if (blastSet.has(nxt)) {
+            q.push(nxt);
+          }
+        }
+      }
+    }
+
+    const protectedNodes = new Set();
+    blastSet.forEach(nodeId => {
+      if (!reached.has(nodeId) && !patchedSet.has(nodeId)) {
+        protectedNodes.add(nodeId);
+      }
+    });
+
+    return {
+      effectiveTaintedSet: reached,
+      protectedSet: protectedNodes,
+    };
+  }, [blastSet, sandboxPatches, rawEdges, selectedNode, rawNodes]);
+
   const rfNodes = useMemo(() => {
     const activeDominoNodeId = (activeDominoIndex !== null && activeDominoIndex !== undefined)
       ? criticalChain[activeDominoIndex]
@@ -284,21 +342,24 @@ export default function GraphCanvas() {
       position: positions[n.id] ?? { x: 0, y: 0 },
       data: {
         ...n,
-        blasted: blastSet.has(n.id),
+        blasted: effectiveTaintedSet.has(n.id),
         selected: localSelected === n.id,
         dominoIndex: dominoIndexMap[n.id] ?? null,
         isDominoActive: activeDominoNodeId === n.id,
+        isSandboxPatched: sandboxPatches.includes(n.id),
+        isSandboxProtected: protectedSet.has(n.id),
       },
     }));
-  }, [rawNodes, positions, blastSet, localSelected, dominoIndexMap, activeDominoIndex, criticalChain]);
+  }, [rawNodes, positions, effectiveTaintedSet, localSelected, dominoIndexMap, activeDominoIndex, criticalChain, sandboxPatches, protectedSet]);
 
   const rfEdges = useMemo(() => {
     return rawEdges.map((e, i) => {
       const u = typeof e.source === 'string' ? e.source : e.source?.id;
       const v = typeof e.target === 'string' ? e.target : e.target?.id;
       const isCriticalPath = criticalEdgePairs.has(`${u}->${v}`);
-      const isHot = blastSet.has(u) || blastSet.has(v);
+      const isHot = effectiveTaintedSet.has(u) || effectiveTaintedSet.has(v);
 
+      const isSeveredByPatch = sandboxPatches.includes(u) || sandboxPatches.includes(v);
       const isCurrentDominoHop = activeDominoIndex !== null && activeDominoIndex > 0 &&
         (
           (criticalChain[activeDominoIndex - 1] === u && criticalChain[activeDominoIndex] === v) ||
@@ -312,25 +373,27 @@ export default function GraphCanvas() {
         type: 'smoothstep',
         animated: isHot || isCriticalPath,
         style: {
-          stroke: isCurrentDominoHop
+          stroke: isSeveredByPatch
+            ? '#10b981'
+            : isCurrentDominoHop
             ? '#f59e0b'
             : isCriticalPath
             ? '#d97706'
             : isHot
             ? '#e11d48'
             : '#d4d4d8',
-          strokeWidth: isCurrentDominoHop ? 4.5 : isCriticalPath ? 3.5 : isHot ? 2 : 1.25,
-          strokeDasharray: isCriticalPath ? '6 4' : undefined,
+          strokeWidth: isSeveredByPatch ? 2.5 : isCurrentDominoHop ? 4.5 : isCriticalPath ? 3.5 : isHot ? 2 : 1.25,
+          strokeDasharray: isSeveredByPatch ? '4 4' : isCriticalPath ? '6 4' : undefined,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isCurrentDominoHop ? '#f59e0b' : isCriticalPath ? '#d97706' : isHot ? '#e11d48' : '#a1a1aa',
-          width: isCriticalPath ? 14 : 12,
-          height: isCriticalPath ? 14 : 12,
+          color: isSeveredByPatch ? '#10b981' : isCurrentDominoHop ? '#f59e0b' : isCriticalPath ? '#d97706' : isHot ? '#e11d48' : '#a1a1aa',
+          width: isCriticalPath || isSeveredByPatch ? 14 : 12,
+          height: isCriticalPath || isSeveredByPatch ? 14 : 12,
         },
       };
     });
-  }, [rawEdges, blastSet, criticalEdgePairs, activeDominoIndex, criticalChain]);
+  }, [rawEdges, effectiveTaintedSet, criticalEdgePairs, activeDominoIndex, criticalChain, sandboxPatches]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
@@ -343,6 +406,7 @@ export default function GraphCanvas() {
     setLocalSelected(null);
     setActiveDominoIndex(null);
     setIsDominoPlaying(false);
+    clearSandboxPatches();
   }, [graphData]);
 
   const MOCK_BLAST = {
@@ -430,7 +494,8 @@ export default function GraphCanvas() {
     setSelectedNode(null);
     setActiveDominoIndex(null);
     setIsDominoPlaying(false);
-  }, [setBlastData, setSelectedNode, setActiveDominoIndex, setIsDominoPlaying]);
+    clearSandboxPatches();
+  }, [setBlastData, setSelectedNode, setActiveDominoIndex, setIsDominoPlaying, clearSandboxPatches]);
 
   const onNodeClick = useCallback((_, node) => {
     setLocalSelected(prev => {
@@ -486,7 +551,7 @@ export default function GraphCanvas() {
               <span className="text-border">·</span>
               <span className="text-rose-700 font-medium flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
                 <span>⚡</span>
-                <span>{blastSet.size}/{rawNodes.length} compromised</span>
+                <span>{effectiveTaintedSet.size}/{rawNodes.length} compromised</span>
               </span>
 
               {criticalChain.length > 1 && (
@@ -505,6 +570,16 @@ export default function GraphCanvas() {
                     <span>🦋</span>
                     <span>Domino Trace ({criticalChain.length})</span>
                   </button>
+                </>
+              )}
+
+              {sandboxPatches.length > 0 && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="text-emerald-800 font-semibold flex items-center gap-1.5 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                    <span>🛡️</span>
+                    <span>Sandbox: {sandboxPatches.length} Patched ({protectedSet.size} Shielded)</span>
+                  </span>
                 </>
               )}
             </>
@@ -542,7 +617,7 @@ export default function GraphCanvas() {
 
           <MiniMap
             className="!bg-white !border !border-border !rounded-xl !shadow-sm"
-            nodeColor={n => n.data?.dominoIndex ? '#f59e0b' : n.data?.blasted ? '#e11d48' : n.data?.vulnerabilities?.length ? '#d97706' : '#e4e4e7'}
+            nodeColor={n => n.data?.isSandboxPatched ? '#10b981' : n.data?.dominoIndex ? '#f59e0b' : n.data?.blasted ? '#e11d48' : n.data?.vulnerabilities?.length ? '#d97706' : '#e4e4e7'}
             maskColor="rgba(255, 255, 255, 0.65)"
           />
         </ReactFlow>
@@ -566,10 +641,10 @@ export default function GraphCanvas() {
       {/* Minimalist Bottom Toolbar */}
       <div className="bg-white/95 backdrop-blur-md border-t border-border px-6 py-3 flex items-center justify-between z-20 shrink-0">
         {/* Left Side */}
-        <div className="flex items-center select-none">
+        <div className="flex items-center gap-3 select-none">
           {localSelected ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted font-sans">Target locked:</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted font-sans">Target:</span>
               <span className="font-mono text-xs font-semibold text-text bg-surface2 border border-border rounded-md px-2 py-0.5">
                 {localSelected}
               </span>
@@ -578,10 +653,26 @@ export default function GraphCanvas() {
                   🦋 Domino Hop #{dominoIndexMap[localSelected]}
                 </span>
               )}
+
+              {/* 🛡️ Virtual Patch Button on Canvas */}
+              {blastData && (
+                <button
+                  type="button"
+                  onClick={() => toggleSandboxPatch(localSelected)}
+                  className={`font-sans font-semibold text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5 cursor-pointer transition-all border shadow-2xs ${
+                    sandboxPatches.includes(localSelected)
+                      ? 'bg-emerald-100 text-emerald-900 border-emerald-400 hover:bg-emerald-200'
+                      : 'bg-white hover:bg-emerald-50 text-emerald-950 border-emerald-300'
+                  }`}
+                >
+                  <span>🛡️</span>
+                  <span>{sandboxPatches.includes(localSelected) ? 'Remove Virtual Patch' : 'Apply Virtual Patch'}</span>
+                </button>
+              )}
             </div>
           ) : (
             <p className="text-xs text-muted font-sans">
-              Select any package card to choose attack origin
+              Select any package card to choose attack origin or apply virtual patch
             </p>
           )}
         </div>
