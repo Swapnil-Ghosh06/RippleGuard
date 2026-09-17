@@ -19,6 +19,12 @@ export const useGraphStore = create((set) => ({
   error: null,
   setError: (msg) => set({ error: msg }),
 
+  compareData: null,
+  setCompareData: (data) => set({ compareData: data }),
+
+  activeTab: 'blast', // 'blast' | 'mitigation' | 'compare'
+  setActiveTab: (tab) => set({ activeTab: tab }),
+
   reset: () => set({
     view: 'idle',
     graphData: null,
@@ -26,5 +32,7 @@ export const useGraphStore = create((set) => ({
     selectedNode: null,
     isSimulating: false,
     error: null,
+    compareData: null,
+    activeTab: 'blast',
   }),
 }));
