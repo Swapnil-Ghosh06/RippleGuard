@@ -429,22 +429,6 @@ function ButterflyStepperHUD({
   );
 }
 
-function getDefaultExpandedSet(nodes, children) {
-  if (!nodes || !nodes.length) return new Set();
-
-  const rootNodes = nodes.filter(n => n.is_root || n.depth === 0);
-  const rootIds = rootNodes.length > 0 ? rootNodes.map(n => n.id) : [nodes[0].id];
-
-  if (nodes.length <= 8) {
-    const allWithChildren = new Set();
-    Object.entries(children || {}).forEach(([id, cList]) => {
-      if (cList && cList.length > 0) allWithChildren.add(id);
-    });
-    return allWithChildren;
-  }
-  return new Set(rootIds);
-}
-
 /**
  * Main Graph Canvas with Progressive Disclosure and Smooth Auto-Zoom
  */
