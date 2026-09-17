@@ -15,7 +15,6 @@ import PackageNode from './PackageNode';
 const NODE_TYPES = { package: PackageNode };
 const EDGE_TYPES = {};
 
-// Layout: Clean horizontal depth tiers with comfortable vertical spacing
 function buildLayout(nodes, edges) {
   const byDepth = {};
   for (const n of nodes) {
@@ -72,27 +71,31 @@ export default function GraphCanvas() {
   }, [rawNodes, positions, blastSet, localSelected]);
 
   const rfEdges = useMemo(() => {
+    const criticalSet = new Set(blastData?.critical_chain ?? []);
+
     return rawEdges.map((e, i) => {
+      const isCriticalPath = criticalSet.has(e.source) && criticalSet.has(e.target);
       const isHot = blastSet.has(e.source) || blastSet.has(e.target);
+
       return {
         id: `e-${i}`,
         source: e.source,
         target: e.target,
         type: 'smoothstep',
-        animated: isHot,
+        animated: isHot || isCriticalPath,
         style: {
-          stroke: isHot ? '#EF4444' : '#262630',
-          strokeWidth: isHot ? 2 : 1.2,
+          stroke: isCriticalPath ? '#ca8a04' : isHot ? '#e11d48' : '#d4d4d8',
+          strokeWidth: isCriticalPath ? 2.5 : isHot ? 2 : 1.25,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isHot ? '#EF4444' : '#3F3F4E',
-          width: 14,
-          height: 14,
+          color: isCriticalPath ? '#ca8a04' : isHot ? '#e11d48' : '#a1a1aa',
+          width: 12,
+          height: 12,
         },
       };
     });
-  }, [rawEdges, blastSet]);
+  }, [rawEdges, blastSet, blastData]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
@@ -105,7 +108,6 @@ export default function GraphCanvas() {
     setLocalSelected(null);
   }, [graphData]);
 
-  // Mock blast scenario data
   const MOCK_BLAST = {
     blast_score: 91,
     packages_affected: 9,
@@ -180,6 +182,11 @@ export default function GraphCanvas() {
     timers.push(finalTimer);
   }, [localSelected, isSimulating, simulate, setBlastData, setIsSimulating, setSelectedNode]);
 
+  const handleReset = useCallback(() => {
+    setBlastData(null);
+    setBlastSet(new Set());
+  }, [setBlastData]);
+
   const onNodeClick = useCallback((_, node) => {
     setLocalSelected(prev => {
       const next = prev === node.id ? null : node.id;
@@ -190,40 +197,39 @@ export default function GraphCanvas() {
 
   if (!rawNodes.length) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-void">
-        <p className="font-mono text-muted text-xs">No graph topology loaded.</p>
+      <div className="w-full h-full flex items-center justify-center bg-white">
+        <p className="text-sm text-muted font-sans">No graph loaded.</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-void relative overflow-hidden">
-
-      {/* Top Floating Canvas Pill (Inspo 2) */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-        <div className="bg-surface2/90 border border-border px-3.5 py-1.5 rounded-full flex items-center gap-3 font-mono text-xs shadow-md backdrop-blur-md">
-          <div className="flex items-center gap-1.5 text-text font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-            <span>Dependency Graph</span>
+    <div className="w-full h-full flex flex-col bg-white relative overflow-hidden">
+      {/* Top Floating Pill */}
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 select-none">
+        <div className="bg-white/95 backdrop-blur-md border border-border px-3.5 py-1.5 rounded-full flex items-center gap-2.5 text-xs font-sans shadow-sm">
+          <div className="flex items-center gap-1.5 font-medium text-text">
+            <span className="w-2 h-2 rounded-full bg-black" />
+            <span>Dependency Canvas</span>
           </div>
           <span className="text-border">·</span>
-          <span className="text-muted">{rawNodes.length} nodes</span>
+          <span className="text-muted">{rawNodes.length} packages</span>
           <span className="text-border">·</span>
-          <span className="text-muted">{rawEdges.length} edges</span>
+          <span className="text-muted">{rawEdges.length} links</span>
 
           {blastData && (
             <>
               <span className="text-border">·</span>
-              <span className="text-danger font-bold flex items-center gap-1">
+              <span className="text-rose-700 font-medium flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
                 <span>⚡</span>
-                <span>{blastSet.size}/{rawNodes.length} Compromised</span>
+                <span>{blastSet.size}/{rawNodes.length} compromised</span>
               </span>
             </>
           )}
         </div>
       </div>
 
-      {/* React Flow Canvas Wrapper */}
+      {/* React Flow Canvas */}
       <div className="flex-1 min-h-0 w-full relative" style={{ minHeight: '350px' }}>
         <ReactFlow
           nodes={nodes}
@@ -237,50 +243,69 @@ export default function GraphCanvas() {
           fitViewOptions={{ padding: 0.25 }}
           minZoom={0.25}
           maxZoom={2}
-          style={{ background: '#0A0A0C' }}
+          style={{ background: '#ffffff' }}
           proOptions={{ hideAttribution: true }}
         >
           <Background
             variant={BackgroundVariant.Dots}
             gap={24}
-            size={1}
-            color="#22222A"
+            size={1.2}
+            color="#e4e4e7"
           />
 
           <Controls
-            className="!bg-surface2 !border !border-border !rounded-lg !overflow-hidden !shadow-lg"
+            className="!bg-white !border !border-border !rounded-xl !shadow-sm"
           />
 
           <MiniMap
-            className="!bg-surface !border !border-border !rounded-lg !overflow-hidden !shadow-lg"
-            nodeColor={n => n.data?.blasted ? '#EF4444' : n.data?.vulnerabilities?.length ? '#F59E0B' : '#262630'}
-            maskColor="rgba(10, 10, 12, 0.75)"
+            className="!bg-white !border !border-border !rounded-xl !shadow-sm"
+            nodeColor={n => n.data?.blasted ? '#e11d48' : n.data?.vulnerabilities?.length ? '#d97706' : '#e4e4e7'}
+            maskColor="rgba(255, 255, 255, 0.65)"
           />
         </ReactFlow>
       </div>
 
-      {/* Sticky Bottom Action Bar */}
-      <div className="px-6 py-3 bg-surface border-t border-border flex items-center justify-between z-20 shrink-0">
-        <div className="flex items-center gap-3">
-          <span className={`w-2 h-2 rounded-full ${localSelected ? 'bg-amber-400' : 'bg-muted'}`} />
-          <p className="font-mono text-xs text-muted">
-            {localSelected ? (
-              <span>Target Selected: <strong className="text-text font-bold">{localSelected}</strong></span>
-            ) : (
-              <span>Click any node card in the graph to select an attack target</span>
-            )}
-          </p>
+      {/* Minimalist Bottom Toolbar */}
+      <div className="bg-white/95 backdrop-blur-md border-t border-border px-6 py-3 flex items-center justify-between z-20 shrink-0">
+        {/* Left Side */}
+        <div className="flex items-center select-none">
+          {localSelected ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted font-sans">Target locked:</span>
+              <span className="font-mono text-xs font-semibold text-text bg-surface2 border border-border rounded-md px-2 py-0.5">
+                {localSelected}
+              </span>
+            </div>
+          ) : (
+            <p className="text-xs text-muted font-sans">
+              Select any package card to choose attack origin
+            </p>
+          )}
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Right Side Buttons */}
+        <div className="flex items-center gap-2 select-none">
           <button
             onClick={handleInject}
             disabled={!localSelected || isSimulating}
-            className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 disabled:opacity-30 disabled:cursor-not-allowed text-white font-sans text-xs font-semibold tracking-wide transition-all shadow-md flex items-center gap-2 cursor-pointer"
+            className={`font-sans font-medium text-xs px-5 py-2 rounded-full flex items-center gap-2 cursor-pointer transition-all shadow-sm ${
+              !localSelected || isSimulating
+                ? 'opacity-40 cursor-not-allowed bg-neutral-200 text-neutral-500'
+                : 'bg-rose-600 hover:bg-rose-700 text-white'
+            }`}
           >
             <span>⚡</span>
             <span>{isSimulating ? 'Simulating Cascade…' : 'Inject Compromise'}</span>
           </button>
+
+          {blastData && (
+            <button
+              onClick={handleReset}
+              className="bg-white hover:bg-surface2 text-text border border-border font-sans font-medium text-xs px-4 py-2 rounded-full cursor-pointer transition-colors"
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
     </div>
