@@ -165,11 +165,11 @@ const PackageNode = memo(({ id, data }) => {
         )}
       </div>
 
-      {/* BOTTOM ROW: Downloads on Left, Expand/Collapse Toggle on Right */}
+      {/* BOTTOM ROW: Downloads on Left, Dependency Topology Tag on Right */}
       <div className="border-t border-border/60 mt-1.5 pt-1.5 flex items-center justify-between text-[10px] text-muted font-sans gap-1">
         <div>
           {monthly_downloads ? (
-            <span className="font-mono text-[10px] text-dim">
+            <span className="font-mono text-[10px] text-dim font-medium">
               {formatDownloads(monthly_downloads)}
             </span>
           ) : (
@@ -177,26 +177,21 @@ const PackageNode = memo(({ id, data }) => {
           )}
         </div>
 
-        {childCount > 0 ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onToggleExpand) onToggleExpand(nodeId);
-            }}
-            className={`text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full border transition-all cursor-pointer shadow-2xs flex items-center gap-1 ${
-              isExpanded
-                ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-300'
-                : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 animate-pulse'
-            }`}
-            title={isExpanded ? 'Collapse sub-dependencies' : `Reveal ${childCount} downstream dependencies`}
-          >
-            <span>{isExpanded ? '−' : '+'}</span>
-            <span>{isExpanded ? 'collapse' : `${childCount} deps`}</span>
-          </button>
-        ) : (
-          <span className="text-[9px] text-muted/60 uppercase font-sans">Leaf</span>
-        )}
+        <div>
+          {depth === 0 ? (
+            <span className="text-[9px] font-mono uppercase text-muted bg-surface2 px-1.5 py-0.5 rounded border border-border/50">
+              Root
+            </span>
+          ) : childCount > 0 ? (
+            <span className="text-[9px] font-mono text-muted/80 bg-surface2/60 px-1.5 py-0.5 rounded border border-border/40">
+              {childCount} {childCount === 1 ? 'dep' : 'deps'}
+            </span>
+          ) : (
+            <span className="text-[9px] text-muted/60 uppercase font-sans tracking-wide">
+              Leaf
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Right source handle */}

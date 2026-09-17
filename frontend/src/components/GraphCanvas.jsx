@@ -152,8 +152,8 @@ function buildIntelligentLayout(nodes, edges) {
   const layers = Object.keys(byLayer).map(Number).sort((a, b) => a - b);
   const positions = {};
 
-  const X_STEP = 310;
-  const MIN_Y_GAP = 135;
+  const X_STEP = 340;
+  const MIN_Y_GAP = 145;
   const BASE_Y_CENTER = 300;
 
   // Root Layer (Layer 0)
@@ -506,7 +506,7 @@ function GraphCanvasInner() {
   const [blastSet, setBlastSet] = useState(new Set());
   const [localSelected, setLocalSelected] = useState(selectedNode);
   const [prevSelectedNode, setPrevSelectedNode] = useState(selectedNode);
-  const [expandedSet, setExpandedSet] = useState(() => getDefaultExpandedSet(rawNodes, childrenMap));
+  const [expandedSet, setExpandedSet] = useState(() => new Set(rawNodes.map(n => n.id)));
   const [prevGraphData, setPrevGraphData] = useState(graphData);
 
   if (selectedNode !== prevSelectedNode) {
@@ -518,7 +518,7 @@ function GraphCanvasInner() {
     setPrevGraphData(graphData);
     setBlastSet(new Set());
     setLocalSelected(null);
-    setExpandedSet(getDefaultExpandedSet(rawNodes, childrenMap));
+    setExpandedSet(new Set(rawNodes.map(n => n.id)));
   }
 
   // Compute Butterfly Trace (Critical Domino Path)
@@ -733,12 +733,12 @@ function GraphCanvasInner() {
     toggleExpand,
   ]);
 
-  // React Flow Edges
+  // React Flow Edges with Organic Flowchart Curves & Strict Left-to-Right Routing
   const rfEdges = useMemo(() => {
     return visibleEdges.map((e, i) => {
       const u = typeof e.source === 'string' ? e.source : e.source?.id;
       const v = typeof e.target === 'string' ? e.target : e.target?.id;
-      const isCriticalPath = criticalEdgePairs.has(`${u}->${v}`);
+      const isCriticalPath = criticalEdgePairs.has(`${u}->${v}`) || criticalEdgePairs.has(`${v}->${u}`);
       const isHot = effectiveTaintedSet.has(u) || effectiveTaintedSet.has(v);
 
       const isSeveredByPatch = sandboxPatches.includes(u) || sandboxPatches.includes(v);
@@ -748,11 +748,22 @@ function GraphCanvasInner() {
           (criticalChain[activeDominoIndex - 1] === v && criticalChain[activeDominoIndex] === u)
         );
 
+      // Strict Left-to-Right routing: ensures curves exit right handle of upstream parent
+      // and enter left handle of downstream child, completely eliminating 180° backwards loops.
+      const posU = positions[u] || { x: 0, y: 0 };
+      const posV = positions[v] || { x: 0, y: 0 };
+      let edgeSource = u;
+      let edgeTarget = v;
+      if (posU.x > posV.x) {
+        edgeSource = v;
+        edgeTarget = u;
+      }
+
       return {
-        id: `e-${u}-${v}-${i}`,
-        source: u,
-        target: v,
-        type: 'smoothstep',
+        id: `e-${edgeSource}-${edgeTarget}-${i}`,
+        source: edgeSource,
+        target: edgeTarget,
+        type: 'default',
         animated: isHot || isCriticalPath,
         style: {
           stroke: isSeveredByPatch
@@ -763,19 +774,19 @@ function GraphCanvasInner() {
             ? '#d97706'
             : isHot
             ? '#e11d48'
-            : '#d4d4d8',
-          strokeWidth: isSeveredByPatch ? 2.5 : isCurrentDominoHop ? 4.5 : isCriticalPath ? 3.5 : isHot ? 2 : 1.25,
+            : '#cbd5e1',
+          strokeWidth: isSeveredByPatch ? 2.5 : isCurrentDominoHop ? 4.5 : isCriticalPath ? 3.5 : isHot ? 2.25 : 1.5,
           strokeDasharray: isSeveredByPatch ? '4 4' : isCriticalPath ? '6 4' : undefined,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isSeveredByPatch ? '#10b981' : isCurrentDominoHop ? '#f59e0b' : isCriticalPath ? '#d97706' : isHot ? '#e11d48' : '#a1a1aa',
-          width: isCriticalPath || isSeveredByPatch ? 14 : 12,
-          height: isCriticalPath || isSeveredByPatch ? 14 : 12,
+          color: isSeveredByPatch ? '#10b981' : isCurrentDominoHop ? '#f59e0b' : isCriticalPath ? '#d97706' : isHot ? '#e11d48' : '#94a3b8',
+          width: isCriticalPath || isSeveredByPatch ? 15 : 12,
+          height: isCriticalPath || isSeveredByPatch ? 15 : 12,
         },
       };
     });
-  }, [visibleEdges, effectiveTaintedSet, criticalEdgePairs, activeDominoIndex, criticalChain, sandboxPatches]);
+  }, [visibleEdges, positions, effectiveTaintedSet, criticalEdgePairs, activeDominoIndex, criticalChain, sandboxPatches]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
