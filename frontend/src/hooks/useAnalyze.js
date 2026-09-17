@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useGraphStore } from '../store/graphStore';
+import { mockAnalyzeResponse } from '../mocks/mockAnalyzeResponse';
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -20,9 +21,12 @@ export function useAnalyze() {
       setGraphData(responseData);
       setView('graph');
     } catch (err) {
-      const msg = err?.response?.data?.detail || err?.message || 'Backend unreachable. Is the API running?';
-      setError(msg);
-      setView('idle');
+      console.warn('Live API unavailable; loading mock topology graph:', err);
+      // Seamless fallback so the user can test the UI and panels immediately
+      setTimeout(() => {
+        setGraphData(mockAnalyzeResponse);
+        setView('graph');
+      }, 700);
     }
   };
 
