@@ -46,6 +46,7 @@ export default function GraphCanvas() {
     graphData, blastData,
     setBlastData, setSelectedNode,
     isSimulating, setIsSimulating,
+    setActiveTab,
   } = useGraphStore();
 
   const { simulate } = useSimulate();
@@ -163,6 +164,7 @@ export default function GraphCanvas() {
       blast = MOCK_BLAST;
       setBlastData(blast);
     }
+    setActiveTab('blast');
 
     const propOrder = blast.propagation_order || [];
     const timers = [];
@@ -180,7 +182,7 @@ export default function GraphCanvas() {
       setIsSimulating(false);
     }, maxDelay + 200);
     timers.push(finalTimer);
-  }, [localSelected, isSimulating, simulate, setBlastData, setIsSimulating, setSelectedNode]);
+  }, [localSelected, isSimulating, simulate, setBlastData, setIsSimulating, setSelectedNode, setActiveTab]);
 
   const handleReset = useCallback(() => {
     setBlastData(null);
