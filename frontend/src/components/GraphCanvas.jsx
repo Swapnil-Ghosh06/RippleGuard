@@ -44,14 +44,20 @@ function buildLayout(nodes, edges) {
 export default function GraphCanvas() {
   const {
     graphData, blastData,
-    setBlastData, setSelectedNode,
+    setBlastData, selectedNode, setSelectedNode,
     isSimulating, setIsSimulating,
     setActiveTab,
   } = useGraphStore();
 
   const { simulate } = useSimulate();
   const [blastSet, setBlastSet] = useState(new Set());
-  const [localSelected, setLocalSelected] = useState(null);
+  const [localSelected, setLocalSelected] = useState(selectedNode);
+
+  useEffect(() => {
+    if (selectedNode !== undefined && selectedNode !== localSelected) {
+      setLocalSelected(selectedNode);
+    }
+  }, [selectedNode]);
 
   const rawNodes = graphData?.nodes ?? graphData?.graph?.nodes ?? [];
   const rawEdges = graphData?.edges ?? graphData?.graph?.edges ?? [];
