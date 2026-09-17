@@ -429,6 +429,22 @@ function ButterflyStepperHUD({
   );
 }
 
+function getDefaultExpandedSet(nodes, children) {
+  if (!nodes || !nodes.length) return new Set();
+
+  const rootNodes = nodes.filter(n => n.is_root || n.depth === 0);
+  const rootIds = rootNodes.length > 0 ? rootNodes.map(n => n.id) : [nodes[0].id];
+
+  if (nodes.length <= 8) {
+    const allWithChildren = new Set();
+    Object.entries(children || {}).forEach(([id, cList]) => {
+      if (cList && cList.length > 0) allWithChildren.add(id);
+    });
+    return allWithChildren;
+  }
+  return new Set(rootIds);
+}
+
 /**
  * Main Graph Canvas with Progressive Disclosure and Smooth Auto-Zoom
  */
@@ -445,16 +461,6 @@ function GraphCanvasInner() {
 
   const { simulate } = useSimulate();
   const { fitView } = useReactFlow();
-
-  const [blastSet, setBlastSet] = useState(new Set());
-  const [localSelected, setLocalSelected] = useState(selectedNode);
-  const [expandedSet, setExpandedSet] = useState(new Set());
-
-  useEffect(() => {
-    if (selectedNode !== undefined && selectedNode !== localSelected) {
-      setLocalSelected(selectedNode);
-    }
-  }, [selectedNode, localSelected]);
 
   const rawNodes = useMemo(() => graphData?.nodes ?? graphData?.graph?.nodes ?? [], [graphData]);
   const rawEdges = useMemo(() => graphData?.edges ?? graphData?.graph?.edges ?? [], [graphData]);
@@ -497,26 +503,23 @@ function GraphCanvasInner() {
     return map;
   }, [rawNodes, rawEdges]);
 
-  // Initialize expanded set
-  useEffect(() => {
-    if (!rawNodes.length) {
-      setExpandedSet(new Set());
-      return;
-    }
+  const [blastSet, setBlastSet] = useState(new Set());
+  const [localSelected, setLocalSelected] = useState(selectedNode);
+  const [prevSelectedNode, setPrevSelectedNode] = useState(selectedNode);
+  const [expandedSet, setExpandedSet] = useState(() => getDefaultExpandedSet(rawNodes, childrenMap));
+  const [prevGraphData, setPrevGraphData] = useState(graphData);
 
-    const rootNodes = rawNodes.filter(n => n.is_root || n.depth === 0);
-    const rootIds = rootNodes.length > 0 ? rootNodes.map(n => n.id) : [rawNodes[0].id];
+  if (selectedNode !== prevSelectedNode) {
+    setPrevSelectedNode(selectedNode);
+    setLocalSelected(selectedNode);
+  }
 
-    if (rawNodes.length <= 8) {
-      const allWithChildren = new Set();
-      Object.entries(childrenMap).forEach(([id, children]) => {
-        if (children.length > 0) allWithChildren.add(id);
-      });
-      setExpandedSet(allWithChildren);
-    } else {
-      setExpandedSet(new Set(rootIds));
-    }
-  }, [rawNodes, childrenMap]);
+  if (graphData !== prevGraphData) {
+    setPrevGraphData(graphData);
+    setBlastSet(new Set());
+    setLocalSelected(null);
+    setExpandedSet(getDefaultExpandedSet(rawNodes, childrenMap));
+  }
 
   // Compute Butterfly Trace (Critical Domino Path)
   const criticalChain = useMemo(() => {
@@ -800,14 +803,12 @@ function GraphCanvasInner() {
     return () => clearInterval(timer);
   }, [isDominoPlaying, criticalChain, setActiveDominoIndex, setIsDominoPlaying, setSelectedNode]);
 
-  // Reset states on new graphData
+  // Reset external store states on new graphData
   useEffect(() => {
-    setBlastSet(new Set());
-    setLocalSelected(null);
     setActiveDominoIndex(null);
     setIsDominoPlaying(false);
     clearSandboxPatches();
-  }, [graphData, setBlastData, clearSandboxPatches, setActiveDominoIndex, setIsDominoPlaying]);
+  }, [graphData, clearSandboxPatches, setActiveDominoIndex, setIsDominoPlaying]);
 
   const handleInject = useCallback(async () => {
     if (!localSelected || isSimulating) return;
