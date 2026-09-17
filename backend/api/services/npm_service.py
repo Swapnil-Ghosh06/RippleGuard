@@ -14,8 +14,74 @@ Downstream Consumers:
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Optional
+import json
+import logging
+from pathlib import Path
+from typing import Optional, Dict, List, Tuple
 import httpx
+
+logger = logging.getLogger("rippleguard.npm")
+
+_CACHE_DIR = Path(__file__).resolve().parent.parent.parent / ".cache"
+_CACHE_FILE = _CACHE_DIR / "npm_cache.json"
+
+_npm_downloads_cache: Dict[str, Optional[int]] = {}
+
+
+def _init_downloads_cache():
+    if _CACHE_FILE.exists():
+        try:
+            with open(_CACHE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    for k, v in data.items():
+                        if isinstance(v, int):
+                            _npm_downloads_cache[k.lower()] = v
+        except Exception as e:
+            logger.warning("Failed to load npm cache file: %s", e)
+
+
+def _persist_cache_item(package: str, downloads: int):
+    _npm_downloads_cache[package.lower()] = downloads
+    try:
+        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        cached_data = {}
+        if _CACHE_FILE.exists():
+            try:
+                with open(_CACHE_FILE, "r", encoding="utf-8") as f:
+                    cached_data = json.load(f)
+            except Exception:
+                cached_data = {}
+        cached_data[package.lower()] = downloads
+        with open(_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(cached_data, f, indent=2)
+    except Exception as e:
+        logger.debug("Failed to write to npm cache file: %s", e)
+
+
+def _persist_cache_batch(items: Dict[str, int]):
+    if not items:
+        return
+    for k, v in items.items():
+        _npm_downloads_cache[k.lower()] = v
+    try:
+        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        cached_data = {}
+        if _CACHE_FILE.exists():
+            try:
+                with open(_CACHE_FILE, "r", encoding="utf-8") as f:
+                    cached_data = json.load(f)
+            except Exception:
+                cached_data = {}
+        for k, v in items.items():
+            cached_data[k.lower()] = v
+        with open(_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(cached_data, f, indent=2)
+    except Exception as e:
+        logger.debug("Failed to write batch to npm cache file: %s", e)
+
+
+_init_downloads_cache()
 
 
 async def get_latest_version(package: str) -> str:
@@ -33,68 +99,208 @@ async def get_latest_version(package: str) -> str:
         return "latest"
 
 
-DEFAULT_DOWNLOAD_FALLBACKS = {
-    "lodash": 82_000_000,
-    "express": 35_000_000,
-    "minimatch": 45_000_000,
-    "react": 90_000_000,
-    "axios": 75_000_000,
-    "webpack": 40_000_000,
-    "typescript": 85_000_000,
-    "debug": 120_000_000,
-    "ms": 150_000_000,
-    "mime": 60_000_000,
-    "cookie": 50_000_000,
-    "semver": 110_000_000
-}
-
-
-async def get_monthly_downloads(package: str) -> int:
+async def get_monthly_downloads(package: str) -> Optional[int]:
     """
-    Fetch the monthly download count for a given npm package.
-    Falls back to curated/default download estimates if npm API rate-limits (HTTP 429) or fails.
+    Fetch the monthly download count for a given npm package from api.npmjs.org.
+    Returns None if the package does not exist (404), rate limits (429), or service is unavailable.
+    Does NOT fabricate fallback counts.
     """
-    url = f"https://api.npmjs.org/downloads/point/last-month/{package}"
+    if not package:
+        return None
+
+    clean_pkg = package.strip()
+    if clean_pkg.lower() in _npm_downloads_cache:
+        return _npm_downloads_cache[clean_pkg.lower()]
+
+    url = f"https://api.npmjs.org/downloads/point/last-month/{clean_pkg}"
+    headers = {
+        "User-Agent": "RippleGuard/1.0 (https://github.com/syedzahidsaleem/rippleguard)"
+    }
+
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(url)
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            response = await client.get(url, headers=headers)
             if response.status_code == 200:
                 data = response.json()
-                dl = data.get("downloads", 0)
-                if dl > 0:
-                    return dl
-    except Exception:
-        pass
+                dl = data.get("downloads")
+                if dl is not None:
+                    dl_int = int(dl)
+                    _persist_cache_item(clean_pkg, dl_int)
+                    return dl_int
+                _npm_downloads_cache[clean_pkg.lower()] = None
+                return None
 
-    # Resilient fallback for rate-limiting (429) or external downtime
-    return DEFAULT_DOWNLOAD_FALLBACKS.get(package.lower(), 1_000_000)
+            if response.status_code == 404:
+                logger.warning(
+                    "Package '%s' not found on npm downloads API (404). Download statistics unavailable.",
+                    package,
+                )
+                _npm_downloads_cache[clean_pkg.lower()] = None
+                return None
+
+            if response.status_code == 429:
+                logger.warning(
+                    "npm downloads API rate limit exceeded (429) for package '%s'. Download statistics temporarily unavailable.",
+                    package,
+                )
+                return None
+
+            logger.warning(
+                "npm downloads API returned HTTP %d for package '%s'. Download statistics unavailable.",
+                response.status_code,
+                package,
+            )
+            return None
+
+    except httpx.TimeoutException as te:
+        logger.warning(
+            "npm downloads API request timed out for package '%s': %s. Download statistics unavailable.",
+            package,
+            te,
+        )
+        return None
+    except Exception as exc:
+        logger.warning(
+            "Error querying npm downloads API for package '%s': %s. Download statistics unavailable.",
+            package,
+            exc,
+        )
+        return None
 
 
+async def _fetch_scoped_single(
+    client: httpx.AsyncClient,
+    package: str,
+    sem: asyncio.Semaphore,
+    headers: dict
+) -> Tuple[str, Optional[int]]:
+    clean_pkg = package.strip()
+    if clean_pkg.lower() in _npm_downloads_cache:
+        return package, _npm_downloads_cache[clean_pkg.lower()]
 
-async def _fetch_npm_downloads_single(client: httpx.AsyncClient, package: str, sem: asyncio.Semaphore) -> tuple[str, int]:
     async with sem:
-        url = f"https://api.npmjs.org/downloads/point/last-month/{package}"
+        url = f"https://api.npmjs.org/downloads/point/last-month/{clean_pkg}"
         try:
-            response = await client.get(url, timeout=3.5)
-            if response.status_code == 200:
-                data = response.json()
-                dl = data.get("downloads", 0)
-                if dl > 0:
-                    return package, dl
-        except Exception:
-            pass
-        return package, DEFAULT_DOWNLOAD_FALLBACKS.get(package.lower(), 1_000_000)
+            res = await client.get(url, headers=headers, timeout=8.0)
+            if res.status_code == 200:
+                data = res.json()
+                dl = data.get("downloads")
+                if dl is not None:
+                    return package, int(dl)
+                return package, None
+            if res.status_code == 404:
+                logger.warning(
+                    "Package '%s' not found on npm downloads API (404). Download statistics unavailable.",
+                    package,
+                )
+            elif res.status_code == 429:
+                logger.warning(
+                    "npm downloads API rate limit exceeded (429) for package '%s'. Download statistics temporarily unavailable.",
+                    package,
+                )
+            else:
+                logger.warning(
+                    "npm downloads API returned HTTP %d for package '%s'. Download statistics unavailable.",
+                    res.status_code,
+                    package,
+                )
+            return package, None
+        except Exception as exc:
+            logger.warning(
+                "Error fetching npm downloads for '%s': %s. Download statistics unavailable.",
+                package,
+                exc,
+            )
+            return package, None
 
 
-async def get_downloads_batch(packages: list[str]) -> dict[str, int]:
-    """Fetch monthly download counts concurrently for a list of npm packages using pooled connections."""
+async def get_downloads_batch(packages: List[str]) -> Dict[str, Optional[int]]:
+    """
+    Fetch monthly download counts concurrently for a list of npm packages.
+    Uses npm's bulk downloads API endpoint (api.npmjs.org/downloads/point/last-month/{pkg1},{pkg2},...)
+    for unscoped packages up to 100 packages per call.
+    Scoped packages (@scope/name) are queried individually as required by the npm API.
+    """
     if not packages:
         return {}
-    sem = asyncio.Semaphore(15)
-    async with httpx.AsyncClient(limits=httpx.Limits(max_keepalive_connections=20, max_connections=30)) as client:
-        tasks = [_fetch_npm_downloads_single(client, pkg, sem) for pkg in packages]
-        results = await asyncio.gather(*tasks)
-    return dict(results)
+
+    unique_pkgs = list({p.strip(): p for p in packages if p.strip()}.values())
+    needed_pkgs = [p for p in unique_pkgs if p.lower() not in _npm_downloads_cache]
+
+    new_cached_items: Dict[str, int] = {}
+    headers = {
+        "User-Agent": "RippleGuard/1.0 (https://github.com/syedzahidsaleem/rippleguard)"
+    }
+
+    if needed_pkgs:
+        scoped = [p for p in needed_pkgs if p.startswith("@")]
+        unscoped = [p for p in needed_pkgs if not p.startswith("@")]
+
+        async with httpx.AsyncClient(
+            limits=httpx.Limits(max_keepalive_connections=15, max_connections=25),
+            timeout=10.0
+        ) as client:
+            # 1. Bulk queries for unscoped packages in chunks of <= 100
+            for i in range(0, len(unscoped), 100):
+                chunk = unscoped[i:i + 100]
+                url = f"https://api.npmjs.org/downloads/point/last-month/{','.join(chunk)}"
+                try:
+                    res = await client.get(url, headers=headers)
+                    if res.status_code == 200:
+                        data = res.json()
+                        # If chunk is size 1, npm returns {"downloads": N, "package": "..."}
+                        if "downloads" in data and "package" in data:
+                            dl = data.get("downloads")
+                            pkg = data["package"]
+                            if dl is not None:
+                                new_cached_items[pkg.lower()] = int(dl)
+                            else:
+                                _npm_downloads_cache[pkg.lower()] = None
+                        else:
+                            for pkg in chunk:
+                                entry = data.get(pkg)
+                                if entry is not None and isinstance(entry, dict) and "downloads" in entry:
+                                    dl_val = entry["downloads"]
+                                    if dl_val is not None:
+                                        new_cached_items[pkg.lower()] = int(dl_val)
+                                    else:
+                                        _npm_downloads_cache[pkg.lower()] = None
+                                else:
+                                    logger.warning(
+                                        "Package '%s' not found in npm bulk downloads response (404).",
+                                        pkg,
+                                    )
+                                    _npm_downloads_cache[pkg.lower()] = None
+                    elif res.status_code == 429:
+                        logger.warning(
+                            "npm downloads API rate limit exceeded (429) during bulk query. Download statistics temporarily unavailable."
+                        )
+                    else:
+                        logger.warning(
+                            "npm bulk downloads query returned HTTP %d. Download statistics unavailable.",
+                            res.status_code,
+                        )
+                except Exception as exc:
+                    logger.warning(
+                        "npm bulk downloads query failed: %s. Download statistics unavailable.",
+                        exc,
+                    )
+
+            # 2. Individual queries for scoped packages
+            if scoped:
+                sem = asyncio.Semaphore(8)
+                tasks = [_fetch_scoped_single(client, p, sem, headers) for p in scoped]
+                scoped_results = await asyncio.gather(*tasks)
+                for pkg, dl in scoped_results:
+                    if dl is not None:
+                        new_cached_items[pkg.lower()] = dl
+                    else:
+                        _npm_downloads_cache[pkg.lower()] = None
+
+        if new_cached_items:
+            _persist_cache_batch(new_cached_items)
+
+    return {pkg: _npm_downloads_cache.get(pkg.lower()) for pkg in packages}
 
 
 async def get_package_metadata(package: str) -> dict:
