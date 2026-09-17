@@ -179,7 +179,7 @@ export default function BlastRadiusPanel() {
           <span>Real-World Impact Equivalence</span>
         </div>
         <p className="text-xs text-dim leading-relaxed font-sans">
-          &ldquo;{blastData.human_comparison}&rdquo;
+          &ldquo;{blastData.human_comparison || 'Targeted attack on downstream dependencies.'}&rdquo;
         </p>
       </div>
 
