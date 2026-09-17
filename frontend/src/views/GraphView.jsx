@@ -43,7 +43,7 @@ export default function GraphView() {
   return (
     <div
       className="w-full flex flex-row overflow-hidden bg-white"
-      style={{ height: 'calc(100vh - 56px)' }}
+      style={{ height: 'calc(100vh - 64px)' }}
     >
       {/* Left — Graph canvas wrapper */}
       <div className="flex-1 min-w-0 h-full overflow-hidden relative flex flex-col">

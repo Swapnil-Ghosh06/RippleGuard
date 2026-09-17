@@ -16,6 +16,15 @@ from api.services import deps_service
 _graph_storage: Dict[str, Dict[str, Any]] = {}
 
 
+def _get_dl(download_data: Optional[Dict[str, Any]], key: str) -> int:
+    """Safely extract integer download count, treating None or missing as 0."""
+    if not download_data:
+        return 0
+    val = download_data.get(key)
+    return int(val) if val is not None else 0
+
+
+
 async def build_dependency_graph(
     package: str,
     ecosystem: str,
@@ -155,7 +164,7 @@ def find_shadow_dependencies(
         if depth > 1:
             in_deg = G.in_degree(node)
             pkg_name = G.nodes[node].get("name", node.split("@")[0])
-            dl = download_data.get(node, 0) or download_data.get(pkg_name, 0)
+            dl = _get_dl(download_data, node) or _get_dl(download_data, pkg_name)
             chokepoint_score = round(float(in_deg * (dl / 1_000_000.0)), 2)
             candidates.append({
                 "node": node,
@@ -196,11 +205,11 @@ def rank_mitigations(
     actions = []
     all_affected = set(affected_nodes)
     comp_pkg = compromised_node.split("@")[0]
-    comp_dl = download_data.get(compromised_node, 0) or download_data.get(comp_pkg, 0)
+    comp_dl = _get_dl(download_data, compromised_node) or _get_dl(download_data, comp_pkg)
 
     unique_affected_pkgs = {n.split("@")[0] for n in all_affected}
     total_blast_downloads = sum(
-        download_data.get(pkg, 0) or max([download_data.get(n, 0) for n in all_affected if n.split("@")[0] == pkg], default=0)
+        _get_dl(download_data, pkg) or max([_get_dl(download_data, n) for n in all_affected if n.split("@")[0] == pkg], default=0)
         for pkg in unique_affected_pkgs
     ) + comp_dl
 
@@ -230,7 +239,7 @@ def rank_mitigations(
         saved_affected = (saved_subtree & all_affected) | ({node} if node in all_affected else set())
         unique_saved_pkgs = {n.split("@")[0] for n in saved_affected}
         eliminated_downloads = sum(
-            download_data.get(pkg, 0) or max([download_data.get(n, 0) for n in saved_affected if n.split("@")[0] == pkg], default=0)
+            _get_dl(download_data, pkg) or max([_get_dl(download_data, n) for n in saved_affected if n.split("@")[0] == pkg], default=0)
             for pkg in unique_saved_pkgs
         )
         if node == compromised_node:
@@ -310,7 +319,7 @@ def simulate_compromise(
     # Deduplicate downloads by unique package name to prevent double-counting multiple versions/paths
     unique_affected_pkgs = {node.split("@")[0] for node in affected}
     total_downloads = sum(
-        download_data.get(pkg, 0) or max([download_data.get(n, 0) for n in affected if n.split("@")[0] == pkg], default=0)
+        _get_dl(download_data, pkg) or max([_get_dl(download_data, n) for n in affected if n.split("@")[0] == pkg], default=0)
         for pkg in unique_affected_pkgs
     )
     comp_pkg = compromised_node.split("@")[0]
@@ -354,7 +363,7 @@ def simulate_compromise(
 
     # Severity breakdown
     crit_count = len(critical_chain) - 1 if len(critical_chain) > 1 else 0
-    high_count = sum(1 for n in affected if (download_data.get(n, 0) or download_data.get(n.split('@')[0], 0)) >= 10_000_000)
+    high_count = sum(1 for n in affected if (_get_dl(download_data, n) or _get_dl(download_data, n.split('@')[0])) >= 10_000_000)
     med_count = max(len(affected) - high_count, 0)
 
     estimated_apps = max(int(total_downloads / 35000), len(affected) * 150, 0)

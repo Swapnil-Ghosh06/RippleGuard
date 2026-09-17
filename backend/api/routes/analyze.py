@@ -128,7 +128,13 @@ async def analyze_package(request: AnalyzeRequest):
         if depth > max_depth_reached:
             max_depth_reached = depth
 
-        dl_count = downloads_map.get(name, 0)
+        raw_dl = downloads_map.get(name)
+        if raw_dl is None:
+            raw_dl = downloads_map.get(nid)
+
+        dl_count = int(raw_dl) if raw_dl is not None else 0
+        dl_unavailable = (raw_dl is None)
+
         raw_vulns = vulns_map.get(nid, [])
 
         vuln_objs = [
@@ -155,6 +161,7 @@ async def analyze_package(request: AnalyzeRequest):
             version=ver,
             ecosystem=eco,
             monthly_downloads=dl_count,
+            downloads_unavailable=dl_unavailable,
             depth=depth,
             vulnerabilities=vuln_objs,
             risk_score=risk_score,
@@ -170,12 +177,15 @@ async def analyze_package(request: AnalyzeRequest):
         for u, v in G.edges
     ]
 
-    root_downloads = downloads_map.get(request.package, 0)
+    raw_root_dl = downloads_map.get(request.package)
+    root_downloads = int(raw_root_dl) if raw_root_dl is not None else 0
+    root_unavailable = (raw_root_dl is None)
     root_obj = PackageRoot(
         name=request.package,
         version=version,
         ecosystem=eco,
-        monthly_downloads=root_downloads
+        monthly_downloads=root_downloads,
+        downloads_unavailable=root_unavailable
     )
 
     stats_obj = GraphStats(

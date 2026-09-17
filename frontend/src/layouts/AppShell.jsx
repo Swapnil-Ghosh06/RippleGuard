@@ -54,52 +54,66 @@ export default function AppShell({ children }) {
 
   return (
     <div className="min-h-screen bg-white text-text flex flex-col selection:bg-yellow-100 selection:text-black">
-      {/* Editorial Minimalist Header */}
-      <header className="h-[56px] flex items-center justify-between px-6 sm:px-10 shrink-0 fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-border">
-        {/* Left — Elegant Brand & Status */}
+      {/* Editorial Minimalist Header matching Channel:D reference */}
+      <header className="h-[64px] flex items-center justify-between px-6 sm:px-12 shrink-0 fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-200/80">
+        {/* Left — Brand Wordmark */}
         <div className="flex items-center gap-4">
           <div
             onClick={handleNewAnalysis}
-            className="flex items-center gap-2.5 cursor-pointer group select-none"
+            className="flex items-center gap-2 cursor-pointer group select-none"
           >
-            {/* Minimal Monoline Shield */}
-            <div className="w-7 h-7 rounded-full border border-border flex items-center justify-center group-hover:border-text transition-colors">
-              <svg className="w-3.5 h-3.5 text-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-            </div>
-
-            {/* Editorial Wordmark */}
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-serif font-normal text-lg tracking-tight text-text">
-                Ripple<span className="italic font-light text-muted">guard</span>
-              </span>
-            </div>
-          </div>
-
-          <span className="text-border text-sm">/</span>
-
-          {/* Minimalist Status Pill */}
-          <div
-            className="inline-flex items-center gap-2 text-xs px-2.5 py-1 rounded-full border transition-all duration-200 select-none"
-            style={{
-              color: status.color,
-              backgroundColor: status.bg,
-              borderColor: status.border,
-            }}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${status.pulse ? 'animate-ping' : ''}`}
-              style={{ backgroundColor: status.dotColor }}
-            />
-            <span className="font-medium tracking-tight font-sans">
-              {status.label}
+            <span className="font-serif font-bold text-2xl tracking-tight text-text">
+              Ripple<span className="text-stone-400 font-light">:</span>Guard
             </span>
           </div>
+
+          {view !== 'idle' && (
+            <div
+              className="inline-flex items-center gap-2 text-xs px-2.5 py-1 rounded-full border transition-all duration-200 select-none"
+              style={{
+                color: status.color,
+                backgroundColor: status.bg,
+                borderColor: status.border,
+              }}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${status.pulse ? 'animate-ping' : ''}`}
+                style={{ backgroundColor: status.dotColor }}
+              />
+              <span className="font-medium tracking-tight font-sans">
+                {status.label}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Right — Stats & Actions */}
-        <div className="flex items-center gap-3">
+        {/* Center / Right — Navigation & Actions */}
+        <div className="flex items-center gap-6">
+          {view === 'idle' && (
+            <nav className="hidden md:flex items-center gap-6 text-xs font-sans text-stone-500 font-medium select-none">
+              <a href="#how-it-works" className="hover:text-text transition-colors">
+                How It Works
+              </a>
+              <a href="#story" className="hover:text-text transition-colors">
+                Why RippleGuard
+              </a>
+              <a
+                href="#search-input"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const el = document.getElementById('search-input');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                    el.focus();
+                  }
+                }}
+                className="hover:text-text transition-colors"
+              >
+                Attack Scenarios
+              </a>
+            </nav>
+          )}
+
           {graphData && view === 'graph' && (
             <div className="hidden sm:flex items-center gap-3 text-xs text-muted font-sans mr-1">
               <span>{nodes.length} packages</span>
@@ -122,7 +136,21 @@ export default function AppShell({ children }) {
             ?
           </button>
 
-          {view !== 'idle' && (
+          {view === 'idle' ? (
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('search-input');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                  el.focus();
+                }
+              }}
+              className="text-xs font-sans font-medium text-white bg-text hover:bg-neutral-800 px-5 py-2 rounded-full transition-all duration-150 cursor-pointer shadow-xs"
+            >
+              Try it Free
+            </button>
+          ) : (
             <button
               onClick={handleNewAnalysis}
               className="text-xs font-sans font-medium text-text hover:text-black bg-white hover:bg-surface2 border border-border hover:border-text px-3.5 py-1.5 rounded-full transition-all duration-150 cursor-pointer flex items-center gap-1.5 shadow-sm"
@@ -135,7 +163,7 @@ export default function AppShell({ children }) {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 pt-[56px] flex flex-col relative">
+      <main className="flex-1 pt-[64px] flex flex-col relative">
         {children}
       </main>
 
