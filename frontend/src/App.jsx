@@ -5,8 +5,18 @@ import SearchView from './views/SearchView'
 import LoadingView from './views/LoadingView'
 import GraphView from './views/GraphView'
 
+import GraphCanvas from './components/GraphCanvas'
+import { mockAnalyzeResponse } from './mocks/mockAnalyzeResponse'
+
 const views = {
-  idle:    <SearchView  key="search"  />,
+  idle: (
+    <div className="w-full flex-1 relative flex" style={{ height: 'calc(100vh - 56px)' }}>
+      <GraphCanvas
+        graphData={mockAnalyzeResponse.graph}
+        onNodeClick={(e, node) => console.log('Node clicked:', node)}
+      />
+    </div>
+  ),
   loading: <LoadingView key="loading" />,
   graph:   <GraphView   key="graph"   />,
 }
@@ -19,7 +29,7 @@ export default function App() {
       <AnimatePresence mode="wait">
         <motion.div
           key={view}
-          className="flex-1 flex flex-col"
+          className="flex-1 flex flex-col h-[calc(100vh-56px)] w-full"
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
