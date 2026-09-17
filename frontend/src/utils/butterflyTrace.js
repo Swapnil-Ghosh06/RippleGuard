@@ -1,3 +1,5 @@
+import { createElement } from 'react';
+
 /**
  * Butterfly Trace Utility & Overlay Component
  *
@@ -31,6 +33,8 @@ export function findCriticalChain(propagationPaths) {
 
 /**
  * SVG overlay component rendering the pulsing gold critical chain path.
+ * Implemented using pure React.createElement to ensure seamless compatibility
+ * with all bundlers and JSX parser configurations in .js files.
  *
  * @param {object} props
  * @param {Array<string>} props.criticalChainNodeIds - Sequential node IDs in the critical chain.
@@ -75,10 +79,11 @@ export function ButterflyTraceOverlay({
   const labelX = (midPoint.x + nextPoint.x) / 2;
   const labelY = (midPoint.y + nextPoint.y) / 2 - 16;
 
-  return (
-    <svg
-      className="butterfly-trace-overlay pointer-events-none select-none"
-      style={{
+  return createElement(
+    'svg',
+    {
+      className: 'butterfly-trace-overlay pointer-events-none select-none',
+      style: {
         position: 'absolute',
         top: 0,
         left: 0,
@@ -87,9 +92,12 @@ export function ButterflyTraceOverlay({
         overflow: 'visible',
         pointerEvents: 'none',
         zIndex: 10,
-      }}
-    >
-      <style>{`
+      },
+    },
+    createElement(
+      'style',
+      null,
+      `
         @keyframes pulse {
           0%, 100% {
             opacity: 0.4;
@@ -101,70 +109,70 @@ export function ButterflyTraceOverlay({
         .butterfly-pulse-path {
           animation: pulse 1.5s ease-in-out infinite;
         }
-      `}</style>
-
-      {/* Ambient gold glow underlay */}
-      <path
-        d={pathData}
-        fill="none"
-        stroke="#fbbf24"
-        strokeWidth="7"
-        strokeOpacity="0.22"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      {/* Main pulsing gold critical chain path (stroke-width 3, gold token #fbbf24) */}
-      <path
-        d={pathData}
-        fill="none"
-        stroke="#fbbf24"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="butterfly-pulse-path"
-      />
-
-      {/* Node waypoint markers along critical chain */}
-      {points.map((pt, index) => (
-        <circle
-          key={index}
-          cx={pt.x}
-          cy={pt.y}
-          r={index === 0 || index === points.length - 1 ? 5 : 3.5}
-          fill="#fbbf24"
-          stroke="#0d1829"
-          strokeWidth="1.5"
-        />
-      ))}
-
-      {/* Text label at the midpoint: "Critical Chain" in gold, small font */}
-      <g transform={`translate(${labelX}, ${labelY})`}>
-        <rect
-          x="-46"
-          y="-11"
-          width="92"
-          height="20"
-          rx="5"
-          fill="#0d1829"
-          fillOpacity="0.95"
-          stroke="#fbbf24"
-          strokeWidth="1.2"
-        />
-        <text
-          x="0"
-          y="1"
-          fill="#fbbf24"
-          fontSize="10"
-          fontFamily="ui-monospace, monospace"
-          fontWeight="600"
-          textAnchor="middle"
-          dominantBaseline="middle"
-        >
-          Critical Chain
-        </text>
-      </g>
-    </svg>
+      `
+    ),
+    // Ambient gold glow underlay
+    createElement('path', {
+      d: pathData,
+      fill: 'none',
+      stroke: '#fbbf24',
+      strokeWidth: 7,
+      strokeOpacity: 0.22,
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+    }),
+    // Main pulsing gold critical chain path (stroke-width 3, gold token #fbbf24)
+    createElement('path', {
+      d: pathData,
+      fill: 'none',
+      stroke: '#fbbf24',
+      strokeWidth: 3,
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+      className: 'butterfly-pulse-path',
+    }),
+    // Waypoint circle dots along critical chain
+    ...points.map((pt, index) =>
+      createElement('circle', {
+        key: index,
+        cx: pt.x,
+        cy: pt.y,
+        r: index === 0 || index === points.length - 1 ? 5 : 3.5,
+        fill: '#fbbf24',
+        stroke: '#0d1829',
+        strokeWidth: 1.5,
+      })
+    ),
+    // Text label: "Critical Chain" in gold, small font
+    createElement(
+      'g',
+      { transform: `translate(${labelX}, ${labelY})` },
+      createElement('rect', {
+        x: -46,
+        y: -11,
+        width: 92,
+        height: 20,
+        rx: 5,
+        fill: '#0d1829',
+        fillOpacity: 0.95,
+        stroke: '#fbbf24',
+        strokeWidth: 1.2,
+      }),
+      createElement(
+        'text',
+        {
+          x: 0,
+          y: 1,
+          fill: '#fbbf24',
+          fontSize: 10,
+          fontFamily: 'ui-monospace, monospace',
+          fontWeight: '600',
+          textAnchor: 'middle',
+          dominantBaseline: 'middle',
+        },
+        'Critical Chain'
+      )
+    )
   );
 }
 
