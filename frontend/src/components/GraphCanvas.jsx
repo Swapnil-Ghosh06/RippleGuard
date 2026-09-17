@@ -12,6 +12,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 
 import { transformToReactFlow } from '../utils/graphTransform.js';
+import { useGraphLayout } from '../hooks/useGraphLayout.js';
+import { useGraphStore } from '../store/graphStore.js';
 
 // Custom package node to render React Flow handles and labels with dark-theme styling
 const nodeTypes = {
@@ -38,23 +40,60 @@ const nodeTypes = {
 };
 
 function GraphCanvasInner({
-  graphData,
-  onNodeClick = (event, node) => console.log('Node clicked:', node),
+  graphData: propGraphData,
+  onNodeClick: propOnNodeClick,
 }) {
-  const { nodes: initialNodes, edges: initialEdges } = useMemo(
-    () => transformToReactFlow(graphData),
-    [graphData]
+  const storeGraphData = useGraphStore((s) => s.graphData);
+  const selectedNode = useGraphStore((s) => s.selectedNode);
+  const setSelectedNode = useGraphStore((s) => s.setSelectedNode);
+
+  const activeGraphData = propGraphData || storeGraphData;
+
+  // 1. Transform raw graph data into base nodes & edges
+  const { nodes: rawNodes, edges: rawEdges } = useMemo(
+    () => transformToReactFlow(activeGraphData),
+    [activeGraphData]
   );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  // 2. Compute ELK layered DAG layout
+  const { layoutedNodes, layoutedEdges, isLayouting } = useGraphLayout(rawNodes, rawEdges);
 
-  // Sync state whenever graphData prop updates
+  // 3. Feed layouted elements into React Flow node & edge state
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  // Sync React Flow nodes and edges when ELK layout calculation completes
   useEffect(() => {
-    const { nodes: newNodes, edges: newEdges } = transformToReactFlow(graphData);
-    setNodes(newNodes);
-    setEdges(newEdges);
-  }, [graphData, setNodes, setEdges]);
+    setNodes(layoutedNodes);
+  }, [layoutedNodes, setNodes]);
+
+  useEffect(() => {
+    setEdges(layoutedEdges);
+  }, [layoutedEdges, setEdges]);
+
+  // Update selection highlight when selectedNode changes
+  useEffect(() => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        const isSelected = selectedNode && node.id === selectedNode;
+        return {
+          ...node,
+          style: {
+            ...node.style,
+            boxShadow: isSelected ? '0 0 0 3px #f43f5e, 0 0 20px rgba(244, 63, 94, 0.4)' : undefined,
+          },
+        };
+      })
+    );
+  }, [selectedNode, setNodes]);
+
+  const handleNodeClick = (event, node) => {
+    if (propOnNodeClick) {
+      propOnNodeClick(event, node);
+    }
+    setSelectedNode(node.id);
+  };
+
 
   return (
     <div
@@ -66,7 +105,7 @@ function GraphCanvasInner({
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onNodeClick={onNodeClick}
+        onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}
         fitView
         style={{ width: '100%', height: '100%', backgroundColor: '#050a14' }}
@@ -90,6 +129,13 @@ function GraphCanvasInner({
           }}
         />
       </ReactFlow>
+
+      {isLayouting && (
+        <div className="absolute top-4 right-4 z-20 px-3 py-1.5 rounded-md bg-[#0d1829]/90 border border-[#1a2d4a] text-slate-300 font-mono text-xs flex items-center gap-2 backdrop-blur-sm shadow-md pointer-events-none">
+          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+          <span>Computing ELK Layout...</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -101,3 +147,4 @@ export default function GraphCanvas(props) {
     </ReactFlowProvider>
   );
 }
+
