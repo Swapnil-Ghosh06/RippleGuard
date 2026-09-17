@@ -586,7 +586,7 @@ export default function SearchPanel() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const { setBlastData, error, setError } = useGraphStore();
+  const { setBlastData, error } = useGraphStore();
   const { analyze } = useAnalyze();
   const searchContainerRef = useRef(null);
 
@@ -708,15 +708,6 @@ export default function SearchPanel() {
 
           {/* Left Column: Headline, Subtitle, Capsule Pill Input */}
           <div className="lg:col-span-7 flex flex-col items-start text-left">
-
-            {/* Overline tag */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface2 border border-border text-[11px] font-sans font-medium tracking-wide text-muted mb-6 select-none">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>LIVE BLAST RADIUS ENGINE</span>
-              <span className="text-border">·</span>
-              <span>deps.dev + OSV</span>
-            </div>
-
             {/* Big Editorial Serif Headline */}
             <h1 className="font-serif font-normal text-5xl sm:text-6xl lg:text-[70px] text-text leading-[1.05] tracking-tight">
               The blast radius of <br />
@@ -966,9 +957,6 @@ export default function SearchPanel() {
           className="mt-20 pt-16 border-t border-stone-200/80"
         >
           <div className="text-left mb-8">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-mono uppercase font-semibold text-stone-600 mb-2">
-              <span>01 / ARCHITECTURE</span>
-            </div>
             <h3 className="font-serif font-normal text-3xl sm:text-4xl text-text tracking-tight">
               How RippleGuard simulates the explosion
             </h3>
@@ -1034,9 +1022,6 @@ export default function SearchPanel() {
 
           {/* Right Column: Bold Editorial Narrative */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-[10px] font-mono uppercase font-semibold text-stone-600 mb-3">
-              <span>02 / THE CORE PROBLEM</span>
-            </div>
 
             <h2 className="font-serif font-normal text-3xl sm:text-4xl lg:text-5xl text-text leading-[1.12] tracking-tight">
               As an engineer, you have hundreds of packages you rely on every day, and not enough visibility into what happens when one goes rogue.
@@ -1092,9 +1077,6 @@ export default function SearchPanel() {
         >
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 text-left">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[10px] font-mono uppercase font-semibold text-rose-800 mb-2">
-                <span>03 / REPLAY BENCHMARKS</span>
-              </div>
               <h3 className="font-serif font-normal text-3xl sm:text-4xl text-text tracking-tight">
                 Famous Supply Chain Attack Replays
               </h3>
@@ -1190,10 +1172,7 @@ export default function SearchPanel() {
       {/* EDITORIAL MINIMALIST FOOTER                              */}
       {/* ======================================================== */}
       <footer className="relative z-20 w-full py-6 px-8 sm:px-12 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted font-sans select-none bg-white">
-        <div className="flex items-center gap-2.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span className="font-medium text-dim">Live OSV.dev & deps.dev API Connected</span>
-        </div>
+        <div className="hidden sm:block" />
 
         <div className="flex items-center gap-4 text-xs text-muted font-normal">
           <span>Zero API Keys Required</span>

@@ -66,25 +66,6 @@ export default function AppShell({ children }) {
               Ripple<span className="text-stone-400 font-light">:</span>Guard
             </span>
           </div>
-
-          {view !== 'idle' && (
-            <div
-              className="inline-flex items-center gap-2 text-xs px-2.5 py-1 rounded-full border transition-all duration-200 select-none"
-              style={{
-                color: status.color,
-                backgroundColor: status.bg,
-                borderColor: status.border,
-              }}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${status.pulse ? 'animate-ping' : ''}`}
-                style={{ backgroundColor: status.dotColor }}
-              />
-              <span className="font-medium tracking-tight font-sans">
-                {status.label}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Center / Right — Navigation & Actions */}
