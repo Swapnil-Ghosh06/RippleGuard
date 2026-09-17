@@ -12,7 +12,6 @@ const PackageNode = memo(({ data }) => {
   const {
     name,
     version,
-    is_root,
     depth = 0,
     ecosystem = 'npm',
     vulnerabilities = [],
@@ -27,78 +26,104 @@ const PackageNode = memo(({ data }) => {
 
   const mainCVE = vulnerabilities[0];
 
-  // Subtle top border accent
-  let rimColor = 'border-t-slate-500';
-  let badgeClass = 'text-zinc-400 bg-zinc-800/60 border-zinc-700/60';
-  let roleLabel = depth === 0 ? 'ROOT' : depth === 1 ? 'DIRECT' : `DEPTH ${depth}`;
+  // Minimalist clean card styling
+  let cardStyle = 'bg-white border border-border hover:border-zinc-400 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.04)]';
 
-  if (is_root || topSev === 'CRITICAL') {
-    rimColor = 'border-t-red-500';
-    badgeClass = 'text-red-400 bg-red-500/10 border-red-500/30';
+  if (blasted) {
+    cardStyle = 'bg-rose-50/90 border-rose-300 shadow-[0_4px_20px_-2px_rgba(225,29,72,0.15)]';
+  } else if (selected) {
+    cardStyle = 'bg-white border-text ring-2 ring-black/10 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.08)]';
+  } else if (topSev === 'CRITICAL') {
+    cardStyle = 'bg-rose-50/40 border-rose-200/80 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.04)]';
   } else if (topSev === 'HIGH' || topSev === 'MEDIUM') {
-    rimColor = 'border-t-amber-400';
-    badgeClass = 'text-amber-400 bg-amber-400/10 border-amber-400/30';
-  } else if (vulnerabilities.length === 0) {
-    rimColor = 'border-t-emerald-400';
-    badgeClass = 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30';
+    cardStyle = 'bg-amber-50/40 border-amber-200/80 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.04)]';
   }
+
+  const roleLabel = depth === 0 ? 'Root' : depth === 1 ? 'Direct' : `Depth ${depth}`;
 
   return (
     <div
-      className={`relative rounded-xl p-3 min-w-[200px] max-w-[230px] transition-all duration-200 cursor-pointer select-none border-t-2 ${rimColor} ${
-        blasted
-          ? 'bg-red-950/20 border-x border-b border-red-500/80 shadow-[0_0_16px_rgba(239,68,68,0.25)]'
-          : selected
-          ? 'bg-surface2 border-x border-b border-accent shadow-[0_0_16px_rgba(56,189,248,0.2)]'
-          : 'bg-[#141418] border-x border-b border-border hover:border-borderGlow shadow-lg'
-      }`}
+      className={`relative min-w-[195px] max-w-[220px] rounded-xl p-3.5 transition-all duration-200 cursor-pointer select-none ${cardStyle}`}
     >
       {/* Left target handle */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-2 !h-2 !bg-borderGlow !border !border-surface !-left-1"
+        className="!w-2 !h-2 !rounded-full !bg-zinc-400 !border-2 !border-white !-left-1"
       />
 
-      {/* Header Row */}
-      <div className="flex items-center justify-between gap-1.5 mb-1.5">
-        <span className={`font-mono text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded border ${badgeClass}`}>
-          {roleLabel}
-        </span>
+      {/* TOP ROW */}
+      <div className="flex items-center justify-between gap-1 mb-2">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-surface2 border border-border text-muted">
+            {ecosystem}
+          </span>
+          <span className="text-[10px] font-sans text-muted">
+            {roleLabel}
+          </span>
+        </div>
 
         {blasted ? (
-          <span className="font-mono text-[9px] font-bold text-red-400 uppercase tracking-wider">
-            ⚡ TAINTED
+          <span className="text-[10px] font-sans font-semibold text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded-full border border-rose-200">
+            ⚡ Tainted
           </span>
         ) : topSev ? (
-          <span className="font-mono text-[9px] font-medium text-muted">
+          <span
+            className={`text-[10px] font-sans font-medium px-2 py-0.5 rounded-full border ${
+              topSev === 'CRITICAL'
+                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                : topSev === 'HIGH' || topSev === 'MEDIUM'
+                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+            }`}
+          >
             {topSev}
           </span>
-        ) : null}
+        ) : (
+          <span className="text-[10px] font-sans text-emerald-600 font-medium">
+            ✓ Clean
+          </span>
+        )}
       </div>
 
-      {/* Package Name */}
-      <div className="mb-1">
-        <h4 className="font-mono text-xs font-bold text-text truncate">
+      {/* PACKAGE NAME */}
+      <div className="mb-1 truncate max-w-full">
+        <span className="font-sans text-xs font-bold text-text">
           {name}
-          <span className="text-muted font-normal text-[11px] ml-1">@{version}</span>
-        </h4>
+        </span>
+        {version && (
+          <span className="font-mono text-[10px] text-muted ml-1">
+            @{version}
+          </span>
+        )}
       </div>
 
-      {/* Description / Summary */}
-      <p className="text-[11px] text-muted line-clamp-2 leading-relaxed font-sans mb-2">
-        {mainCVE?.summary
-          ? mainCVE.summary
-          : depth === 0
-          ? 'Root target package'
-          : `Dependency via direct linkage`}
-      </p>
+      {/* DESCRIPTION / SUMMARY */}
+      <div className="min-h-[28px] mb-1.5">
+        {blasted ? (
+          <p className="text-[11px] text-rose-700 font-medium leading-relaxed truncate font-sans">
+            Compromise chain active
+          </p>
+        ) : mainCVE?.summary ? (
+          <p className="text-[11px] text-muted line-clamp-2 leading-relaxed font-sans">
+            {mainCVE.summary}
+          </p>
+        ) : (
+          <p className="text-[11px] text-muted/80 leading-relaxed font-sans">
+            No known CVEs detected
+          </p>
+        )}
+      </div>
 
-      {/* Bottom Metadata */}
-      <div className="flex items-center justify-between pt-1.5 border-t border-border/60 font-mono text-[9px] text-muted">
-        <span>{ecosystem}</span>
-        {monthly_downloads && (
-          <span>{formatDownloads(monthly_downloads)}</span>
+      {/* BOTTOM ROW */}
+      <div className="border-t border-border/60 mt-1.5 pt-1.5 flex items-center justify-between text-[10px] text-muted font-sans">
+        <span>Package</span>
+        {monthly_downloads ? (
+          <span className="font-mono text-[10px] text-dim">
+            {formatDownloads(monthly_downloads)}
+          </span>
+        ) : (
+          <span className="opacity-0">-</span>
         )}
       </div>
 
@@ -106,7 +131,7 @@ const PackageNode = memo(({ data }) => {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-2 !h-2 !bg-borderGlow !border !border-surface !-right-1"
+        className="!w-2 !h-2 !rounded-full !bg-zinc-400 !border-2 !border-white !-right-1"
       />
     </div>
   );
