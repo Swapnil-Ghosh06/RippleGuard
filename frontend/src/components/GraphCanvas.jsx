@@ -333,34 +333,34 @@ function ButterflyStepperHUD({
 
   return (
     <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 max-w-[95vw] sm:max-w-xl w-full px-4 select-none">
-      <div className="bg-white/95 backdrop-blur-md border border-amber-300 shadow-[0_8px_30px_rgb(245,158,11,0.22)] rounded-2xl p-3.5 flex flex-col gap-2">
+      <div className="bg-[#181c28]/95 backdrop-blur-md border border-amber-500/50 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-2xl p-3.5 flex flex-col gap-2 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-base animate-pulse">🦋</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="font-sans text-xs font-bold text-amber-950 uppercase tracking-wider">
+              <span className="font-mono text-xs font-bold text-amber-300 uppercase tracking-wider">
                 Butterfly Domino Trace
               </span>
-              <span className="text-[10px] font-mono text-amber-800 bg-amber-100/90 px-1.5 py-0.5 rounded border border-amber-200">
+              <span className="text-[10px] font-mono text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-800/80">
                 Hop {currentStep + 1} of {criticalChain.length}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <span className={`text-[10px] font-sans font-medium px-2 py-0.5 rounded-full border ${
+            <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${
               isOrigin
-                ? 'bg-rose-100 text-rose-800 border-rose-200 font-semibold'
+                ? 'bg-rose-950 text-rose-300 border-rose-800 font-semibold'
                 : isFrontier
-                ? 'bg-purple-100 text-purple-800 border-purple-200 font-semibold'
-                : 'bg-amber-100 text-amber-800 border-amber-200'
+                ? 'bg-purple-950 text-purple-300 border-purple-800 font-semibold'
+                : 'bg-amber-950 text-amber-300 border-amber-800'
             }`}>
               {isOrigin ? '⚡ Compromise Origin' : isFrontier ? '🏁 Exposure Frontier' : 'Cascading Link'}
             </span>
             <button
               type="button"
               onClick={onClose}
-              className="w-5 h-5 rounded-full hover:bg-surface2 flex items-center justify-center text-muted hover:text-text text-xs cursor-pointer ml-1"
+              className="w-5 h-5 rounded-full hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white text-xs cursor-pointer ml-1"
               title="Close Stepper"
             >
               ✕
@@ -369,12 +369,12 @@ function ButterflyStepperHUD({
         </div>
 
         {/* Current Node Display & Stepper Controls */}
-        <div className="flex items-center justify-between gap-3 pt-1 border-t border-amber-100">
+        <div className="flex items-center justify-between gap-3 pt-1 border-t border-white/10">
           <div className="min-w-0 flex-1">
-            <p className="font-mono text-xs font-bold text-text truncate">
+            <p className="font-mono text-xs font-bold text-white truncate">
               {currentNode}
             </p>
-            <p className="text-[10px] text-muted font-sans truncate">
+            <p className="text-[10px] text-zinc-400 font-sans truncate">
               {isOrigin
                 ? 'Attacker entrypoint exploiting package vulnerability'
                 : `Infected via upstream parent dependency linkage`}
@@ -387,7 +387,7 @@ function ButterflyStepperHUD({
               type="button"
               onClick={() => onStepChange(0)}
               disabled={currentStep === 0}
-              className="px-2 py-1 rounded-lg bg-surface2 hover:bg-surface3 disabled:opacity-40 text-text font-mono text-[10px] cursor-pointer"
+              className="px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 font-mono text-[10px] cursor-pointer"
               title="Reset to Origin"
             >
               ⏮
@@ -396,7 +396,7 @@ function ButterflyStepperHUD({
               type="button"
               onClick={() => onStepChange(Math.max(0, currentStep - 1))}
               disabled={currentStep === 0}
-              className="px-2.5 py-1 rounded-lg bg-surface2 hover:bg-surface3 disabled:opacity-40 text-text font-sans text-xs font-semibold cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 font-sans text-xs font-semibold cursor-pointer"
               title="Previous Hop"
             >
               ◀
@@ -404,10 +404,10 @@ function ButterflyStepperHUD({
             <button
               type="button"
               onClick={onTogglePlay}
-              className={`px-3 py-1 rounded-lg font-sans text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-xs ${
+              className={`px-3 py-1 rounded-lg font-sans text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-sm ${
                 isPlaying
                   ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
-                  : 'bg-amber-500 hover:bg-amber-600 text-white'
+                  : 'bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold'
               }`}
             >
               <span>{isPlaying ? '⏸' : '▶'}</span>
@@ -417,7 +417,7 @@ function ButterflyStepperHUD({
               type="button"
               onClick={() => onStepChange(Math.min(criticalChain.length - 1, currentStep + 1))}
               disabled={currentStep === criticalChain.length - 1}
-              className="px-2.5 py-1 rounded-lg bg-surface2 hover:bg-surface3 disabled:opacity-40 text-text font-sans text-xs font-semibold cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 font-sans text-xs font-semibold cursor-pointer"
               title="Next Hop"
             >
               ▶
@@ -755,16 +755,16 @@ function GraphCanvasInner() {
             : isCurrentDominoHop
             ? '#f59e0b'
             : isCriticalPath
-            ? '#d97706'
+            ? '#f59e0b'
             : isHot
-            ? '#e11d48'
-            : '#cbd5e1',
-          strokeWidth: isSeveredByPatch ? 2.5 : isCurrentDominoHop ? 4.5 : isCriticalPath ? 3.5 : isHot ? 2.25 : 1.5,
+            ? '#f43f5e'
+            : '#475569',
+          strokeWidth: isSeveredByPatch ? 2.5 : isCurrentDominoHop ? 4.5 : isCriticalPath ? 3.5 : isHot ? 2.5 : 2,
           strokeDasharray: isSeveredByPatch ? '4 4' : isCriticalPath ? '6 4' : undefined,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isSeveredByPatch ? '#10b981' : isCurrentDominoHop ? '#f59e0b' : isCriticalPath ? '#d97706' : isHot ? '#e11d48' : '#94a3b8',
+          color: isSeveredByPatch ? '#10b981' : isCurrentDominoHop ? '#f59e0b' : isCriticalPath ? '#f59e0b' : isHot ? '#f43f5e' : '#64748b',
           width: isCriticalPath || isSeveredByPatch ? 15 : 12,
           height: isCriticalPath || isSeveredByPatch ? 15 : 12,
         },
@@ -883,8 +883,8 @@ function GraphCanvasInner() {
 
   if (!rawNodes.length) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-white">
-        <p className="text-sm text-muted font-sans">No graph loaded.</p>
+      <div className="w-full h-full flex items-center justify-center bg-[#0e121a]">
+        <p className="text-sm text-zinc-400 font-sans">No graph loaded.</p>
       </div>
     );
   }
@@ -892,35 +892,35 @@ function GraphCanvasInner() {
   const isFullView = visibleNodes.length === rawNodes.length;
 
   return (
-    <div className="w-full h-full flex flex-col bg-white relative overflow-hidden">
+    <div className="w-full h-full flex flex-col bg-[#0e121a] relative overflow-hidden">
       {/* Top Floating Controls & Indicators */}
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2 select-none flex-wrap max-w-[calc(100%-2rem)]">
         {/* Main Stats Pill */}
-        <div className="bg-white/95 backdrop-blur-md border border-border px-3.5 py-1.5 rounded-full flex items-center gap-2.5 text-xs font-sans shadow-sm">
-          <div className="flex items-center gap-1.5 font-medium text-text">
-            <span className="w-2 h-2 rounded-full bg-black" />
+        <div className="bg-[#181c28]/95 backdrop-blur-md border border-[#2c3448] px-3.5 py-1.5 rounded-full flex items-center gap-2.5 text-xs font-sans shadow-lg text-zinc-300">
+          <div className="flex items-center gap-1.5 font-medium text-white">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Dependency Canvas</span>
           </div>
-          <span className="text-border">·</span>
-          <span className="text-muted font-medium">
+          <span className="text-[#2c3448]">·</span>
+          <span className="text-zinc-400 font-medium">
             {visibleNodes.length === rawNodes.length
               ? `${rawNodes.length} packages`
               : `${visibleNodes.length} of ${rawNodes.length} packages`}
           </span>
-          <span className="text-border">·</span>
-          <span className="text-muted">{visibleEdges.length} links</span>
+          <span className="text-[#2c3448]">·</span>
+          <span className="text-zinc-400">{visibleEdges.length} links</span>
 
           {blastData && (
             <>
-              <span className="text-border">·</span>
-              <span className="text-rose-700 font-medium flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+              <span className="text-[#2c3448]">·</span>
+              <span className="text-rose-400 font-medium flex items-center gap-1 bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-800/80">
                 <span>⚡</span>
                 <span>{effectiveTaintedSet.size}/{rawNodes.length} compromised</span>
               </span>
 
               {criticalChain.length > 1 && (
                 <>
-                  <span className="text-border">·</span>
+                  <span className="text-[#2c3448]">·</span>
                   <button
                     type="button"
                     onClick={() => {
@@ -929,7 +929,7 @@ function GraphCanvasInner() {
                       if (originId) setSelectedNode(originId);
                       setIsDominoPlaying(true);
                     }}
-                    className="text-amber-900 font-bold flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 px-2.5 py-0.5 rounded-full border border-amber-300 cursor-pointer transition-all active:scale-95"
+                    className="text-amber-300 font-bold flex items-center gap-1.5 bg-amber-950/80 hover:bg-amber-900 px-2.5 py-0.5 rounded-full border border-amber-800/80 cursor-pointer transition-all active:scale-95"
                   >
                     <span>🦋</span>
                     <span>Domino Trace ({criticalChain.length})</span>
@@ -939,8 +939,8 @@ function GraphCanvasInner() {
 
               {sandboxPatches.length > 0 && (
                 <>
-                  <span className="text-border">·</span>
-                  <span className="text-emerald-800 font-semibold flex items-center gap-1.5 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                  <span className="text-[#2c3448]">·</span>
+                  <span className="text-emerald-300 font-semibold flex items-center gap-1.5 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-800/80">
                     <span>🛡️</span>
                     <span>Sandbox: {sandboxPatches.length} Patched ({protectedSet.size} Shielded)</span>
                   </span>
@@ -952,14 +952,14 @@ function GraphCanvasInner() {
 
         {/* View Layout Controls (Focus Direct / Expand All / Zoom Fit) */}
         {rawNodes.length > 1 && (
-          <div className="bg-white/95 backdrop-blur-md border border-border px-1.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+          <div className="bg-[#181c28]/95 backdrop-blur-md border border-[#2c3448] px-1.5 py-1 rounded-full flex items-center gap-1 shadow-lg text-zinc-300">
             <button
               type="button"
               onClick={handleFocusDirect}
               className={`px-2.5 py-0.5 text-[11px] font-sans font-medium rounded-full cursor-pointer transition-colors ${
                 !isFullView
-                  ? 'bg-surface2 text-text font-semibold'
-                  : 'text-muted hover:text-text hover:bg-surface'
+                  ? 'bg-zinc-700 text-white font-semibold'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
               }`}
               title="Focus on Root & Direct dependencies"
             >
@@ -970,18 +970,18 @@ function GraphCanvasInner() {
               onClick={handleExpandAll}
               className={`px-2.5 py-0.5 text-[11px] font-sans font-medium rounded-full cursor-pointer transition-colors ${
                 isFullView
-                  ? 'bg-surface2 text-text font-semibold'
-                  : 'text-muted hover:text-text hover:bg-surface'
+                  ? 'bg-zinc-700 text-white font-semibold'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
               }`}
               title="Expand all downstream dependency branches"
             >
               Expand All
             </button>
-            <span className="text-border text-xs">|</span>
+            <span className="text-[#2c3448] text-xs">|</span>
             <button
               type="button"
               onClick={handleFitView}
-              className="px-2 py-0.5 text-[11px] font-sans text-muted hover:text-text hover:bg-surface rounded-full cursor-pointer transition-colors"
+              className="px-2 py-0.5 text-[11px] font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full cursor-pointer transition-colors"
               title="Auto Zoom to Fit Graph"
             >
               Fit View ⤢
@@ -990,7 +990,7 @@ function GraphCanvasInner() {
         )}
 
         {rawNodes.length === 1 && (
-          <div className="bg-amber-50/95 border border-amber-200/80 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-sans text-amber-900 shadow-xs">
+          <div className="bg-amber-950/80 border border-amber-800/80 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-sans text-amber-300 shadow-sm">
             <span>ℹ️</span>
             <span className="font-medium">Standalone Root Library (0 downstream dependencies)</span>
           </div>
@@ -1012,24 +1012,24 @@ function GraphCanvasInner() {
           fitViewOptions={{ padding: 0.25 }}
           minZoom={0.2}
           maxZoom={2}
-          style={{ background: '#ffffff' }}
+          style={{ background: '#0e121a' }}
           proOptions={{ hideAttribution: true }}
         >
           <Background
             variant={BackgroundVariant.Dots}
             gap={24}
-            size={1.2}
-            color="#e4e4e7"
+            size={1.5}
+            color="#22283a"
           />
 
           <Controls
-            className="!bg-white !border !border-border !rounded-xl !shadow-sm"
+            className="!bg-[#181c28] !border !border-[#2c3448] !text-white !rounded-xl !shadow-2xl"
           />
 
           <MiniMap
-            className="!bg-white !border !border-border !rounded-xl !shadow-sm"
-            nodeColor={n => n.data?.isSandboxPatched ? '#10b981' : n.data?.dominoIndex ? '#f59e0b' : n.data?.blasted ? '#e11d48' : n.data?.vulnerabilities?.length ? '#d97706' : '#e4e4e7'}
-            maskColor="rgba(255, 255, 255, 0.65)"
+            className="!bg-[#181c28] !border !border-[#2c3448] !rounded-xl !shadow-2xl"
+            nodeColor={n => n.data?.isSandboxPatched ? '#10b981' : n.data?.dominoIndex ? '#f59e0b' : n.data?.blasted ? '#f43f5e' : n.data?.vulnerabilities?.length ? '#d97706' : '#334155'}
+            maskColor="rgba(14, 18, 26, 0.75)"
           />
 
           <ViewportAutoFitter triggerKey={`${visibleNodes.map(n => n.id).join(',')}-${blastData ? 'blast' : 'idle'}`} />
