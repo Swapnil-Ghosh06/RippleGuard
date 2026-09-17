@@ -1,186 +1,289 @@
-# RippleGuard 🛡️
-### *See the compromise before it becomes a catastrophe.*
+<div align="center">
 
-[![Vite](https://img.shields.io/badge/Frontend-React_18_+_Vite-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI_+_Python_3.11-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![React Flow](https://img.shields.io/badge/Graph_Engine-React_Flow_+_NetworkX-FF0072?style=flat)](https://reactflow.dev/)
-[![Data Providers](https://img.shields.io/badge/Data-deps.dev_+_OSV.dev-4285F4?style=flat&logo=google&logoColor=white)](https://deps.dev/)
-[![Hackathon](https://img.shields.io/badge/Manipal_Hackathon_2026-Cybersecurity_Track-red?style=flat)]()
+<img src="./docs/assets/banner.jpg" alt="RippleGuard — Supply Chain Compromise Simulator" width="100%"/>
 
-**RippleGuard** is an open-source **Compromise Propagation & Blast Radius Simulator** for modern software supply chains. 
+<br/>
+<br/>
 
-Rather than functioning as a static vulnerability scanner, RippleGuard models live transitive dependency DAGs across **npm** and **PyPI**, injects realistic supply chain attacks (e.g. malicious updates, maintainer sabotage, zero-day RCEs), and simulates step-by-step how contagion ripples through downstream ecosystems.
+**See the compromise before it becomes a catastrophe.**
 
----
+<br/>
 
-## 🌟 Key Highlights & Capabilities
+[![React](https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Python](https://img.shields.io/badge/Python_3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org/)
+[![NetworkX](https://img.shields.io/badge/NetworkX-Graph_Engine-orange?style=for-the-badge)](https://networkx.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](./LICENSE)
 
-- 🕸️ **Live Multi-Tier Dependency Resolution**: Instant recursive DAG construction for any npm or PyPI package via `deps.dev` and official package registries.
-- ⚡ **Compromise Propagation Engine**: Exponential decay contagion algorithm ($P(v) = P(u) \cdot e^{-\lambda \cdot d} \cdot \text{Weight}$) that simulates how malicious payloads spread through dependencies.
-- 💥 **Blast Radius Scoring (0–100)**: Quantitative impact metrics combining affected package count, transitive depth, monthly download exposure, and exploit severity.
-- 🦋 **Butterfly Trace & Domino Stepper**: Interactive step-by-step scrubber tracing the critical failure chain from entrypoint to terminal endpoints with auto-centering camera focus.
-- 🛡️ **Interactive Virtual Sandbox**: In-browser sandbox allowing engineers to simulate removing, upgrading, or isolating packages and immediately observe the blast radius reduction.
-- 🎯 **One-Click Attack Benchmarks**: Pre-loaded simulations of infamous real-world supply chain attacks:
-  - **Log4Shell RCE** (`log4js` / `CVE-2021-44228`)
-  - **SSH Binary Backdoor** (`xz` / `CVE-2024-3094`)
-  - **Wallet Theft Trojan** (`event-stream` / `GHSA-mh6f-8j2x-4483`)
-  - **Maintainer Sabotage** (`colors` / `GHSA-5rqg-jm4f-cqx7`)
-  - **Prototype Pollution** (`lodash` / `CVE-2021-23337`)
-- 📋 **Prioritized Remediation Planner**: Actionable upgrade paths with copy-paste commands (`npm update`, `pip install --upgrade`) and exact percentage impact metrics.
-- 📄 **Executive & Technical Export**: Downloadable audit summaries in JSON and Markdown SBOM formats.
-- 🎨 **Editorial Design System**: Clean newspaper aesthetic featuring warm cream palette, Playfair Display typography, and custom water-drop branding.
+<br/>
+
+[![Hackathon](https://img.shields.io/badge/🏆_Manipal_Hackathon_2026-Cybersecurity_Track-red?style=flat-square&labelColor=black)](/)
+[![No API Keys](https://img.shields.io/badge/🔑_Zero_API_Keys-Required-brightgreen?style=flat-square&labelColor=black)](/)
+[![npm + PyPI](https://img.shields.io/badge/📦_npm_+_PyPI-Supported-blue?style=flat-square&labelColor=black)](/)
+
+<br/>
+
+[**🚀 Live Demo**](#) · [**📖 Docs**](./docs/) · [**🐛 Report Bug**](https://github.com/Swapnil-Ghosh06/RippleGuard/issues) · [**✨ Request Feature**](https://github.com/Swapnil-Ghosh06/RippleGuard/issues)
+
+</div>
 
 ---
 
-## 🏗️ Architecture & System Design
+## ⚡ What is RippleGuard?
+
+> *You rely on hundreds of packages every day — and you have zero visibility into what happens when one goes rogue.*
+
+Standard vulnerability scanners give you a raw list of 400 CVE alerts and no idea which one could actually cripple your infrastructure. They alert on package versions, but **cannot map reachability, transitive blast paths, or downstream impact.**
+
+**RippleGuard is different.** It's a **supply chain compromise simulator** — not an alert fatigue engine. You pick any package in the dependency tree, inject a real-world attack, and **watch the infection cascade across the dependency graph in real time.**
+
+<br/>
+
+<div align="center">
 
 ```
-                     ┌────────────────────────────────────────┐
-                     │          RippleGuard Frontend          │
-                     │  (React 18 + Vite + Tailwind + Flow)   │
-                     └───────────────────┬────────────────────┘
-                                         │ REST API
-                                         ▼
-                     ┌────────────────────────────────────────┐
-                     │          FastAPI Backend Core          │
-                     │ (Graph Engine, NetworkX, Decay Sim)    │
-                     └───────┬────────────────────────┬───────┘
-                             │                        │
-               HTTP / Live   ▼          HTTP / Live   ▼
-        ┌─────────────────────────┐      ┌─────────────────────────┐
-        │  Google deps.dev API    │      │     OSV.dev API         │
-        │  (Transitive Dep DAGs)  │      │  (Vulnerability Feed)   │
-        └─────────────────────────┘      └─────────────────────────┘
+You name a package  →  We map its entire dependency universe
+                   →  You inject a compromise
+                   →  We calculate the blast radius
+                   →  You see exactly what breaks and why
 ```
 
-### Contagion Spread Formula
-Contagion probability $P(v)$ across dependency edge $(u, v)$ with distance $d$ is computed via:
+</div>
+
+---
+
+## ✨ Core Features
+
+<img src="./docs/assets/features.jpg" alt="RippleGuard Feature Grid" width="100%"/>
+
+<br/>
+
+| Feature | Description |
+|---|---|
+| 🕸️ **Live Dependency DAGs** | Recursive transitive dependency resolution for any npm or PyPI package in seconds via `deps.dev` |
+| 💥 **Blast Radius Score (0–100)** | Quantitative impact metric combining affected packages, depth, monthly downloads & exploit severity |
+| ⚡ **Compromise Propagation Engine** | Exponential decay contagion algorithm — watch malicious payloads spread node-by-node in real time |
+| 🦋 **Domino Stepper** | Step-by-step scrubber tracing the critical failure chain with auto-centering camera focus |
+| 🛡️ **Virtual Patch Sandbox** | Simulate removing, upgrading, or isolating packages and see blast radius shrink live |
+| 🎯 **Attack Benchmarks** | One-click replays of Log4Shell, XZ Backdoor, event-stream, colors, and lodash CVEs |
+| 📋 **Remediation Planner** | Prioritized upgrade paths with exact copy-paste `npm update` / `pip install --upgrade` commands |
+| 📄 **Executive Export** | Downloadable JSON & Markdown SBOM audit summaries |
+
+---
+
+## 🎬 See It In Action
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>🔍 Search & Analyze Any Package</strong><br/>
+      Type any npm or PyPI package name. RippleGuard builds a live dependency graph showing all transitive relationships and known CVEs.
+    </td>
+    <td align="center" width="50%">
+      <strong>💥 Inject a Compromise</strong><br/>
+      Click any node, hit "Inject Compromise", and watch the blast cascade spread node-by-node across the entire tree.
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>🦋 Trace the Domino Path</strong><br/>
+      Use the step-by-step Domino Stepper to walk through the critical failure chain with the camera auto-centering on each hop.
+    </td>
+    <td align="center" width="50%">
+      <strong>🛡️ Patch & Measure Impact</strong><br/>
+      Apply virtual patches in the sandbox and instantly see how much blast radius each fix eliminates.
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🏗️ Architecture
+
+<img src="./docs/assets/architecture.jpg" alt="RippleGuard System Architecture" width="100%"/>
+
+<br/>
+
+### How the Contagion Formula Works
+
+RippleGuard uses an **exponential decay propagation model** to simulate how a compromise spreads through a dependency graph:
+
 $$P(v) = P(u) \cdot e^{-\lambda \cdot d} \cdot W_{\text{vuln}}(v)$$
 
-Where:
-- $\lambda$: Attenuation constant based on dependency role (Direct vs Transitive).
-- $W_{\text{vuln}}(v)$: Vulnerability weight derived from CVSS v3 score and exploit maturity.
+| Symbol | Meaning |
+|---|---|
+| `P(v)` | Contagion probability at node `v` |
+| `P(u)` | Contagion probability at parent node `u` |
+| `λ` | Attenuation constant (role: Direct vs Transitive dependency) |
+| `d` | Graph distance from the initial compromise point |
+| `W_vuln(v)` | Vulnerability weight from CVSS v3 score & exploit maturity |
 
 ---
 
-## 📚 Documentation Index
+## 🎯 Attack Benchmarks
 
-All project specifications and design docs live in [`docs/`](./docs):
+Replay five of the most devastating real-world supply chain attacks with one click:
 
-| Document | Description |
-|---|---|
-| [`docs/PRD.md`](./docs/PRD.md) | Product vision, core features (F1–F8), judging criteria mapping |
-| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | System architecture, request lifecycle, data flow |
-| [`docs/TECHSTACK.md`](./docs/TECHSTACK.md) | Technology choices, library rationale, and dependencies |
-| [`docs/DATA_MODEL.md`](./docs/DATA_MODEL.md) | Entity relationships (Package, Vulnerability, BlastResult) |
-| [`docs/SCHEMA.md`](./docs/SCHEMA.md) | API request & response specifications |
-| [`docs/DESIGN.md`](./docs/DESIGN.md) | Color palette, typography tokens, motion system |
-| [`docs/REQUIREMENTS.md`](./docs/REQUIREMENTS.md) | Functional and non-functional requirements checklist |
-| [`docs/TDD.md`](./docs/TDD.md) | Technical design document — propagation algorithms & DAG parsing |
-| [`docs/CREATIVE_IDEAS.md`](./docs/CREATIVE_IDEAS.md) | Differentiator features & innovation highlights |
-| [`docs/VIDEO_SCRIPT.md`](./docs/VIDEO_SCRIPT.md) | Official 3-minute video presentation & teleprompter script |
-| [`docs/NITYA_PPT_BRIEF.md`](./docs/NITYA_PPT_BRIEF.md) | Pitch deck content structure & slide walkthrough |
+| Attack | Package | CVE | Impact |
+|---|---|---|---|
+| 🔥 **Log4Shell RCE** | `log4js` | CVE-2021-44228 | Remote code execution via log interpolation |
+| 🐚 **SSH Binary Backdoor** | `xz` | CVE-2024-3094 | Malicious XZ compression library compromising SSH |
+| 💸 **Wallet Theft Trojan** | `event-stream` | GHSA-mh6f-8j2x-4483 | Malicious package injected to steal Bitcoin |
+| 🎨 **Maintainer Sabotage** | `colors` | GHSA-5rqg-jm4f-cqx7 | Deliberate breakage by burned-out maintainer |
+| 🧬 **Prototype Pollution** | `lodash` | CVE-2021-23337 | Object prototype poisoning across Node.js apps |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- **Node.js** v18.0+ & **npm**
-- **Python** 3.10+ & **pip**
-- **Zero API Keys Required** (All upstream data providers are keyless and free)
+
+- **Node.js** v18+ & npm
+- **Python** 3.10+ & pip
+- **Zero API keys required** — all data providers are free and keyless
 
 ---
 
-### 1. Backend Setup
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/Swapnil-Ghosh06/RippleGuard.git
+cd RippleGuard
+```
+
+---
+
+### 2️⃣ Backend Setup
 
 ```bash
 cd backend
 
-# Create and activate virtual environment
+# Create virtual environment
 python -m venv venv
 
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows (cmd/pwsh):
-.\venv\Scripts\activate
+# Activate it
+source venv/bin/activate        # macOS / Linux
+.\venv\Scripts\activate         # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Start FastAPI development server
+# Start the API server
 uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-The API will be live at `http://127.0.0.1:8000`.  
-Interactive Swagger docs: `http://127.0.0.1:8000/docs`.
+> **API live at:** `http://127.0.0.1:8000`  
+> **Swagger docs:** `http://127.0.0.1:8000/docs`
 
 ---
 
-### 2. Frontend Setup
+### 3️⃣ Frontend Setup
 
 ```bash
 cd frontend
 
-# Install npm dependencies
+# Install dependencies
 npm install
 
-# Start Vite dev server
+# Copy env config
+cp .env.example .env.local
+# .env.local already points to http://localhost:8000 by default
+
+# Start dev server
 npm run dev
 ```
 
-The web client will launch at `http://localhost:5173`.
+> **App live at:** `http://localhost:5173`
 
 ---
 
-## 📡 REST API Reference
+## 📡 API Reference
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/health` | Service health status and API version. |
-| `POST` | `/api/analyze` | Resolves transitive dependencies & queries OSV vulnerabilities. |
-| `POST` | `/api/simulate` | Executes blast radius calculation & contagion propagation. |
-| `POST` | `/api/compare` | Compares blast radius differences between versions or packages. |
-| `POST` | `/api/export` | Generates downloadable JSON / Markdown executive summaries. |
-| `GET` | `/api/attacks` | Returns curated historical attack scenarios. |
+| `GET` | `/health` | Service health status & API version |
+| `POST` | `/api/analyze` | Resolves transitive deps & queries OSV vulnerabilities |
+| `POST` | `/api/simulate` | Executes blast radius calculation & contagion propagation |
+| `POST` | `/api/compare` | Compares blast radius between versions or packages |
+| `POST` | `/api/export` | Generates downloadable JSON / Markdown summaries |
+| `GET` | `/api/attacks` | Returns curated historical attack scenarios |
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **Framework**: React 18 + Vite 8
-- **Interactive Graphing**: React Flow (`@xyflow/react`)
-- **State Management**: Zustand
-- **Styling & Motion**: Tailwind CSS + Framer Motion
-- **Typography**: Playfair Display, DM Sans, Sora, Montserrat
+<div align="center">
 
-### Backend
-- **Framework**: FastAPI (Python 3.10+)
-- **ASGI Server**: Uvicorn
-- **Graph Processing**: NetworkX
-- **HTTP Client**: HTTPX (Async HTTP connection pool)
-- **Validation**: Pydantic v2
+| Layer | Technology |
+|---|---|
+| **Frontend Framework** | React 18 + Vite |
+| **Graph Visualization** | React Flow (`@xyflow/react`) |
+| **State Management** | Zustand |
+| **Animations** | Framer Motion |
+| **Styling** | Tailwind CSS |
+| **Typography** | Playfair Display · DM Sans · Sora |
+| **Backend Framework** | FastAPI (Python 3.11) |
+| **ASGI Server** | Uvicorn |
+| **Graph Processing** | NetworkX |
+| **HTTP Client** | HTTPX (async) |
+| **Validation** | Pydantic v2 |
+| **Dependency Data** | Google deps.dev API |
+| **Vulnerability Data** | OSV.dev Advisory Database |
+| **Package Registries** | npm Registry API · PyPI JSON API |
 
-### External Data Services
-- **Google Open Source Insights (`deps.dev`)**: Live transitive dependency graphs.
-- **Open Source Vulnerabilities (`OSV.dev`)**: Distributed open-source CVE & advisory database.
-- **Package Registries**: npm Registry API & PyPI JSON API.
+</div>
 
 ---
 
-## 👥 The RippleGuard Team
+## 📚 Documentation
 
-| Contributor | Squad | Focus Area |
-|---|---|---|
-| **Syed Zahid Saleem** ([@syedzahidsaleem](https://github.com/syedzahidsaleem)) | Backend | Project Lead — Graph Engine, Fast DAG Resolution & API Architecture |
-| **Haripriya** ([@Haripriya24071](https://github.com/Haripriya24071)) | Backend | Data Services, OSV & Registry Integration, Vulnerability Scoring |
-| **Swapnil Ghosh** ([@Swapnil-Ghosh06](https://github.com/Swapnil-Ghosh06)) | Frontend | Frontend Architecture, Design System, Responsive Layout & Scaffolding |
-| **Shubham** ([@subham-OPS08](https://github.com/subham-OPS08)) | Frontend | Graph Visualization, Custom Node Ports, Canvas Interactions & Layout |
-| **Nitya** ([@dearnitya](https://github.com/dearnitya)) | Frontend & UI | Analysis Panels, Domino Stepper HUD, Mitigation UI & Documentation |
+All design & specification docs live in [`docs/`](./docs/):
+
+| Doc | Description |
+|---|---|
+| [`PRD.md`](./docs/PRD.md) | Product vision, core features, judging criteria mapping |
+| [`ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | System architecture, request lifecycle, data flow |
+| [`TECHSTACK.md`](./docs/TECHSTACK.md) | Technology choices & library rationale |
+| [`DATA_MODEL.md`](./docs/DATA_MODEL.md) | Entity relationships — Package, Vulnerability, BlastResult |
+| [`SCHEMA.md`](./docs/SCHEMA.md) | API request & response specifications |
+| [`DESIGN.md`](./docs/DESIGN.md) | Color palette, typography tokens, motion system |
+| [`TDD.md`](./docs/TDD.md) | Technical design — propagation algorithms & DAG parsing |
+
+---
+
+## 👥 The Team
+
+<div align="center">
+
+| | Contributor | Role | Focus |
+|---|---|---|---|
+| 🧠 | **Syed Zahid Saleem** · [@syedzahidsaleem](https://github.com/syedzahidsaleem) | Backend Lead | Graph Engine, FastAPI Architecture, DAG Resolution |
+| 🔬 | **Haripriya** · [@Haripriya24071](https://github.com/Haripriya24071) | Backend | OSV & Registry Integration, Vulnerability Scoring |
+| 🎨 | **Swapnil Ghosh** · [@Swapnil-Ghosh06](https://github.com/Swapnil-Ghosh06) | Frontend | Design System, Frontend Architecture, Layout |
+| 🖥️ | **Shubham** · [@subham-OPS08](https://github.com/subham-OPS08) | Frontend | Graph Visualization, Node Ports, Canvas Interactions |
+| 🎭 | **Nitya** · [@dearnitya](https://github.com/dearnitya) | Frontend & UI | Analysis Panels, Domino Stepper HUD, Mitigation UI |
+
+</div>
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+Built with ❤️ for **Manipal Hackathon 2026** — Cybersecurity Track
+
+<br/>
+
+*RippleGuard — Because one rogue package can sink everything.*
+
+<br/>
+
+⭐ **Star this repo** if you found it useful!
+
+</div>
