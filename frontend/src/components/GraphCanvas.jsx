@@ -152,8 +152,8 @@ function buildIntelligentLayout(nodes, edges) {
   const layers = Object.keys(byLayer).map(Number).sort((a, b) => a - b);
   const positions = {};
 
-  const X_STEP = 340;
-  const MIN_Y_GAP = 145;
+  const X_STEP = 360;
+  const MIN_Y_GAP = 155;
   const BASE_Y_CENTER = 300;
 
   // Root Layer (Layer 0)
