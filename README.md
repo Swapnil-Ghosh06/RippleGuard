@@ -30,7 +30,9 @@
 
 ---
 
-## ⚡ What is RippleGuard?
+## ⚡ The Problem
+
+<img src="./docs/assets/screenshot-problem.png" alt="The Problem — supply chain attack visibility gap" width="100%"/>
 
 > *You rely on hundreds of packages every day — and you have zero visibility into what happens when one goes rogue.*
 
@@ -38,86 +40,58 @@ Standard vulnerability scanners give you a raw list of 400 CVE alerts and no ide
 
 **RippleGuard is different.** It's a **supply chain compromise simulator** — not an alert fatigue engine. You pick any package in the dependency tree, inject a real-world attack, and **watch the infection cascade across the dependency graph in real time.**
 
-<br/>
+---
+
+## 🎯 Meet RippleGuard
+
+<img src="./docs/assets/screenshot-hero.png" alt="RippleGuard Hero — blast radius of a single package" width="100%"/>
+
+> *The no-brainer way to map exactly what breaks across your dependency tree when a package gets poisoned.*
 
 <div align="center">
 
 ```
-You name a package  →  We map its entire dependency universe
-                   →  You inject a compromise
-                   →  We calculate the blast radius
-                   →  You see exactly what breaks and why
+Search any npm or PyPI package  →  RippleGuard maps the full dependency universe
+Inject a real attack scenario   →  Watch the compromise cascade in real time
+Read the Blast Radius Score     →  Know exactly what's at risk and how to fix it
 ```
 
 </div>
 
 ---
 
+## 💥 The Dependency Canvas
+
+<img src="./docs/assets/screenshot-graph.png" alt="RippleGuard Dependency Canvas — live graph simulation" width="100%"/>
+
+Every node is a real package. Every edge is a real dependency. The canvas is live — click any node, inject a compromise, and watch the contagion spread hop-by-hop with a 0–100 **Blast Radius Score**.
+
+**Color coding at a glance:**
+- 🔴 `CRITICAL CVE` — Immediate exploit risk
+- 🟠 `HIGH/MEDIUM CVE` — Active vulnerability  
+- 🟢 `No known CVEs` — Clean package
+- ⚡ `Compromised` — Infected by simulation
+
+---
+
+## 📖 How It Works
+
+<img src="./docs/assets/screenshot-howto.png" alt="RippleGuard — How it works, 4 steps" width="100%"/>
+
+---
+
 ## ✨ Core Features
-
-<img src="./docs/assets/features.jpg" alt="RippleGuard Feature Grid" width="100%"/>
-
-<br/>
 
 | Feature | Description |
 |---|---|
-| 🕸️ **Live Dependency DAGs** | Recursive transitive dependency resolution for any npm or PyPI package in seconds via `deps.dev` |
+| 🕸️ **Live Dependency DAGs** | Recursive transitive dependency resolution for any npm or PyPI package via `deps.dev` |
 | 💥 **Blast Radius Score (0–100)** | Quantitative impact metric combining affected packages, depth, monthly downloads & exploit severity |
-| ⚡ **Compromise Propagation Engine** | Exponential decay contagion algorithm — watch malicious payloads spread node-by-node in real time |
+| ⚡ **Compromise Propagation Engine** | Exponential decay contagion algorithm — malicious payloads spread node-by-node in real time |
 | 🦋 **Domino Stepper** | Step-by-step scrubber tracing the critical failure chain with auto-centering camera focus |
 | 🛡️ **Virtual Patch Sandbox** | Simulate removing, upgrading, or isolating packages and see blast radius shrink live |
 | 🎯 **Attack Benchmarks** | One-click replays of Log4Shell, XZ Backdoor, event-stream, colors, and lodash CVEs |
 | 📋 **Remediation Planner** | Prioritized upgrade paths with exact copy-paste `npm update` / `pip install --upgrade` commands |
 | 📄 **Executive Export** | Downloadable JSON & Markdown SBOM audit summaries |
-
----
-
-## 🎬 See It In Action
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <strong>🔍 Search & Analyze Any Package</strong><br/>
-      Type any npm or PyPI package name. RippleGuard builds a live dependency graph showing all transitive relationships and known CVEs.
-    </td>
-    <td align="center" width="50%">
-      <strong>💥 Inject a Compromise</strong><br/>
-      Click any node, hit "Inject Compromise", and watch the blast cascade spread node-by-node across the entire tree.
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <strong>🦋 Trace the Domino Path</strong><br/>
-      Use the step-by-step Domino Stepper to walk through the critical failure chain with the camera auto-centering on each hop.
-    </td>
-    <td align="center" width="50%">
-      <strong>🛡️ Patch & Measure Impact</strong><br/>
-      Apply virtual patches in the sandbox and instantly see how much blast radius each fix eliminates.
-    </td>
-  </tr>
-</table>
-
----
-
-## 🏗️ Architecture
-
-<img src="./docs/assets/architecture.jpg" alt="RippleGuard System Architecture" width="100%"/>
-
-<br/>
-
-### How the Contagion Formula Works
-
-RippleGuard uses an **exponential decay propagation model** to simulate how a compromise spreads through a dependency graph:
-
-$$P(v) = P(u) \cdot e^{-\lambda \cdot d} \cdot W_{\text{vuln}}(v)$$
-
-| Symbol | Meaning |
-|---|---|
-| `P(v)` | Contagion probability at node `v` |
-| `P(u)` | Contagion probability at parent node `u` |
-| `λ` | Attenuation constant (role: Direct vs Transitive dependency) |
-| `d` | Graph distance from the initial compromise point |
-| `W_vuln(v)` | Vulnerability weight from CVSS v3 score & exploit maturity |
 
 ---
 
@@ -135,6 +109,26 @@ Replay five of the most devastating real-world supply chain attacks with one cli
 
 ---
 
+## 🏗️ Architecture
+
+<img src="./docs/assets/architecture.jpg" alt="RippleGuard System Architecture" width="100%"/>
+
+### Contagion Formula
+
+RippleGuard uses an **exponential decay propagation model**:
+
+$$P(v) = P(u) \cdot e^{-\lambda \cdot d} \cdot W_{\text{vuln}}(v)$$
+
+| Symbol | Meaning |
+|---|---|
+| `P(v)` | Contagion probability at node `v` |
+| `P(u)` | Contagion probability at parent node `u` |
+| `λ` | Attenuation constant (Direct vs Transitive dependency) |
+| `d` | Graph distance from the initial compromise point |
+| `W_vuln(v)` | Vulnerability weight from CVSS v3 score & exploit maturity |
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -143,58 +137,36 @@ Replay five of the most devastating real-world supply chain attacks with one cli
 - **Python** 3.10+ & pip
 - **Zero API keys required** — all data providers are free and keyless
 
----
-
-### 1️⃣ Clone the Repository
+### 1️⃣ Clone
 
 ```bash
 git clone https://github.com/Swapnil-Ghosh06/RippleGuard.git
 cd RippleGuard
 ```
 
----
-
-### 2️⃣ Backend Setup
+### 2️⃣ Backend
 
 ```bash
 cd backend
-
-# Create virtual environment
 python -m venv venv
-
-# Activate it
 source venv/bin/activate        # macOS / Linux
 .\venv\Scripts\activate         # Windows
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Start the API server
 uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-> **API live at:** `http://127.0.0.1:8000`  
-> **Swagger docs:** `http://127.0.0.1:8000/docs`
+> **API:** `http://127.0.0.1:8000` · **Swagger:** `http://127.0.0.1:8000/docs`
 
----
-
-### 3️⃣ Frontend Setup
+### 3️⃣ Frontend
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Copy env config
 cp .env.example .env.local
-# .env.local already points to http://localhost:8000 by default
-
-# Start dev server
 npm run dev
 ```
 
-> **App live at:** `http://localhost:5173`
+> **App:** `http://localhost:5173`
 
 ---
 
@@ -202,11 +174,11 @@ npm run dev
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/health` | Service health status & API version |
+| `GET` | `/health` | Service health & API version |
 | `POST` | `/api/analyze` | Resolves transitive deps & queries OSV vulnerabilities |
-| `POST` | `/api/simulate` | Executes blast radius calculation & contagion propagation |
-| `POST` | `/api/compare` | Compares blast radius between versions or packages |
-| `POST` | `/api/export` | Generates downloadable JSON / Markdown summaries |
+| `POST` | `/api/simulate` | Executes blast radius & contagion propagation |
+| `POST` | `/api/compare` | Compares blast radius between versions/packages |
+| `POST` | `/api/export` | Generates JSON / Markdown audit summaries |
 | `GET` | `/api/attacks` | Returns curated historical attack scenarios |
 
 ---
@@ -217,20 +189,19 @@ npm run dev
 
 | Layer | Technology |
 |---|---|
-| **Frontend Framework** | React 18 + Vite |
-| **Graph Visualization** | React Flow (`@xyflow/react`) |
-| **State Management** | Zustand |
+| **Frontend** | React 18 + Vite |
+| **Graph Engine** | React Flow (`@xyflow/react`) |
+| **State** | Zustand |
 | **Animations** | Framer Motion |
 | **Styling** | Tailwind CSS |
 | **Typography** | Playfair Display · DM Sans · Sora |
-| **Backend Framework** | FastAPI (Python 3.11) |
-| **ASGI Server** | Uvicorn |
+| **Backend** | FastAPI (Python 3.11) + Uvicorn |
 | **Graph Processing** | NetworkX |
 | **HTTP Client** | HTTPX (async) |
 | **Validation** | Pydantic v2 |
-| **Dependency Data** | Google deps.dev API |
-| **Vulnerability Data** | OSV.dev Advisory Database |
-| **Package Registries** | npm Registry API · PyPI JSON API |
+| **Dep Data** | Google deps.dev API |
+| **CVE Data** | OSV.dev Advisory Database |
+| **Registries** | npm Registry API · PyPI JSON API |
 
 </div>
 
@@ -238,17 +209,15 @@ npm run dev
 
 ## 📚 Documentation
 
-All design & specification docs live in [`docs/`](./docs/):
-
 | Doc | Description |
 |---|---|
-| [`PRD.md`](./docs/PRD.md) | Product vision, core features, judging criteria mapping |
+| [`PRD.md`](./docs/PRD.md) | Product vision, core features, judging criteria |
 | [`ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | System architecture, request lifecycle, data flow |
 | [`TECHSTACK.md`](./docs/TECHSTACK.md) | Technology choices & library rationale |
 | [`DATA_MODEL.md`](./docs/DATA_MODEL.md) | Entity relationships — Package, Vulnerability, BlastResult |
-| [`SCHEMA.md`](./docs/SCHEMA.md) | API request & response specifications |
-| [`DESIGN.md`](./docs/DESIGN.md) | Color palette, typography tokens, motion system |
-| [`TDD.md`](./docs/TDD.md) | Technical design — propagation algorithms & DAG parsing |
+| [`SCHEMA.md`](./docs/SCHEMA.md) | API request & response specs |
+| [`DESIGN.md`](./docs/DESIGN.md) | Color palette, typography, motion system |
+| [`TDD.md`](./docs/TDD.md) | Propagation algorithms & DAG parsing |
 
 ---
 
@@ -270,7 +239,7 @@ All design & specification docs live in [`docs/`](./docs/):
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+Licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
 
 ---
 
