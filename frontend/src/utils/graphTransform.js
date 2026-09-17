@@ -1,40 +1,42 @@
-import { SEVERITY_COLORS, getMaxSeverity, text } from './colorMapping.js'
-import { mockAnalyzeResponse } from '../mocks/mockAnalyzeResponse.js'
+import { SEVERITY_COLORS, getMaxSeverity } from './colorMapping.js';
 
 /**
- * Computes style object for a graph node based on root status and vulnerability severity.
+ * Computes custom CSS styling for a node based on its root status and maximum vulnerability severity.
  *
- * @param {object} node
- * @returns {React.CSSProperties}
+ * @param {object} node - Backend package node object.
+ * @param {boolean} [node.is_root] - Whether the node is the root package.
+ * @param {Array<{ severity?: string }>} [node.vulnerabilities] - List of package vulnerabilities.
+ * @returns {import('react').CSSProperties} Node style properties.
  */
-export function getNodeStyle(node) {
-  const maxSev = getMaxSeverity(node?.vulnerabilities)
-  const borderColor = SEVERITY_COLORS[maxSev] || SEVERITY_COLORS.NONE
-
+function getNodeStyle(node) {
+  const maxSeverity = getMaxSeverity(node?.vulnerabilities);
+  const color = SEVERITY_COLORS[maxSeverity] || SEVERITY_COLORS.NONE;
   return {
     background: node?.is_root ? '#7c3aed' : '#1e293b',
-    border: `2px solid ${borderColor}`,
+    border: `2px solid ${color}`,
     borderRadius: '8px',
-    color: text,
+    color: '#f1f5f9',
     fontSize: '11px',
     padding: '8px 12px',
     minWidth: '120px',
-  }
+  };
 }
 
 /**
- * Converts backend graph payload (nodes[] and edges[]) to React Flow format.
+ * Transforms backend graph data ({ nodes: [...], edges: [...] }) into React Flow node and edge definitions.
  *
- * @param {object} backendGraph - { nodes: Array, edges: Array } or payload with graph property
- * @returns {{ nodes: Array, edges: Array }}
+ * @param {object} backendGraph - The graph object from the backend API response ({ nodes: Array, edges: Array }).
+ * @param {Array<object>} [backendGraph.nodes] - Raw backend node list.
+ * @param {Array<object>} [backendGraph.edges] - Raw backend edge list.
+ * @returns {{ nodes: Array<object>, edges: Array<object> }} React Flow formatted nodes and edges.
  */
 export function transformToReactFlow(backendGraph) {
   if (!backendGraph) {
-    return { nodes: [], edges: [] }
+    return { nodes: [], edges: [] };
   }
 
-  const rawNodes = backendGraph.nodes || backendGraph.graph?.nodes || []
-  const rawEdges = backendGraph.edges || backendGraph.graph?.edges || []
+  const rawNodes = backendGraph.nodes ?? backendGraph.graph?.nodes ?? [];
+  const rawEdges = backendGraph.edges ?? backendGraph.graph?.edges ?? [];
 
   const nodes = rawNodes.map((node) => ({
     id: node.id,
@@ -50,7 +52,7 @@ export function transformToReactFlow(backendGraph) {
       riskScore: node.risk_score,
     },
     style: getNodeStyle(node),
-  }))
+  }));
 
   const edges = rawEdges.map((edge, index) => ({
     id: `e${index}`,
@@ -58,14 +60,8 @@ export function transformToReactFlow(backendGraph) {
     target: edge.target,
     type: 'smoothstep',
     animated: false,
-    style: {
-      stroke: '#334155',
-      strokeWidth: 1.5,
-    },
-  }))
+    style: { stroke: '#334155', strokeWidth: 1.5 },
+  }));
 
-  return { nodes, edges }
+  return { nodes, edges };
 }
-
-// Quick sanity check in the browser console (temporary)
-console.log('React Flow Graph Preview:', transformToReactFlow(mockAnalyzeResponse.graph))
