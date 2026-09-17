@@ -28,6 +28,7 @@ All project documentation lives in [`docs/`](./docs). Start here, in this order:
 | [`docs/IMPLEMENTATION.md`](./docs/IMPLEMENTATION.md) | Copy-paste-ready starter code for every file |
 | [`docs/CREATIVE_IDEAS.md`](./docs/CREATIVE_IDEAS.md) | The 10 differentiator features and who owns each |
 | [`docs/NITYA_PPT_BRIEF.md`](./docs/NITYA_PPT_BRIEF.md) | Slide-by-slide deck content + video script |
+| [`docs/VIDEO_SCRIPT.md`](./docs/VIDEO_SCRIPT.md) | Official 3-minute video presentation & teleprompter script |
 | `docs/*_ROLE.md` | Individual role brief per teammate |
 
 ## Team
