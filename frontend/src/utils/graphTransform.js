@@ -50,6 +50,8 @@ export function transformToReactFlow(backendGraph) {
       downloads: node.monthly_downloads,
       isRoot: node.is_root,
       riskScore: node.risk_score,
+      isShadowDependency: Boolean(node.is_shadow_dependency || node.isShadowDependency),
+      isBlasted: Boolean(node.is_blasted || node.isBlasted),
     },
     style: getNodeStyle(node),
   }));

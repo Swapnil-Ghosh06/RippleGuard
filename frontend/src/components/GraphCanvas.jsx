@@ -1,150 +1,337 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
   MiniMap,
   useNodesState,
   useEdgesState,
-  ReactFlowProvider,
-  Handle,
-  Position,
+  MarkerType,
+  BackgroundVariant,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-import { transformToReactFlow } from '../utils/graphTransform.js';
-import { useGraphLayout } from '../hooks/useGraphLayout.js';
-import { useGraphStore } from '../store/graphStore.js';
+import { useGraphStore } from '../store/graphStore';
+import { useSimulate } from '../hooks/useSimulate';
+import PackageNode from './nodes/PackageNode';
 
-// Custom package node to render React Flow handles and labels with dark-theme styling
-const nodeTypes = {
-  packageNode: ({ data }) => (
-    <div className="text-center select-none">
-      <Handle
-        type="target"
-        position={Position.Top}
-        style={{ background: '#64748b', width: 8, height: 8 }}
-      />
-      <div className="font-mono font-bold text-xs">{data.label}</div>
-      {data.version && (
-        <div className="font-mono text-[10px] text-slate-400 mt-0.5">
-          v{data.version}
-        </div>
-      )}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        style={{ background: '#64748b', width: 8, height: 8 }}
-      />
-    </div>
-  ),
+const NODE_TYPES = {
+  packageNode: PackageNode,
+  package: PackageNode,
 };
 
-function GraphCanvasInner({
-  graphData: propGraphData,
-  onNodeClick: propOnNodeClick,
-}) {
-  const storeGraphData = useGraphStore((s) => s.graphData);
-  const selectedNode = useGraphStore((s) => s.selectedNode);
-  const setSelectedNode = useGraphStore((s) => s.setSelectedNode);
+const EDGE_TYPES = {};
 
-  const activeGraphData = propGraphData || storeGraphData;
+function buildLayout(nodes, edges) {
+  const byDepth = {};
+  for (const n of nodes) {
+    const d = n.depth ?? 0;
+    if (!byDepth[d]) byDepth[d] = [];
+    byDepth[d].push(n);
+  }
 
-  // 1. Transform raw graph data into base nodes & edges
-  const { nodes: rawNodes, edges: rawEdges } = useMemo(
-    () => transformToReactFlow(activeGraphData),
-    [activeGraphData]
-  );
+  const X_STEP = 280;
+  const Y_STEP = 135;
+  const positions = {};
 
-  // 2. Compute ELK layered DAG layout
-  const { layoutedNodes, layoutedEdges, isLayouting } = useGraphLayout(rawNodes, rawEdges);
+  for (const [depth, group] of Object.entries(byDepth)) {
+    const d = Number(depth);
+    const totalH = (group.length - 1) * Y_STEP;
+    group.forEach((n, i) => {
+      positions[n.id] = {
+        x: d * X_STEP + 80,
+        y: i * Y_STEP - totalH / 2 + 280,
+      };
+    });
+  }
 
-  // 3. Feed layouted elements into React Flow node & edge state
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  return positions;
+}
 
-  // Sync React Flow nodes and edges when ELK layout calculation completes
+export default function GraphCanvas() {
+  const {
+    graphData,
+    blastData,
+    setBlastData,
+    setSelectedNode,
+    isSimulating,
+    setIsSimulating,
+  } = useGraphStore();
+
+  const { simulate } = useSimulate();
+  const [blastSet, setBlastSet] = useState(new Set());
+  const [localSelected, setLocalSelected] = useState(null);
+
+  const rawNodes = graphData?.nodes ?? graphData?.graph?.nodes ?? [];
+  const rawEdges = graphData?.edges ?? graphData?.graph?.edges ?? [];
+
+  const positions = useMemo(() => buildLayout(rawNodes, rawEdges), [rawNodes]);
+
+  const rfNodes = useMemo(() => {
+    return rawNodes.map((n) => ({
+      id: n.id,
+      type: 'package',
+      position: positions[n.id] ?? { x: 0, y: 0 },
+      data: {
+        ...n,
+        blasted: blastSet.has(n.id),
+        selected: localSelected === n.id,
+      },
+    }));
+  }, [rawNodes, positions, blastSet, localSelected]);
+
+  const rfEdges = useMemo(() => {
+    return rawEdges.map((e, i) => {
+      const isHot = blastSet.has(e.source) || blastSet.has(e.target);
+      return {
+        id: `e-${i}`,
+        source: e.source,
+        target: e.target,
+        animated: isHot,
+        style: {
+          stroke: isHot ? '#e11d48' : '#cbd5e1',
+          strokeWidth: isHot ? 2 : 1.2,
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: isHot ? '#e11d48' : '#94a3b8',
+          width: 14,
+          height: 14,
+        },
+      };
+    });
+  }, [rawEdges, blastSet]);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
+
+  // Sync ReactFlow internal state when rfNodes or rfEdges change
   useEffect(() => {
-    setNodes(layoutedNodes);
-  }, [layoutedNodes, setNodes]);
+    setNodes(rfNodes);
+  }, [rfNodes, setNodes]);
 
   useEffect(() => {
-    setEdges(layoutedEdges);
-  }, [layoutedEdges, setEdges]);
+    setEdges(rfEdges);
+  }, [rfEdges, setEdges]);
 
-  // Update selection highlight when selectedNode changes
+  // Reset local state when a new package is analyzed
   useEffect(() => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        const isSelected = selectedNode && node.id === selectedNode;
-        return {
-          ...node,
-          style: {
-            ...node.style,
-            boxShadow: isSelected ? '0 0 0 3px #f43f5e, 0 0 20px rgba(244, 63, 94, 0.4)' : undefined,
-          },
-        };
-      })
-    );
-  }, [selectedNode, setNodes]);
+    setBlastSet(new Set());
+    setLocalSelected(null);
+  }, [graphData]);
 
-  const handleNodeClick = (event, node) => {
-    if (propOnNodeClick) {
-      propOnNodeClick(event, node);
-    }
-    setSelectedNode(node.id);
+  const MOCK_BLAST = {
+    blast_score: 91,
+    packages_affected: 9,
+    direct_affected: 3,
+    transitive_affected: 6,
+    monthly_downloads_affected: '438M',
+    human_comparison:
+      'Exposure exceeds 330M endpoints monthly — equivalent to compromising every active internet user in the US.',
+    mitigations: [
+      {
+        package: 'lodash@4.17.20',
+        fix_version: '4.17.21',
+        blast_reduction: 94,
+        command: 'npm update lodash@4.17.21',
+        description:
+          'Patches prototype pollution in zipObjectDeep and template engine injection vectors.',
+      },
+      {
+        package: 'minimatch@3.0.4',
+        fix_version: '3.0.5',
+        blast_reduction: 61,
+        command: 'npm update minimatch@3.0.5',
+        description:
+          'Neutralizes catastrophic ReDoS backtracking in glob pattern evaluation.',
+      },
+      {
+        package: 'semver@7.5.4',
+        fix_version: '7.5.4',
+        blast_reduction: 38,
+        command: 'npm update semver@7.5.4',
+        description:
+          'Resolves regular expression denial of service in range comparison engine.',
+      },
+    ],
+    propagation_order: [
+      { node: 'lodash@4.17.20', delay_ms: 0, event: 'INJECT', msg: 'Compromised token exploited at entrypoint' },
+      { node: 'express@4.18.1', delay_ms: 220, event: 'SPREAD', msg: 'Tainted through require("lodash") linkage' },
+      { node: 'react@18.2.0', delay_ms: 260, event: 'SPREAD', msg: 'Tainted through build tooling dependency chain' },
+      { node: 'webpack@5.88.0', delay_ms: 480, event: 'CASCADE', msg: 'Bundle compilation pipeline infected' },
+      { node: 'next@13.4.0', delay_ms: 600, event: 'CASCADE', msg: 'Full-stack SSR runtime contaminated' },
+      { node: 'axios@1.4.0', delay_ms: 650, event: 'CASCADE', msg: 'HTTP client transport layer tainted' },
+      { node: 'chalk@5.3.0', delay_ms: 820, event: 'CASCADE', msg: 'Terminal logger tainted' },
+      { node: 'semver@7.5.4', delay_ms: 850, event: 'CASCADE', msg: 'Version comparator engine tainted' },
+      { node: 'minimatch@3.0.4', delay_ms: 870, event: 'CASCADE', msg: 'Path matcher engine tainted' },
+      { node: 'ms@2.1.3', delay_ms: 900, event: 'CASCADE', msg: 'Time parser utility tainted' },
+    ],
   };
 
+  const handleInject = useCallback(async () => {
+    if (!localSelected || isSimulating) return;
+    setIsSimulating(true);
+    setSelectedNode(localSelected);
+    setBlastSet(new Set([localSelected]));
+
+    let blast = await simulate(localSelected);
+    if (!blast) {
+      blast = MOCK_BLAST;
+      setBlastData(blast);
+    }
+
+    const propOrder = blast.propagation_order || [];
+    const timers = [];
+
+    propOrder.forEach(({ node, delay_ms }, idx) => {
+      const delay = delay_ms ?? idx * 150;
+      const t = setTimeout(() => {
+        setBlastSet((prev) => new Set([...prev, typeof node === 'string' ? node : node?.id || node]));
+      }, delay);
+      timers.push(t);
+    });
+
+    const maxDelay = propOrder.length ? Math.max(...propOrder.map((p, i) => p.delay_ms ?? i * 150)) : 800;
+    const finalTimer = setTimeout(() => {
+      setIsSimulating(false);
+    }, maxDelay + 200);
+    timers.push(finalTimer);
+  }, [localSelected, isSimulating, simulate, setBlastData, setIsSimulating, setSelectedNode]);
+
+  const handleReset = useCallback(() => {
+    setBlastData(null);
+    setBlastSet(new Set());
+  }, [setBlastData]);
+
+  const onNodeClick = useCallback(
+    (_, node) => {
+      setLocalSelected((prev) => {
+        const next = prev === node.id ? null : node.id;
+        setSelectedNode(next);
+        return next;
+      });
+    },
+    [setSelectedNode]
+  );
+
+  if (!rawNodes.length) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-white">
+        <p className="text-sm text-muted font-sans">No graph loaded.</p>
+      </div>
+    );
+  }
 
   return (
-    <div
-      style={{ width: '100%', height: '100%', minHeight: 'calc(100vh - 56px)' }}
-      className="relative w-full h-full bg-[#050a14]"
-    >
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick}
-        nodeTypes={nodeTypes}
-        fitView
-        style={{ width: '100%', height: '100%', backgroundColor: '#050a14' }}
-      >
-        <Background color="#1e293b" gap={16} size={1} />
-        <Controls className="!bg-[#0d1829] !border-[#1a2d4a] [&>button]:!bg-[#0d1829] [&>button]:!border-[#1a2d4a] [&>button]:!fill-[#94a3b8] [&>button:hover]:!bg-[#1e293b]" />
-        <MiniMap
-          nodeColor={(n) => {
-            const styleBorder = n.style?.border;
-            if (typeof styleBorder === 'string') {
-              const parts = styleBorder.split(' ');
-              return parts[parts.length - 1] || '#3b82f6';
-            }
-            return '#3b82f6';
-          }}
-          maskColor="rgba(5, 10, 20, 0.75)"
-          style={{
-            backgroundColor: '#0d1829',
-            border: '1px solid #1a2d4a',
-            borderRadius: '6px',
-          }}
-        />
-      </ReactFlow>
+    <div className="w-full h-full flex flex-col bg-white relative overflow-hidden">
+      {/* Top Floating Pill */}
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 select-none">
+        <div className="bg-white/95 backdrop-blur-md border border-border px-3.5 py-1.5 rounded-full flex items-center gap-2.5 text-xs font-sans shadow-sm">
+          <div className="flex items-center gap-1.5 font-medium text-text">
+            <span className="w-2 h-2 rounded-full bg-black" />
+            <span>Dependency Canvas</span>
+          </div>
+          <span className="text-border">·</span>
+          <span className="text-muted">{rawNodes.length} packages</span>
+          <span className="text-border">·</span>
+          <span className="text-muted">{rawEdges.length} links</span>
 
-      {isLayouting && (
-        <div className="absolute top-4 right-4 z-20 px-3 py-1.5 rounded-md bg-[#0d1829]/90 border border-[#1a2d4a] text-slate-300 font-mono text-xs flex items-center gap-2 backdrop-blur-sm shadow-md pointer-events-none">
-          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-          <span>Computing ELK Layout...</span>
+          {blastData && (
+            <>
+              <span className="text-border">·</span>
+              <span className="text-rose-700 font-medium flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                <span>⚡</span>
+                <span>
+                  {blastSet.size}/{rawNodes.length} compromised
+                </span>
+              </span>
+            </>
+          )}
         </div>
-      )}
+      </div>
+
+      {/* React Flow Canvas */}
+      <div className="flex-1 min-h-0 w-full relative" style={{ minHeight: '350px' }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onNodeClick={onNodeClick}
+          nodeTypes={NODE_TYPES}
+          edgeTypes={EDGE_TYPES}
+          fitView
+          fitViewOptions={{ padding: 0.25 }}
+          minZoom={0.25}
+          maxZoom={2}
+          style={{ background: '#ffffff' }}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={24}
+            size={1.2}
+            color="#e4e4e7"
+          />
+
+          <Controls className="!bg-white !border !border-border !rounded-xl !shadow-sm" />
+
+          <MiniMap
+            className="!bg-white !border !border-border !rounded-xl !shadow-sm"
+            nodeColor={(n) =>
+              n.data?.blasted
+                ? '#e11d48'
+                : n.data?.vulnerabilities?.length
+                ? '#d97706'
+                : '#e4e4e7'
+            }
+            maskColor="rgba(255, 255, 255, 0.65)"
+          />
+        </ReactFlow>
+      </div>
+
+      {/* Minimalist Bottom Toolbar */}
+      <div className="bg-white/95 backdrop-blur-md border-t border-border px-6 py-3 flex items-center justify-between z-20 shrink-0">
+        {/* Left Side */}
+        <div className="flex items-center select-none">
+          {localSelected ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted font-sans">Target locked:</span>
+              <span className="font-mono text-xs font-semibold text-text bg-surface2 border border-border rounded-md px-2 py-0.5">
+                {localSelected}
+              </span>
+            </div>
+          ) : (
+            <p className="text-xs text-muted font-sans">
+              Select any package card to choose attack origin
+            </p>
+          )}
+        </div>
+
+        {/* Right Side Buttons */}
+        <div className="flex items-center gap-2 select-none">
+          <button
+            onClick={handleInject}
+            disabled={!localSelected || isSimulating}
+            className={`font-sans font-medium text-xs px-5 py-2 rounded-full flex items-center gap-2 cursor-pointer transition-all shadow-sm ${
+              !localSelected || isSimulating
+                ? 'opacity-40 cursor-not-allowed bg-neutral-200 text-neutral-500'
+                : 'bg-rose-600 hover:bg-rose-700 text-white'
+            }`}
+          >
+            <span>⚡</span>
+            <span>{isSimulating ? 'Simulating Cascade…' : 'Inject Compromise'}</span>
+          </button>
+
+          {blastData && (
+            <button
+              onClick={handleReset}
+              className="bg-white hover:bg-surface2 text-text border border-border font-sans font-medium text-xs px-4 py-2 rounded-full cursor-pointer transition-colors"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
-
-export default function GraphCanvas(props) {
-  return (
-    <ReactFlowProvider>
-      <GraphCanvasInner {...props} />
-    </ReactFlowProvider>
-  );
-}
-
