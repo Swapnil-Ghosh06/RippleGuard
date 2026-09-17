@@ -23,16 +23,14 @@ function formatDownloads(n) {
  * @param {boolean} props.selected - React Flow built-in selection state
  */
 function PackageNode({ data = {}, selected = false }) {
-  const {
-    label = '',
-    version = '',
-    vulns = [],
-    downloads,
-    isRoot = false,
-    riskScore,
-    isShadowDependency = false,
-    isBlasted = false,
-  } = data;
+  const label = data.label || data.name || (typeof data.id === 'string' ? data.id.split('@')[0] : 'package');
+  const version = data.version || (typeof data.id === 'string' ? data.id.split('@')[1] : '');
+  const vulns = data.vulns || data.vulnerabilities || [];
+  const downloads = data.downloads ?? data.monthly_downloads;
+  const isRoot = Boolean(data.isRoot || data.is_root || data.depth === 0);
+  const riskScore = data.riskScore ?? data.risk_score;
+  const isShadowDependency = Boolean(data.isShadowDependency || data.is_shadow_dependency);
+  const isBlasted = Boolean(data.isBlasted || data.blasted);
 
   const maxSeverity = getMaxSeverity(vulns);
   const severityColor = SEVERITY_COLORS[maxSeverity] || SEVERITY_COLORS.NONE;
