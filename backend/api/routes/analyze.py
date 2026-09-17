@@ -16,6 +16,7 @@ from api.models.response_models import (
 from api.services.graph_service import build_dependency_graph, _graph_storage
 from api.services import npm_service, pypi_service, osv_service
 from api.services.enrichment_service import generate_vulnerability_impact_summary
+from api.services.famous_attacks import FAMOUS_ATTACKS
 
 router = APIRouter(tags=["analyze"])
 
@@ -143,6 +144,22 @@ async def analyze_package(request: AnalyzeRequest):
         dl_unavailable = (raw_dl is None)
 
         raw_vulns = vulns_map.get(nid, [])
+        if not raw_vulns:
+            attack_match = next(
+                (a for a in FAMOUS_ATTACKS if a.get("package") == name and (not a.get("version") or a.get("version") == ver)),
+                None
+            )
+            if attack_match:
+                raw_vulns = [{
+                    "id": attack_match.get("cve", attack_match.get("id")),
+                    "severity": "CRITICAL",
+                    "cvss_score": 10.0,
+                    "summary": attack_match.get("description", ""),
+                    "affected_versions": [ver],
+                    "fixed_version": None,
+                    "impact_summary": f"Critical zero-day Remote Code Execution (RCE) flaw allowing unauthenticated remote attackers to execute arbitrary system commands ({attack_match.get('name')} substitute attack on {name})."
+                }]
+                vulns_map[nid] = raw_vulns
 
         vuln_objs = [
             Vulnerability(

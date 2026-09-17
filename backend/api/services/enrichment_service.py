@@ -16,6 +16,7 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 import httpx
+from api.services.famous_attacks import FAMOUS_ATTACKS
 
 OSV_QUERY_URL = "https://api.osv.dev/v1/query"
 
@@ -23,6 +24,9 @@ OSV_QUERY_URL = "https://api.osv.dev/v1/query"
 # --- Domain Knowledge Taxonomy for Qualitative Explanations ---
 
 PACKAGE_DOMAINS = {
+    # Logging Frameworks & Diagnostic Telemetry
+    "log4js": ("enterprise application logging frameworks and diagnostic telemetry pipelines", "recording application logs, system diagnostics, and audit events"),
+
     # Web Frameworks & HTTP Servers
     "express": ("web servers, REST APIs, and backend microservices", "handling HTTP requests, route dispatch, and middleware execution"),
     "koa": ("modular web services and async HTTP APIs", "async middleware cascading and request context processing"),
@@ -103,6 +107,21 @@ def generate_vulnerability_impact_summary(vuln: dict, package_name: str = "") ->
     sum_lower = summary.lower()
     det_lower = details.lower()
     vid = str(v.get("id", "VULN"))
+
+    # Check if this vulnerability or package matches a famous historical substitute attack
+    famous_match = next(
+        (a for a in FAMOUS_ATTACKS if a.get("cve") == vid or a.get("id") == vid or (a.get("package") == pkg and vid in (a.get("cve", ""), a.get("id", "")))),
+        None
+    )
+    if famous_match:
+        desc = famous_match.get("description", "").rstrip(".")
+        name = famous_match.get("name", "")
+        impact = famous_match.get("impact", "")
+        if "log4j" in desc.lower() or "rce" in desc.lower() or "log4shell" in name.lower() or "cve-2021-44228" in vid.lower():
+            return f"Critical zero-day Remote Code Execution (RCE) flaw allowing unauthenticated remote attackers to execute arbitrary system commands ({name} substitute attack on {pkg})."
+        elif impact:
+            return f"{desc} ({name} supply chain attack, impacting {impact})."
+        return f"{desc}."
 
     # Select variation index deterministically based on vulnerability ID
     var_idx = sum(ord(c) for c in vid) % 3
@@ -423,6 +442,21 @@ def enrich_nodes_with_vulnerabilities(
 
         downloads = download_map.get(pkg_name, 0)
         vulnerabilities = vuln_map.get(node_key, [])
+        if not vulnerabilities:
+            attack_match = next(
+                (a for a in FAMOUS_ATTACKS if a.get("package") == pkg_name and (not a.get("version") or a.get("version") == pkg_version)),
+                None
+            )
+            if attack_match:
+                vulnerabilities = [{
+                    "id": attack_match.get("cve", attack_match.get("id")),
+                    "summary": attack_match.get("description", ""),
+                    "details": attack_match.get("impact", ""),
+                    "severity": "CRITICAL",
+                    "cvss_score": 10.0,
+                    "fixed_version": None,
+                    "impact_summary": f"Critical zero-day Remote Code Execution (RCE) flaw allowing unauthenticated remote attackers to execute arbitrary system commands ({attack_match.get('name')} substitute attack on {pkg_name})."
+                }]
 
         max_risk = 0.0
         enriched_vulns = []
