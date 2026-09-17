@@ -18,6 +18,10 @@ const PackageNode = memo(({ data }) => {
     monthly_downloads,
     blasted,
     selected,
+    dominoIndex,
+    isDominoActive,
+    isSandboxPatched,
+    isSandboxProtected,
   } = data;
 
   const topSev = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].find(s =>
@@ -29,7 +33,15 @@ const PackageNode = memo(({ data }) => {
   // Minimalist clean card styling
   let cardStyle = 'bg-white border border-border hover:border-zinc-400 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.04)]';
 
-  if (blasted) {
+  if (isSandboxPatched) {
+    cardStyle = 'bg-emerald-50/95 border-emerald-500 ring-4 ring-emerald-400/60 shadow-[0_6px_28px_rgba(16,185,129,0.35)] scale-[1.03] z-30';
+  } else if (isSandboxProtected) {
+    cardStyle = 'bg-emerald-50/60 border-emerald-300 ring-2 ring-emerald-400/30 shadow-[0_4px_18px_rgba(16,185,129,0.15)] z-10';
+  } else if (isDominoActive) {
+    cardStyle = 'bg-amber-50/95 border-amber-500 ring-4 ring-amber-400/60 shadow-[0_6px_28px_rgba(245,158,11,0.35)] scale-[1.04] z-30';
+  } else if (dominoIndex) {
+    cardStyle = 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/40 shadow-[0_4px_20px_rgba(245,158,11,0.2)] z-20';
+  } else if (blasted) {
     cardStyle = 'bg-rose-50/90 border-rose-300 shadow-[0_4px_20px_-2px_rgba(225,29,72,0.15)]';
   } else if (selected) {
     cardStyle = 'bg-white border-text ring-2 ring-black/10 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.08)]';
@@ -63,7 +75,28 @@ const PackageNode = memo(({ data }) => {
           </span>
         </div>
 
-        {blasted ? (
+        {isSandboxPatched ? (
+          <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-full border bg-emerald-500 text-white border-emerald-600 shadow-xs flex items-center gap-1">
+            <span>🛡️</span>
+            <span>Patched</span>
+          </span>
+        ) : isSandboxProtected ? (
+          <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300 flex items-center gap-1">
+            <span>✓</span>
+            <span>Shielded</span>
+          </span>
+        ) : dominoIndex ? (
+          <span
+            className={`text-[10px] font-sans font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 transition-all ${
+              isDominoActive
+                ? 'bg-amber-500 text-white border-amber-600 shadow-sm animate-pulse'
+                : 'bg-amber-100 text-amber-900 border-amber-300'
+            }`}
+          >
+            <span>🦋</span>
+            <span>{dominoIndex === 1 ? 'Origin #1' : `Domino #${dominoIndex}`}</span>
+          </span>
+        ) : blasted ? (
           <span className="text-[10px] font-sans font-semibold text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded-full border border-rose-200">
             ⚡ Tainted
           </span>
@@ -100,7 +133,19 @@ const PackageNode = memo(({ data }) => {
 
       {/* DESCRIPTION / SUMMARY */}
       <div className="min-h-[28px] mb-1.5">
-        {blasted ? (
+        {isSandboxPatched ? (
+          <p className="text-[11px] text-emerald-900 font-semibold leading-relaxed truncate font-sans">
+            Virtual patch active · Cascade blocked
+          </p>
+        ) : isSandboxProtected ? (
+          <p className="text-[11px] text-emerald-800 font-medium leading-relaxed truncate font-sans">
+            Infection severed · Safeguarded by sandbox
+          </p>
+        ) : dominoIndex ? (
+          <p className="text-[11px] text-amber-900 font-semibold leading-relaxed truncate font-sans">
+            {dominoIndex === 1 ? 'Critical Cascade Origin' : `Critical Domino Path (Hop ${dominoIndex})`}
+          </p>
+        ) : blasted ? (
           <p className="text-[11px] text-rose-700 font-medium leading-relaxed truncate font-sans">
             Compromise chain active
           </p>

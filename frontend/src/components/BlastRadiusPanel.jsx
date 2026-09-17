@@ -97,6 +97,9 @@ export default function BlastRadiusPanel() {
     graphData,
     isSimulating, setIsSimulating,
     setActiveTab,
+    activeDominoIndex, setActiveDominoIndex,
+    isDominoPlaying, setIsDominoPlaying,
+    sandboxPatches, toggleSandboxPatch, applyOptimalPatchSet, clearSandboxPatches,
   } = useGraphStore();
 
   const { simulate } = useSimulate();
@@ -155,6 +158,96 @@ export default function BlastRadiusPanel() {
       .slice(0, 3);
   }, [blastData, rawNodes, rawEdges]);
 
+  // Critical Butterfly Domino Chain (Idea 2 from CREATIVE_IDEAS.md)
+  const criticalChain = useMemo(() => {
+    if (blastData?.critical_chain && Array.isArray(blastData.critical_chain) && blastData.critical_chain.length >= 2) {
+      return blastData.critical_chain;
+    }
+    if (!blastData || !rawNodes.length) return [];
+
+    const startId = selectedNode || rawNodes.find(n => n.is_root)?.id || rawNodes[0]?.id;
+    if (!startId) return [];
+
+    if (blastData.propagation_order && blastData.propagation_order.length >= 2) {
+      const propNodes = blastData.propagation_order
+        .map(p => typeof p.node === 'string' ? p.node : p.node?.id)
+        .filter(Boolean);
+      if (propNodes.length >= 2) {
+        const idx = propNodes.indexOf(startId);
+        if (idx !== -1 && idx < propNodes.length - 1) {
+          return propNodes.slice(idx, idx + 4);
+        }
+        return propNodes.slice(0, 4);
+      }
+    }
+
+    const adj = {};
+    rawEdges.forEach(e => {
+      const u = typeof e.source === 'string' ? e.source : e.source?.id;
+      const v = typeof e.target === 'string' ? e.target : e.target?.id;
+      if (u && v) {
+        if (!adj[u]) adj[u] = [];
+        if (!adj[v]) adj[v] = [];
+        adj[v].push(u);
+        adj[u].push(v);
+      }
+    });
+
+    let longest = [startId];
+    const q = [[startId]];
+    while (q.length > 0) {
+      const path = q.shift();
+      const curr = path[path.length - 1];
+      const neighbors = (adj[curr] || []).filter(n => !path.includes(n));
+      if (neighbors.length === 0) {
+        if (path.length > longest.length) longest = path;
+      } else {
+        for (const nxt of neighbors) {
+          if (path.length < 5) q.push([...path, nxt]);
+        }
+      }
+    }
+    return longest;
+  }, [blastData, rawNodes, rawEdges, selectedNode]);
+
+  // Real-time Sandbox What-If Recalculation
+  const sandboxStats = useMemo(() => {
+    if (!blastData) return { score: 0, scoreDelta: 0, pctReduction: 0, isEffective: false };
+    const baseScore = blastData.blast_score ?? 0;
+    if (!sandboxPatches || sandboxPatches.length === 0) {
+      return {
+        score: baseScore,
+        scoreDelta: 0,
+        pctReduction: 0,
+        isEffective: false,
+      };
+    }
+
+    let totalPct = 0;
+    sandboxPatches.forEach(pkgId => {
+      const cleanId = (typeof pkgId === 'string' ? pkgId : pkgId?.id || '').split('@')[0];
+      const match = (blastData.mitigations || []).find(m =>
+        m.package === pkgId || m.package.split('@')[0] === cleanId
+      );
+      if (match) {
+        totalPct += (match.blast_reduction || 55);
+      } else {
+        totalPct += 45;
+      }
+    });
+
+    const cappedPct = Math.min(94, totalPct);
+    const currentScore = Math.max(6, Math.round(baseScore * (1 - cappedPct / 100)));
+    const scoreDelta = baseScore - currentScore;
+
+    return {
+      score: currentScore,
+      scoreDelta,
+      pctReduction: cappedPct,
+      isEffective: true,
+    };
+  }, [blastData, sandboxPatches]);
+
   // Selected node details (defaults to selectedNode or highestRiskNode or rootNode)
   const activeTargetNode = useMemo(() => {
     if (selectedNode) {
@@ -189,6 +282,12 @@ export default function BlastRadiusPanel() {
           transitive_affected: 6,
           monthly_downloads_affected: '438M',
           human_comparison: "Exposure exceeds 330M endpoints monthly — equivalent to compromising every active internet user in the US.",
+          critical_chain: [
+            target,
+            'express@4.18.1',
+            'webpack@5.88.0',
+            'next@13.4.0',
+          ],
           mitigations: [
             {
               package: 'lodash@4.17.20',
@@ -343,8 +442,9 @@ export default function BlastRadiusPanel() {
   // ==========================================
   // POST-SIMULATION STATE (Threat Active)
   // ==========================================
-  const label = getScoreLabel(blastData.blast_score);
-  const score = blastData.blast_score;
+  const effectiveScore = sandboxStats.isEffective ? sandboxStats.score : blastData.blast_score;
+  const label = getScoreLabel(effectiveScore);
+  const score = effectiveScore;
   const timeline = (blastData.propagation_order || []).slice(0, 8);
   const maxDepth = Math.max(...rawNodes.map(n => n.depth ?? 0), 1);
 
@@ -366,12 +466,17 @@ export default function BlastRadiusPanel() {
       <div className="rounded-2xl bg-surface2 border border-border p-4 relative overflow-hidden">
         <div className="flex items-end justify-between mb-3">
           <div>
-            <div className="flex items-baseline gap-1.5">
+            <div className="flex items-baseline gap-1.5 flex-wrap">
               <ScoreCounter value={score} />
               <span className="text-sm font-sans text-muted">/ 100</span>
+              {sandboxStats.isEffective && (
+                <span className="text-[11px] font-bold font-sans text-emerald-900 bg-emerald-100 border border-emerald-300 rounded-full px-2 py-0.5 ml-1 animate-pulse">
+                  −{sandboxStats.scoreDelta} pts ({sandboxStats.pctReduction}% cut)
+                </span>
+              )}
             </div>
             <p className="text-xs text-muted font-sans mt-0.5">
-              Cumulative Threat Index
+              Cumulative Threat Index {sandboxStats.isEffective ? '(Sandbox Mode)' : ''}
             </p>
           </div>
 
@@ -458,7 +563,101 @@ export default function BlastRadiusPanel() {
         </div>
       </div>
 
-      {/* 3. Real-World Equivalence Card */}
+      {/* 3. Interactive What-If Dependency Sandbox Card */}
+      <div className="rounded-2xl bg-emerald-50/70 border border-emerald-300 p-4 shadow-xs">
+        <div className="flex items-center justify-between mb-2 select-none">
+          <div className="flex items-center gap-2">
+            <span className="text-base animate-pulse">🧪</span>
+            <div>
+              <h4 className="font-sans text-xs font-bold text-emerald-950 uppercase tracking-wider">
+                Interactive "What-If" Sandbox
+              </h4>
+              <p className="text-[10px] text-emerald-800 font-sans">
+                Virtual Patch & Surgical Containment
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {sandboxPatches.length > 0 && (
+              <button
+                type="button"
+                onClick={clearSandboxPatches}
+                className="text-[10px] font-mono text-emerald-800 hover:text-emerald-950 underline cursor-pointer"
+              >
+                Reset
+              </button>
+            )}
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-300">
+              {sandboxPatches.length} Patched
+            </span>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-emerald-950/90 font-sans mb-3 leading-relaxed">
+          Experiment with patches on any dependency to test risk reduction before deployment. Watch the cascade contain live.
+        </p>
+
+        {/* Quick Scenario Buttons */}
+        <div className="flex items-center gap-2 mb-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              const optimal = (blastData.mitigations || []).slice(0, 2).map(m => m.package);
+              if (optimal.length > 0) {
+                applyOptimalPatchSet(optimal);
+              } else if (highestRiskNode) {
+                applyOptimalPatchSet([highestRiskNode.id]);
+              }
+            }}
+            className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition-all"
+          >
+            <span>🛡️</span>
+            <span>Apply Optimal Patch Set</span>
+          </button>
+        </div>
+
+        {/* Active Patches List */}
+        {sandboxPatches.length > 0 ? (
+          <div className="flex flex-col gap-1.5 pt-2 border-t border-emerald-200/80">
+            <span className="text-[10px] font-sans font-bold text-emerald-900 uppercase tracking-wider">
+              Active Virtual Patches:
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {sandboxPatches.map((pkgId) => (
+                <span
+                  key={pkgId}
+                  className="inline-flex items-center gap-1 bg-white border border-emerald-300 text-emerald-900 text-[11px] font-mono font-medium px-2 py-1 rounded-lg shadow-2xs"
+                >
+                  <span>🛡️</span>
+                  <span className="truncate max-w-[170px]">{pkgId}</span>
+                  <button
+                    type="button"
+                    onClick={() => toggleSandboxPatch(pkgId)}
+                    className="text-emerald-700 hover:text-emerald-950 font-bold ml-1 cursor-pointer"
+                    title="Remove patch"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-1 p-2 rounded-xl bg-emerald-100/70 border border-emerald-300 text-xs font-sans text-emerald-950 flex items-center justify-between">
+              <span>Risk Reduction:</span>
+              <span className="font-mono font-bold text-emerald-900">
+                −{sandboxStats.scoreDelta} pts ({sandboxStats.pctReduction}% eliminated)
+              </span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-[10px] text-emerald-800/80 font-sans italic pt-1 border-t border-emerald-200/60">
+            Tip: Click "Apply Virtual Patch" on any node in the canvas or click "Apply Optimal Patch Set" above.
+          </p>
+        )}
+      </div>
+
+      {/* 4. Real-World Equivalence Card */}
       <div className="rounded-2xl bg-amber-50/50 border border-amber-200/70 p-4">
         <div className="flex items-center gap-1.5 mb-1.5 select-none text-amber-900 text-xs font-semibold">
           <span>💡</span>
@@ -469,7 +668,119 @@ export default function BlastRadiusPanel() {
         </p>
       </div>
 
-      {/* 4. Shadow Dependency Revealer (Chokepoint Analyzer) */}
+      {/* 4. The Butterfly Trace (Critical Domino Path Hero) */}
+      {criticalChain.length > 1 && (
+        <div className="rounded-2xl bg-amber-50/70 border border-amber-300 p-4 shadow-xs">
+          <div className="flex items-center justify-between mb-2 select-none">
+            <div className="flex items-center gap-2">
+              <span className="text-base animate-pulse">🦋</span>
+              <div>
+                <h4 className="font-sans text-xs font-bold text-amber-950 uppercase tracking-wider">
+                  The Butterfly Trace
+                </h4>
+                <p className="text-[10px] text-amber-800 font-sans">
+                  Critical Domino Chain ({criticalChain.length} hops)
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (isDominoPlaying) {
+                  setIsDominoPlaying(false);
+                } else {
+                  setActiveDominoIndex(0);
+                  const origin = criticalChain[0];
+                  if (origin) setSelectedNode(origin);
+                  setIsDominoPlaying(true);
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-sans text-xs font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition-all"
+            >
+              <span>{isDominoPlaying ? '⏸' : '▶'}</span>
+              <span>{isDominoPlaying ? 'Pause Cascade' : 'Play Domino Trace'}</span>
+            </button>
+          </div>
+
+          <p className="text-[11px] text-amber-900/90 font-sans mb-3 leading-relaxed">
+            The single deadliest transmission path through your dependency tree. A micro-change at the origin ripples all the way to production leaves.
+          </p>
+
+          {/* Sequential Domino Chain Hops */}
+          <div className="flex flex-col gap-2">
+            {criticalChain.map((nodeId, idx) => {
+              const isStart = idx === 0;
+              const isEnd = idx === criticalChain.length - 1;
+              const isCurrent = activeDominoIndex === idx;
+              const matchingNode = rawNodes.find(n => n.id === nodeId);
+              const downloads = matchingNode?.monthly_downloads;
+
+              return (
+                <div
+                  key={nodeId}
+                  onClick={() => {
+                    setActiveDominoIndex(idx);
+                    setSelectedNode(nodeId);
+                  }}
+                  className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 text-xs cursor-pointer transition-all ${
+                    isCurrent
+                      ? 'bg-amber-100/95 border-amber-500 ring-2 ring-amber-400/60 shadow-xs scale-[1.01]'
+                      : 'bg-white border-amber-200/80 hover:border-amber-400'
+                  }`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className={`text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border ${
+                        isStart
+                          ? 'bg-rose-100 text-rose-800 border-rose-200'
+                          : isEnd
+                          ? 'bg-purple-100 text-purple-800 border-purple-200'
+                          : 'bg-amber-100 text-amber-900 border-amber-300'
+                      }`}>
+                        {isStart ? 'Origin' : isEnd ? 'Frontier' : `Hop #${idx}`}
+                      </span>
+                      <span className="font-mono text-xs font-bold text-text truncate">
+                        {nodeId}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted font-sans">
+                      {isStart
+                        ? 'Exploit entrypoint package'
+                        : isEnd
+                        ? 'Downstream consumer exposed'
+                        : `Transitive parent linkage`}
+                      {downloads ? ` · ${formatDownloads(downloads)} dl/mo` : ''}
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 flex items-center gap-1">
+                    <span className="font-mono text-[10px] text-amber-800 font-semibold">
+                      {isCurrent ? '● Active' : 'Select'}
+                    </span>
+                    <span className="text-amber-600 text-xs">→</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Domino Breaker Recommendation */}
+          {criticalChain.length >= 2 && (
+            <div className="mt-3 pt-3 border-t border-amber-200/80 flex items-start gap-2 text-xs font-sans text-amber-950">
+              <span className="text-sm shrink-0 mt-0.5">✂️</span>
+              <div>
+                <p className="font-semibold mb-0.5">Domino Breaker Opportunity</p>
+                <p className="text-[11px] text-amber-900 leading-relaxed">
+                  Pinning or upgrading the link between <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">{criticalChain[0].split('@')[0]}</code> and <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">{criticalChain[1].split('@')[0]}</code> breaks this entire cascade before it reaches production leaves.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 5. Shadow Dependency Revealer (Chokepoint Analyzer) */}
       <div className="rounded-2xl bg-surface2 border border-border p-4">
         <div className="flex items-center justify-between mb-2 select-none">
           <div className="flex items-center gap-1.5">
@@ -559,6 +870,26 @@ export default function BlastRadiusPanel() {
             {targetExploit.consequence}
           </p>
         </div>
+
+        {/* Sandbox Virtual Patch Button on Target */}
+        {activeTargetNode && (
+          <button
+            type="button"
+            onClick={() => toggleSandboxPatch(activeTargetNode.id)}
+            className={`mt-2.5 w-full py-2 px-3 rounded-xl font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border shadow-2xs ${
+              sandboxPatches.includes(activeTargetNode.id)
+                ? 'bg-emerald-100 text-emerald-900 border-emerald-400 hover:bg-emerald-200'
+                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border-emerald-300'
+            }`}
+          >
+            <span>🛡️</span>
+            <span>
+              {sandboxPatches.includes(activeTargetNode.id)
+                ? 'Remove Virtual Patch'
+                : `Apply Virtual Patch to ${activeTargetNode.name || 'Target'}`}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* 6. High-Leverage Remediation & Rapid Patch Action */}
