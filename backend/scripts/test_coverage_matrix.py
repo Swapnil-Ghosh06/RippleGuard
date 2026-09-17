@@ -89,7 +89,7 @@ PACKAGES_MATRIX = [
 
 def run_matrix():
     print("=" * 80)
-    print(f"RippleGuard — 40-Package Real-World Coverage Matrix ({len(PACKAGES_MATRIX)} packages)")
+    print(f"RippleGuard - 40-Package Real-World Coverage Matrix ({len(PACKAGES_MATRIX)} packages)")
     print("=" * 80)
 
     results = []
@@ -259,9 +259,51 @@ def run_matrix():
                 f.write(fail["traceback"])
                 f.write("```\n\n")
 
+        # 3. PEP 503 Normalization Verification
+        pep503_passed, pep503_details = verify_pep503_normalization()
+        f.write("\n## 3. PyPI PEP 503 Name Normalization Verification\n\n")
+        f.write("Tested case and separator variants for `flask-sqlalchemy`:\n")
+        f.write("- `flask-sqlalchemy`\n")
+        f.write("- `Flask_SQLAlchemy`\n")
+        f.write("- `flask.sqlalchemy`\n\n")
+        if pep503_passed:
+            base_dl = pep503_details["flask-sqlalchemy"]["root"]["monthly_downloads"]
+            f.write(f"**Status:** ✅ **PASS** — All 3 variants resolved to the identical cached graph payload and identical download count (`{base_dl:,}` monthly downloads).\n")
+        else:
+            f.write("**Status:** ❌ **FAIL** — Variants did not resolve to identical cached payloads.\n")
+
     print(f"\nWrote full coverage report to: {report_path}")
     return pass_count, fail_count, failures
 
 
+def verify_pep503_normalization():
+    print("\n" + "=" * 80)
+    print("Testing PyPI PEP 503 Name Normalization...")
+    print("=" * 80)
+
+    variants = ["flask-sqlalchemy", "Flask_SQLAlchemy", "flask.sqlalchemy"]
+    responses = {}
+
+    for var in variants:
+        res = client.post("/analyze", json={"package": var, "ecosystem": "pypi", "depth": 2})
+        if res.status_code != 200:
+            raise RuntimeError(f"POST /analyze failed for '{var}' with HTTP {res.status_code}: {res.text}")
+        data = res.json()
+        responses[var] = data
+        print(f"  * '{var}' -> Name: '{data['root']['name']}', Downloads: {data['root']['monthly_downloads']:,}, Nodes: {data['stats']['total_nodes']}")
+
+    base = responses["flask-sqlalchemy"]
+    all_identical = all(responses[v] == base for v in variants)
+    all_dls_identical = all(responses[v]["root"]["monthly_downloads"] == base["root"]["monthly_downloads"] for v in variants)
+
+    if all_identical and all_dls_identical:
+        print("[PASS] PEP 503 Verification PASSED: All 3 variants resolved to identical cached results and download counts.")
+        return True, responses
+    else:
+        print("[FAIL] PEP 503 Verification FAILED: Results differed between variants.")
+        return False, responses
+
+
 if __name__ == "__main__":
     run_matrix()
+

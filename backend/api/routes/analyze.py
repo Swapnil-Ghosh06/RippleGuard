@@ -45,6 +45,8 @@ async def analyze_package(request: AnalyzeRequest):
     Enforces <8s end-to-end SLA, returning 503 on timeout and 404 for unresolvable packages.
     """
     eco = request.ecosystem.lower()
+    if eco == "pypi":
+        request.package = pypi_service.normalize_pypi_package_name(request.package)
 
     try:
         # Resolve latest version if not explicitly pinned

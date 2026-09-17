@@ -38,6 +38,16 @@ _CACHE_FILE = _CACHE_DIR / "pypistats_cache.json"
 _pypi_downloads_cache: dict[str, Optional[int]] = {}
 
 
+def normalize_pypi_package_name(name: str) -> str:
+    """
+    Normalizes a PyPI package name according to PEP 503:
+    Lowercase and collapse any run of [-_.] characters into a single hyphen '-'.
+    """
+    if not name:
+        return ""
+    return re.sub(r"[-_.]+", "-", name.strip()).lower()
+
+
 def _init_downloads_cache():
     if _CACHE_FILE.exists():
         try:
@@ -46,13 +56,14 @@ def _init_downloads_cache():
                 if isinstance(data, dict):
                     for k, v in data.items():
                         if isinstance(v, int):
-                            _pypi_downloads_cache[k.lower()] = v
+                            _pypi_downloads_cache[normalize_pypi_package_name(k)] = v
         except Exception as e:
             logger.warning("Failed to load pypistats cache file: %s", e)
 
 
 def _persist_cache_item(package: str, downloads: int):
-    _pypi_downloads_cache[package.lower()] = downloads
+    norm_pkg = normalize_pypi_package_name(package)
+    _pypi_downloads_cache[norm_pkg] = downloads
     try:
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
         cached_data = {}
@@ -62,7 +73,7 @@ def _persist_cache_item(package: str, downloads: int):
                     cached_data = json.load(f)
             except Exception:
                 cached_data = {}
-        cached_data[package.lower()] = downloads
+        cached_data[norm_pkg] = downloads
         with open(_CACHE_FILE, "w", encoding="utf-8") as f:
             json.dump(cached_data, f, indent=2)
     except Exception as e:
@@ -75,10 +86,11 @@ _init_downloads_cache()
 
 async def get_pypi_metadata(package: str, version: str = None) -> dict:
     """Fetch package metadata from PyPI JSON API for a given package and version."""
+    norm_pkg = normalize_pypi_package_name(package)
     if not version or version == "latest":
-        url = f"https://pypi.org/pypi/{package}/json"
+        url = f"https://pypi.org/pypi/{norm_pkg}/json"
     else:
-        url = f"https://pypi.org/pypi/{package}/{version}/json"
+        url = f"https://pypi.org/pypi/{norm_pkg}/{version}/json"
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -125,7 +137,7 @@ def parse_pypi_deps(requires_dist: list[str]) -> list[dict]:
 
         if clean_name:
             deps.append({
-                "name": clean_name,
+                "name": normalize_pypi_package_name(clean_name),
                 "version": "latest",
                 "ecosystem": "pypi"
             })
@@ -143,7 +155,7 @@ async def get_monthly_downloads(package: str) -> Optional[int]:
     if not package:
         return None
 
-    clean_pkg = package.strip().lower()
+    clean_pkg = normalize_pypi_package_name(package)
 
     if clean_pkg in _pypi_downloads_cache:
         return _pypi_downloads_cache[clean_pkg]
@@ -214,7 +226,7 @@ async def _fetch_pypi_download_throttled(
     package: str,
     sem: asyncio.Semaphore
 ) -> tuple[str, Optional[int]]:
-    clean_pkg = package.strip().lower()
+    clean_pkg = normalize_pypi_package_name(package)
     if clean_pkg in _pypi_downloads_cache:
         return package, _pypi_downloads_cache[clean_pkg]
 
@@ -290,18 +302,31 @@ async def get_downloads_batch(packages: list[str]) -> dict[str, Optional[int]]:
     if not packages:
         return {}
 
-    unique_pkgs = list({p.strip(): p for p in packages if p.strip()}.values())
+    # Deduplicate packages using PEP 503 normalized representation
+    norm_to_orig = {}
+    for p in packages:
+        if p and p.strip():
+            norm = normalize_pypi_package_name(p)
+            if norm not in norm_to_orig:
+                norm_to_orig[norm] = p.strip()
+
     sem = asyncio.Semaphore(1)
 
     async with httpx.AsyncClient(
         limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
         timeout=8.0
     ) as client:
-        tasks = [_fetch_pypi_download_throttled(client, pkg, sem) for pkg in unique_pkgs]
+        tasks = [_fetch_pypi_download_throttled(client, norm, sem) for norm in norm_to_orig.keys()]
         results = await asyncio.gather(*tasks)
 
     res_dict = dict(results)
-    return {pkg: res_dict.get(pkg, res_dict.get(pkg.strip().lower())) for pkg in packages}
+    return {
+        pkg: res_dict.get(
+            normalize_pypi_package_name(pkg),
+            _pypi_downloads_cache.get(normalize_pypi_package_name(pkg))
+        )
+        for pkg in packages
+    }
 
 
 
