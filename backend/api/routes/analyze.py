@@ -49,27 +49,28 @@ async def analyze_package(request: AnalyzeRequest):
     if eco == "pypi":
         request.package = pypi_service.normalize_pypi_package_name(request.package)
 
-    try:
-        # Resolve latest version if not explicitly pinned
+    async def _resolve_and_build(target_eco: str, target_pkg: str):
+        if target_eco == "pypi":
+            target_pkg = pypi_service.normalize_pypi_package_name(target_pkg)
+
         version = request.version
         if not version or version == "latest":
-            if eco == "npm":
-                version = await asyncio.wait_for(npm_service.get_latest_version(request.package), timeout=15.0)
-            elif eco == "pypi":
-                meta = await asyncio.wait_for(pypi_service.get_pypi_metadata(request.package), timeout=15.0)
+            if target_eco == "npm":
+                version = await asyncio.wait_for(npm_service.get_latest_version(target_pkg), timeout=15.0)
+            elif target_eco == "pypi":
+                meta = await asyncio.wait_for(pypi_service.get_pypi_metadata(target_pkg), timeout=15.0)
                 version = meta.get("version", "latest")
             else:
                 version = "latest"
 
-        cache_key = f"{request.package}-{eco}-{version}-depth{request.depth}"
+        cache_key = f"{target_pkg}-{target_eco}-{version}-depth{request.depth}"
         if cache_key in _analyze_cache:
-            return _analyze_cache[cache_key]
+            return _analyze_cache[cache_key], None
 
-        # Step 1: Construct dependency graph via BFS
         G = await asyncio.wait_for(
             build_dependency_graph(
-                package=request.package,
-                ecosystem=eco,
+                package=target_pkg,
+                ecosystem=target_eco,
                 version=version,
                 max_depth=request.depth
             ),
@@ -77,10 +78,7 @@ async def analyze_package(request: AnalyzeRequest):
         )
 
         if G.number_of_nodes() == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Package '{request.package}' not found or has no resolvable dependency tree."
-            )
+            raise PackageNotFoundError(f"Package '{target_pkg}' not found in {target_eco} registry.")
 
         root_candidates = [n for n in G.nodes if G.nodes[n].get("is_root")]
         if root_candidates:
@@ -97,8 +95,7 @@ async def analyze_package(request: AnalyzeRequest):
         ]
         package_names = [G.nodes[nid]["name"] for nid in node_ids]
 
-        # Step 2: Fetch monthly downloads + vulnerabilities concurrently via asyncio.gather
-        if eco == "npm":
+        if target_eco == "npm":
             downloads_task = npm_service.get_downloads_batch(package_names)
         else:
             downloads_task = pypi_service.get_downloads_batch(package_names)
@@ -109,11 +106,26 @@ async def analyze_package(request: AnalyzeRequest):
             asyncio.gather(downloads_task, vulns_task),
             timeout=25.0
         )
-    except PackageNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e) or f"Package '{request.package}' not found in {eco} registry."
-        )
+        return None, (G, target_eco, target_pkg, version, node_ids, downloads_map, vulns_map, cache_key)
+
+    try:
+        cached_resp, result = await _resolve_and_build(eco, request.package)
+        if cached_resp:
+            return cached_resp
+        G, eco, request.package, version, node_ids, downloads_map, vulns_map, cache_key = result
+    except (PackageNotFoundError, HTTPException, ValueError):
+        # Automatic cross-ecosystem fallback (e.g. searching 'pandas' under npm or 'express' under pypi)
+        alt_eco = "pypi" if eco == "npm" else "npm"
+        try:
+            cached_resp, result = await _resolve_and_build(alt_eco, request.package)
+            if cached_resp:
+                return cached_resp
+            G, eco, request.package, version, node_ids, downloads_map, vulns_map, cache_key = result
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Package '{request.package}' not found in {eco} or {alt_eco} registry."
+            )
     except (ServiceTimeoutError, asyncio.TimeoutError):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

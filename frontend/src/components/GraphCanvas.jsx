@@ -196,12 +196,10 @@ export default function GraphCanvas() {
   }, [setBlastData]);
 
   const onNodeClick = useCallback((_, node) => {
-    setLocalSelected(prev => {
-      const next = prev === node.id ? null : node.id;
-      setSelectedNode(next);
-      return next;
-    });
-  }, [setSelectedNode]);
+    const next = localSelected === node.id ? null : node.id;
+    setLocalSelected(next);
+    setSelectedNode(next);
+  }, [localSelected, setSelectedNode]);
 
   if (!rawNodes.length) {
     return (
@@ -214,7 +212,7 @@ export default function GraphCanvas() {
   return (
     <div className="w-full h-full flex flex-col bg-white relative overflow-hidden">
       {/* Top Floating Pill */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 select-none">
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 select-none flex-wrap">
         <div className="bg-white/95 backdrop-blur-md border border-border px-3.5 py-1.5 rounded-full flex items-center gap-2.5 text-xs font-sans shadow-sm">
           <div className="flex items-center gap-1.5 font-medium text-text">
             <span className="w-2 h-2 rounded-full bg-black" />
@@ -235,6 +233,13 @@ export default function GraphCanvas() {
             </>
           )}
         </div>
+
+        {rawNodes.length === 1 && (
+          <div className="bg-amber-50/95 border border-amber-200/80 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-sans text-amber-900 shadow-xs">
+            <span>ℹ️</span>
+            <span className="font-medium">Standalone Root Library (0 downstream dependencies)</span>
+          </div>
+        )}
       </div>
 
       {/* React Flow Canvas */}
