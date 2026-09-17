@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import ReactFlow, {
   Background,
   Controls,
@@ -13,6 +14,7 @@ import 'reactflow/dist/style.css';
 import { useGraphStore } from '../store/graphStore';
 import { useSimulate } from '../hooks/useSimulate';
 import PackageNode from './nodes/PackageNode';
+import NodeDetail from './NodeDetail';
 
 const NODE_TYPES = {
   packageNode: PackageNode,
@@ -108,6 +110,7 @@ export default function GraphCanvas() {
   const { simulate } = useSimulate();
   const [blastSet, setBlastSet] = useState(new Set());
   const [localSelected, setLocalSelected] = useState(null);
+  const [detailNode, setDetailNode] = useState(null);
   const [prevGraphData, setPrevGraphData] = useState(graphData);
 
   // Reset local state when a new package graphData is analyzed without useEffect cascading render
@@ -115,6 +118,7 @@ export default function GraphCanvas() {
     setPrevGraphData(graphData);
     setBlastSet(new Set());
     setLocalSelected(null);
+    setDetailNode(null);
   }
 
   const rawNodes = useMemo(
@@ -175,13 +179,14 @@ export default function GraphCanvas() {
     setEdges(rfEdges);
   }, [rfEdges, setEdges]);
 
-  const handleInject = useCallback(async () => {
-    if (!localSelected || isSimulating) return;
+  const handleInject = useCallback(async (overrideNodeId) => {
+    const target = typeof overrideNodeId === 'string' ? overrideNodeId : localSelected;
+    if (!target || isSimulating) return;
     setIsSimulating(true);
-    setSelectedNode(localSelected);
-    setBlastSet(new Set([localSelected]));
+    setSelectedNode(target);
+    setBlastSet(new Set([target]));
 
-    let blast = await simulate(localSelected);
+    let blast = await simulate(target);
     if (!blast) {
       blast = MOCK_BLAST;
       setBlastData(blast);
@@ -210,8 +215,20 @@ export default function GraphCanvas() {
     setBlastSet(new Set());
   }, [setBlastData]);
 
+  const handleRemoveNode = useCallback(
+    (nodeId) => {
+      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+      setDetailNode(null);
+      setLocalSelected(null);
+      setSelectedNode(null);
+    },
+    [setNodes, setEdges, setSelectedNode]
+  );
+
   const onNodeClick = useCallback(
     (_, node) => {
+      setDetailNode((prev) => (prev?.id === node.id ? null : node));
       setLocalSelected((prev) => {
         const next = prev === node.id ? null : node.id;
         setSelectedNode(next);
@@ -340,6 +357,18 @@ export default function GraphCanvas() {
           )}
         </div>
       </div>
+
+      {/* Node detail slide-in inspection panel */}
+      <AnimatePresence>
+        {detailNode && (
+          <NodeDetail
+            node={detailNode}
+            onClose={() => setDetailNode(null)}
+            onInjectCompromise={handleInject}
+            onRemoveNode={handleRemoveNode}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
