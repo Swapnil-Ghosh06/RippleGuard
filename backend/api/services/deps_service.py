@@ -72,12 +72,15 @@ async def get_all_deps_as_flat_list(
                     pass
 
             if response.status_code != 200:
-                return ([], [])
+                return await _fetch_registry_fallback_deps(package, ecosystem, version)
             response.raise_for_status()
             data = response.json()
 
             nodes_raw = data.get("nodes", [])
             edges_raw = data.get("edges", [])
+
+            if not nodes_raw:
+                return await _fetch_registry_fallback_deps(package, ecosystem, version)
 
             flat_nodes = []
             for node in nodes_raw:
@@ -99,11 +102,65 @@ async def get_all_deps_as_flat_list(
             return (flat_nodes, flat_edges)
 
     except httpx.TimeoutException:
-        raise TimeoutError(f"deps.dev timed out for {package}@{version}")
+        return await _fetch_registry_fallback_deps(package, ecosystem, version)
     except (httpx.HTTPError, Exception):
-        # On any non-timeout failure, return empty graph structure gracefully
-        # to ensure graph construction falls back safely without crashing.
-        return ([], [])
+        return await _fetch_registry_fallback_deps(package, ecosystem, version)
+
+
+async def _fetch_registry_fallback_deps(
+    package: str, ecosystem: str, version: str
+) -> tuple[list[dict], list[tuple[int, int]]]:
+    """
+    Fallback dependency resolution querying official registries (npm registry / PyPI JSON API)
+    when deps.dev has not indexed a package or is unreachable.
+    """
+    import re
+    from api.services.pypi_service import normalize_pypi_package_name
+
+    flat_nodes = []
+    flat_edges = []
+    eco = ecosystem.lower()
+
+    try:
+        if eco == "npm":
+            encoded = package.replace("/", "%2F")
+            url = f"https://registry.npmjs.org/{encoded}"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.get(url)
+                if res.status_code == 200:
+                    data = res.json()
+                    ver = version if (version and version != "latest") else data.get("dist-tags", {}).get("latest", "latest")
+                    manifest = data.get("versions", {}).get(ver, {}) or (data.get("versions", {}).get(data.get("dist-tags", {}).get("latest", ""), {}))
+                    deps = manifest.get("dependencies", {}) if isinstance(manifest, dict) else {}
+                    flat_nodes.append({"name": package, "version": ver, "ecosystem": "npm"})
+                    for dep_name, dep_ver in deps.items():
+                        clean_v = re.sub(r"^[^\d]*", "", str(dep_ver)).split(" ")[0] or "latest"
+                        child_idx = len(flat_nodes)
+                        flat_nodes.append({"name": dep_name, "version": clean_v, "ecosystem": "npm"})
+                        flat_edges.append((0, child_idx))
+                    return (flat_nodes, flat_edges)
+        elif eco == "pypi":
+            norm = normalize_pypi_package_name(package)
+            url = f"https://pypi.org/pypi/{norm}/json"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.get(url)
+                if res.status_code == 200:
+                    data = res.json()
+                    info = data.get("info", {})
+                    ver = version if (version and version != "latest") else info.get("version", "latest")
+                    reqs = info.get("requires_dist") or []
+                    flat_nodes.append({"name": package, "version": ver, "ecosystem": "pypi"})
+                    for r in reqs:
+                        clean = re.split(r"[<>=!~;\[\(\s]", r)[0].strip()
+                        if clean:
+                            child_idx = len(flat_nodes)
+                            flat_nodes.append({"name": normalize_pypi_package_name(clean), "version": "latest", "ecosystem": "pypi"})
+                            flat_edges.append((0, child_idx))
+                    return (flat_nodes, flat_edges)
+    except Exception:
+        pass
+
+    return ([], [])
 
 
 async def get_direct_dependencies(

@@ -139,9 +139,6 @@ def calculate_blast_score(
     4. Type Stub Threat Profile Modifier:
        - 0.25x scaling for @types/* compile-time declaration packages without runtime code
     """
-    if affected_count <= 0:
-        return 10.0 if has_cve else 0.0
-
     # Auto-detect type stub if not explicitly passed
     if not is_type_stub and package_name:
         pkg_lower = package_name.lower()
@@ -158,33 +155,36 @@ def calculate_blast_score(
     is_single_edge_util = (fan_out <= 1 and total_nodes <= 6 and eff_root_dl < 15_000_000)
 
     # 1. Structural Propagation Component (0 - 45 pts)
-    # Logarithmic breadth across affected packages
-    breadth_score = min(math.log10(1 + affected_count) / math.log10(151.0), 1.0) * 30.0
+    if affected_count > 0:
+        # Logarithmic breadth across affected packages
+        breadth_score = min(math.log10(1 + affected_count) / math.log10(151.0), 1.0) * 30.0
 
-    # Fan-out & Chain Topology Bonus
-    if is_single_edge_util:
-        fan_out_score = 2.0
-        chain_score = min(critical_chain_len / 4.0, 1.0) * 2.0 if critical_chain_len > 0 else 1.0
+        # Fan-out & Chain Topology Bonus
+        if is_single_edge_util:
+            fan_out_score = 2.0
+            chain_score = min(critical_chain_len / 4.0, 1.0) * 2.0 if critical_chain_len > 0 else 1.0
+        else:
+            fan_out_score = min(math.log10(1 + fan_out) / math.log10(11.0), 1.0) * 8.0
+            chain_score = min(critical_chain_len / 4.0, 1.0) * 7.0 if critical_chain_len > 0 else (3.5 if affected_count > 1 else 0.0)
+
+        struct_score = breadth_score + fan_out_score + chain_score
+
+        # Single-edge linear chain dampening (no parallel architectural impact)
+        if is_single_edge_util:
+            struct_score *= 0.45
     else:
-        fan_out_score = min(math.log10(1 + fan_out) / math.log10(11.0), 1.0) * 8.0
-        chain_score = min(critical_chain_len / 4.0, 1.0) * 7.0 if critical_chain_len > 0 else (3.5 if affected_count > 1 else 0.0)
-
-    struct_score = breadth_score + fan_out_score + chain_score
-
-    # Single-edge linear chain dampening (no parallel architectural impact)
-    if is_single_edge_util:
-        struct_score *= 0.45
+        struct_score = 0.0
 
     # 2. Ecosystem Exposure Component (0 - 45 pts)
-    # For single-edge utils, downstream blast cannot exceed the package's own direct adoption envelope
-    if is_single_edge_util:
-        eff_blast_dl = min(eff_blast_dl, eff_root_dl * 3)
+    # For single-edge utils or leaf nodes, downstream blast cannot exceed the package's own direct adoption envelope
+    if is_single_edge_util or affected_count == 0:
+        eff_blast_dl = min(eff_blast_dl, eff_root_dl * 3) if eff_root_dl > 0 else eff_blast_dl
 
-    root_pts = min(math.log10(max(eff_root_dl, 1)) / 9.0, 1.0) * 25.0
-    blast_pts = min(math.log10(max(eff_blast_dl, 1)) / 9.0, 1.0) * 20.0
+    root_pts = min(math.log10(max(eff_root_dl, 1)) / 9.0, 1.0) * 25.0 if eff_root_dl > 0 else 0.0
+    blast_pts = min(math.log10(max(eff_blast_dl, 1)) / 9.0, 1.0) * 20.0 if eff_blast_dl > 0 else 0.0
     exposure_score = root_pts + blast_pts
 
-    if is_single_edge_util:
+    if is_single_edge_util or affected_count == 0:
         exposure_score *= 0.70
 
     # 3. Known CVE Bonus (0 - 10 pts)
@@ -410,18 +410,20 @@ def simulate_compromise(
     # Calculate blast metrics per docs/TDD.md Section 3.2
     # Deduplicate downloads by unique package name to prevent double-counting multiple versions/paths
     unique_affected_pkgs = {_pkg_name(node) for node in affected}
-    total_downloads = sum(
+    downstream_downloads = sum(
         _get_dl(download_data, pkg) or max([_get_dl(download_data, n) for n in affected if _pkg_name(n) == pkg], default=0)
         for pkg in unique_affected_pkgs
     )
     comp_pkg = _pkg_name(compromised_node)
+    comp_dl = _get_dl(download_data, compromised_node) or _get_dl(download_data, comp_pkg) or 0
+    total_downloads = downstream_downloads + comp_dl
+
     comp_vulns = (vuln_data or {}).get(compromised_node, []) or (vuln_data or {}).get(comp_pkg, [])
     has_cve = len(comp_vulns) > 0
 
     # Butterfly Trace (Idea 2)
     critical_chain = find_butterfly_trace(G_prop, compromised_node)
 
-    comp_dl = _get_dl(download_data, compromised_node) or _get_dl(download_data, comp_pkg) or 0
     direct_deps_cnt = len(list(G_prop.successors(compromised_node))) if compromised_node in G_prop else 0
     is_type_stub = comp_pkg.startswith("@types/") or "/@types/" in comp_pkg
 
@@ -469,7 +471,7 @@ def simulate_compromise(
     high_count = sum(1 for n in affected if (_get_dl(download_data, n) or _get_dl(download_data, n.split('@')[0])) >= 10_000_000)
     med_count = max(len(affected) - high_count, 0)
 
-    estimated_apps = max(int(total_downloads / 35000), len(affected) * 150, 0)
+    estimated_apps = max(int(total_downloads / 35000), (len(affected) + 1) * 150 if total_downloads > 0 else 0)
 
     eco = G.nodes[compromised_node].get("ecosystem", "npm") if compromised_node in G.nodes else "npm"
     blast_summary = generate_blast_summary(
