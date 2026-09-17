@@ -51,6 +51,7 @@ export function useSimulate() {
           };
         }),
         propagation_order: propOrder,
+        propagation_paths: raw.propagation?.propagation_paths ?? raw.propagation_paths ?? [],
         affected_nodes:    affected,
         critical_chain:    raw.critical_chain ?? raw.propagation?.critical_chain ?? [],
         shadow_dependencies: raw.shadow_dependencies ?? [],
